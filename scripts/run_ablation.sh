@@ -72,4 +72,26 @@ run diff_pna_edge     --data_base "${DIFF_BASE}" --conv_type pna --edge_geo_feat
 # MeshGraphNet（Encode-Process-Decode＋エッジ更新。メッシュ応力場SOTA構造）。
 run diff_mgn          --data_base "${DIFF_BASE}" --conv_type meshgraphnet --mgn_blocks 10
 
+# --- E. plain正規化アーム（基準不要化＝教授論点。差分アームと横並び比較）---
+#   PLAIN_BASE は all_hole_defect_zscore（生DSPSS→zscore, 実在確認済 2026-06-02）。
+run plain_gat             --data_base "${PLAIN_BASE}" --conv_type gat
+run plain_gat_geo         --data_base "${PLAIN_BASE}" --conv_type gat --extra_geo_features
+run plain_gatv2           --data_base "${PLAIN_BASE}" --conv_type gatv2
+run plain_sage            --data_base "${PLAIN_BASE}" --conv_type sage
+run plain_transformer_edge --data_base "${PLAIN_BASE}" --conv_type transformer --edge_geo_features
+run plain_pna_edge        --data_base "${PLAIN_BASE}" --conv_type pna --edge_geo_features
+run plain_pna_edge_geo    --data_base "${PLAIN_BASE}" --conv_type pna --edge_geo_features --extra_geo_features
+run plain_mgn             --data_base "${PLAIN_BASE}" --conv_type meshgraphnet --mgn_blocks 10
+
+# --- F. mirror拡張アーム（左右非対称＝論文の弱点②。差分ベース）---
+#   MIRROR_PERM は make_mirror_perm.py で生成（反転軸=周方向z, 57分割の左右軸）:
+#     python make_mirror_perm.py --fixed <normalized_x_2layer.npy> \
+#            --reflect <normalized_z_2layer.npy> --out mirror_perm.npy
+#   座標元: /home/nishioka/GNN/GNN_hole/GNN_hole_data/（2026版学習もこの座標を使用）。
+#   生成時 coverage=1.000 / involution=1.000 を確認すること（厳密な左右対合）。
+run mirror_gat            --data_base "${DIFF_BASE}" --conv_type gat   --mirror_augment --mirror_perm_path "${MIRROR_PERM}"
+run mirror_gatv2_geo      --data_base "${DIFF_BASE}" --conv_type gatv2 --extra_geo_features --mirror_augment --mirror_perm_path "${MIRROR_PERM}"
+run mirror_pna_edge       --data_base "${DIFF_BASE}" --conv_type pna --edge_geo_features --mirror_augment --mirror_perm_path "${MIRROR_PERM}"
+run mirror_transformer_edge --data_base "${DIFF_BASE}" --conv_type transformer --edge_geo_features --mirror_augment --mirror_perm_path "${MIRROR_PERM}"
+
 echo "=== ablation done. group-purged 正直評価は各runに --group_purge_eval を足す ==="
