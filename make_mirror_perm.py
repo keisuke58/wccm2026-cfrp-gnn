@@ -38,28 +38,34 @@ def nearest_indices(query_xy, ref_xy, chunk=512):
         return out
 
 
-def build_layer_perm(x, y):
-    """1層分の (x,y) からミラー置換（層内ローカル index）を返す。"""
-    xc = x.min() + x.max()  # 反転中心 *2 （x -> xc - x）
-    mirrored = np.column_stack((xc - x, y))
-    ref = np.column_stack((x, y))
+def build_layer_perm(a_fixed, a_reflect):
+    """1層分のミラー置換を返す。
+    構造格子の2軸 (a_fixed=長手方向x, a_reflect=周方向z) でマッチングし、
+    周方向 a_reflect を中心で反転（左右領域の入れ替え）する。
+    段間構造は45°円弧シェルなので、左右対称は Cartesian x ではなく周方向 z まわり。"""
+    rc = a_reflect.min() + a_reflect.max()  # 反転中心 *2
+    mirrored = np.column_stack((a_fixed, rc - a_reflect))
+    ref = np.column_stack((a_fixed, a_reflect))
     perm_local = nearest_indices(mirrored, ref)
     return perm_local
 
 
 def main():
     ap = argparse.ArgumentParser(description="Generate left-right mirror permutation for CFRP DSPSS mesh.")
-    ap.add_argument('--x', required=True, help='Path to x-coordinate npy (>=13942).')
-    ap.add_argument('--y', required=True, help='Path to y-coordinate npy (>=13942).')
+    # 構造格子の2軸: --fixed=長手方向(x), --reflect=周方向(z, 左右の対称軸)
+    ap.add_argument('--fixed', '--x', dest='fixed', required=True,
+                    help='Path to FIXED grid-axis coord npy (longitudinal x; 125 distinct).')
+    ap.add_argument('--reflect', '--z', dest='reflect', required=True,
+                    help='Path to REFLECTED grid-axis coord npy (circumferential z; 57 distinct, left-right axis).')
     ap.add_argument('--out', default='mirror_perm.npy', help='Output permutation npy path.')
     ap.add_argument('--total_nodes', type=int, default=13942)
     ap.add_argument('--vertices_per_layer', type=int, default=6971)
     args = ap.parse_args()
 
-    x = np.load(args.x).astype(np.float64)[:args.total_nodes]
-    y = np.load(args.y).astype(np.float64)[:args.total_nodes]
+    x = np.load(args.fixed).astype(np.float64)[:args.total_nodes]
+    y = np.load(args.reflect).astype(np.float64)[:args.total_nodes]
     vpl = args.vertices_per_layer
-    assert x.shape[0] == args.total_nodes, f"x has {x.shape[0]} nodes, expected {args.total_nodes}"
+    assert x.shape[0] == args.total_nodes, f"coord has {x.shape[0]} nodes, expected {args.total_nodes}"
 
     perm = np.empty(args.total_nodes, dtype=np.int64)
     for layer, sl in enumerate([slice(0, vpl), slice(vpl, args.total_nodes)]):
