@@ -24,7 +24,10 @@ from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_
 import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.metrics import classification_report, confusion_matrix, precision_recall_fscore_support, matthews_corrcoef, balanced_accuracy_score, roc_auc_score, roc_curve, auc
-import optuna
+try:
+    import optuna  # optional: ハイパラ探索用。学習本体では未使用なので無くても動く。
+except ImportError:
+    optuna = None
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import seaborn as sns
