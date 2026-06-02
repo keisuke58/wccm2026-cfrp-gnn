@@ -1,0 +1,85 @@
+# wccm2026-cfrp-gnn
+
+CFRP段間構造（穴あり）の3次元欠陥推定 — **FEA × Graph Neural Network**。
+WCCM 2026 / ECCOMAS（ミュンヘン, 2026-07-22, セッション MS090E）登壇のためのクリーンな作業リポジトリ。
+
+> 既発表（穴あき試験片）: Nishioka et al., *Frontiers in Materials* 12, 1652484 (2025) —
+> [DOI:10.3389/fmats.2025.1652484](https://doi.org/10.3389/fmats.2025.1652484)。本研究はこれを**穴あり段間構造＋ノイズ頑健**へ拡張する。
+
+## 課題設定（NDT制約）
+
+- 非破壊検査（赤外線応力測定）を想定 → **入力は主応力和 DSPSS と既知形状（座標）のみ**。応力テンソル成分は使用不可。
+- 表面DSPSS（最外2層）をグラフのノード特徴とし、**19クラス**（欠陥なし＋層×面内領域）で欠陥位置・挿入層を分類。
+- GAT（Graph Attention Network）で不均一応力場を学習。
+
+## 入力正規化の論点（差分 vs plain）
+
+| | 差分正規化（既定） | plain正規化 |
+|---|---|---|
+| 定義 | (Original − 欠陥なし基準) → z-score | 生DSPSS → z-score |
+| 穴の応力集中 | 相殺でき穴周りに強い | 穴集中が支配的で苦手 |
+| 実験再現性 | 同一部品の欠陥なし基準が必要（難） | 測定そのままで**基準不要**（実用的） |
+| データ | `all_sub_hole_defect_zscore` | 別途生成（`data_prep/`） |
+
+**方針**: 差分を主結果（提出アブスト準拠）に残しつつ、**plain正規化＋幾何特徴(r,θ)で「基準不要化」を拡張**として提示
+→ アブストの "future application to experimental infrared stress measurement data" に直結。
+切替は `--data_base` と `--extra_geo_features` のフラグのみ（コード改変不要）。
+
+## 構成
+
+```
+train.py            # メイン学習（旧 GNN_zscore_sub.py）。DDP/4GPU torchrun
+make_mirror_perm.py # 左右ミラー拡張用 permutation を座標から生成
+models 相当は train.py 内 GATModel（GAT/GATv2 切替）
+Loss/               # Focal ほか損失（train.py が import）
+data_prep/          # 正規化スクリプト（差分/plain, percentile zscore 等）
+eval/               # 予測・可視化・評価（混同行列, クラス別F1, TDPS）
+scripts/            # run_best_configs.sh（既存ベスト）, run_ablation.sh（本研究用）
+results/            # 最新の結果図（混同行列・F1）
+```
+
+## 精度向上オプション（すべて default-OFF → ベースライン不変）
+
+| フラグ | 内容 | 狙い |
+|---|---|---|
+| `--conv_type gatv2` | GATConv→GATv2Conv（dynamic attention） | 表現力 |
+| `--extra_geo_features` | 座標由来 r=√(x²+y²), θ を追加（4→6次元） | 穴周り誤推定（基準不要化） |
+| `--train_noise_std S` | 学習中DSPSS列にGaussianノイズをオンライン注入 | ノイズ頑健＋過学習抑制 |
+| `--train_noise_curriculum` | ノイズ強度を 0→S に線形増加 | 早期崩壊回避 |
+| `--label_smoothing E` | CE経路のラベル平滑化（`--no_logit_adjust`時） | 隣接層誤分類 |
+| `--mirror_augment --mirror_perm_path P` | 左右反転でtrain倍化 | 左右領域の非対称（論文の弱点②） |
+| `--group_purge_eval` | train群と重なるval/testを除外して正直評価 | リーク検査 |
+
+既に本体に実装済み: DropEdge / dropout / residual / minority・class-freqサンプラー /
+Focal・LogitAdjust / 層制約 / OneCycleLR。
+
+## 実行（vancouver, 4×RTX4090）
+
+```bash
+# 1) ミラーperm を生成（初回のみ）
+python make_mirror_perm.py \
+  --x /home/nishioka/GNN/GNN_hole/GNN_hole_data/normalized_x_2layer.npy \
+  --y /home/nishioka/GNN/GNN_hole/GNN_hole_data/normalized_y_2layer.npy \
+  --out mirror_perm.npy
+
+# 2) ベースライン（差分・既存ベスト相当）
+torchrun --nproc_per_node=4 train.py --use_onecycle --batch_size 128 --hidden_channels 32
+
+# 3) アブレーション一式（差分/plain × geo ＋ 新規正則化）
+bash scripts/run_ablation.sh
+```
+
+### データ配置（サーバー側・既定パス）
+- 差分zscore: `/home/nishioka/GNN/GNN_hole_2026/all_sub_hole_defect_zscore/{train,val,test}/Defect_L*.npy`
+- ラベル: `/home/nishioka/GNN/GNN_hole_2026/all_19class_label/`
+- 座標/エッジ: `/home/nishioka/GNN/GNN_hole/GNN_hole_data/normalized_{x,y,z}_2layer.npy`, `hole_edges_2layer_best.npy`
+- plain版は `data_prep/` の正規化（差分を経ない）で生成し `--data_base` で指定。
+
+## 現状の数値（参考）
+- 事前学習 Macro F1 = **0.730**（val/best, "F10p730"）/ **test ≈ 0.66**（乖離=過学習が課題）
+- ノイズ専用データ版は F1 0.17（崩壊）→ 本リポは**オンラインノイズ拡張**で代替。
+- Frontiers版（穴あき試験片・差分なし）: Macro F1 0.61, TDPS 0.70。
+- 論文の弱点 → 本リポの対策: 隣接層誤分類→`--label_smoothing`、左右非対称→`--mirror_augment`。
+
+## 来歴
+Frontiers companion `keisuke58/nishioka_cfrp_gnn` の `GNN_hole_2026/` から、WCCM用に厳選コピーして整理。
