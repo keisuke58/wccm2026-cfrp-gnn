@@ -1100,6 +1100,21 @@ def evaluate_and_visualize(final_test_loader, train_loader, ddp_model, device, c
     plt.savefig(f"{output_dir}/confusion_matrix{timestamp}.png")
     plt.close()
 
+    # 2b. 行正規化（recall）混同行列 — 生カウントはクラス0が支配して対角が見えないため、
+    #     各行を真ラベル件数で割り、対角=各クラスのrecallにする（=「クロス/対角」が見える版）。
+    plt.figure(figsize=(10, 8))
+    cm_raw = confusion_matrix(all_labels_np, all_preds_np, labels=list(range(19)))
+    row_sums = cm_raw.sum(axis=1, keepdims=True)
+    cm_norm = np.divide(cm_raw, row_sums, out=np.zeros_like(cm_raw, dtype=float), where=row_sums > 0)
+    sns.heatmap(cm_norm, annot=True, fmt=".2f", cmap="Blues", vmin=0, vmax=1,
+                xticklabels=range(19), yticklabels=range(19),
+                cbar_kws={'label': 'Recall (row-normalized)'})
+    plt.xlabel("Predicted")
+    plt.ylabel("Actual")
+    plt.title("Confusion Matrix (row-normalized / recall)")
+    plt.savefig(f"{output_dir}/confusion_matrix_rownorm{timestamp}.png", dpi=150, bbox_inches='tight')
+    plt.close()
+
     plt.figure(figsize=(14, 12))
     cm = confusion_matrix(all_labels_np, all_preds_np)
     # Apply log scale to avoid overwhelming contrast
