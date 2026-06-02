@@ -69,5 +69,7 @@ run diff_transformer  --data_base "${DIFF_BASE}" --conv_type transformer
 run diff_transformer_edge --data_base "${DIFF_BASE}" --conv_type transformer --edge_geo_features
 run diff_pna          --data_base "${DIFF_BASE}" --conv_type pna
 run diff_pna_edge     --data_base "${DIFF_BASE}" --conv_type pna --edge_geo_features
+# MeshGraphNet（Encode-Process-Decode＋エッジ更新。メッシュ応力場SOTA構造）。
+run diff_mgn          --data_base "${DIFF_BASE}" --conv_type meshgraphnet --mgn_blocks 10
 
 echo "=== ablation done. group-purged 正直評価は各runに --group_purge_eval を足す ==="
