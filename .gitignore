@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+
+# data & artifacts (large; keep on server)
+*.npy
+*.npz
+*.odb
+*.inp
+*.dat
+*.rpt
+*.pt
+*.pth
+mirror_perm.npy
+
+# logs
+*.log
+training_log_*
+ablation_*
+training_pid_*
+
+# OS
+.DS_Store
+
+# allow result figures explicitly (small PNGs curated under results/)
+!results/*.png
