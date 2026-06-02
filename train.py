@@ -6,7 +6,11 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch_geometric.nn import GATConv, GATv2Conv
+from torch_geometric.nn import (
+    GATConv, GATv2Conv, TransformerConv, SAGEConv,
+    GINConv, GINEConv, ResGatedGraphConv, PNAConv,
+)
+from torch_geometric.utils import degree as _pyg_degree
 from torch_geometric.data import Data
 from torch_geometric.loader import DataLoader
 from sklearn.model_selection import train_test_split, KFold
@@ -434,9 +438,59 @@ def edge_dropout(edge_index, drop_prob=0.0002):
     return edge_index_dropped
 
 
+# =============================================================================
+# Conv "zoo": GATv2 以外のアーキも --conv_type で差し替えられるようにする。
+# 設計方針: 各層の「出力次元」は GAT 版と完全に同じ (hidden*4, hidden*8, hidden*4)
+# に固定する。こうすると BatchNorm / 残差 proj / fc / 層制約マスクは一切変えずに
+# conv だけ差し替わり、ベースラインとの比較がフェアになる。
+#
+#   gat        : GATConv          （既存・ベースライン）
+#   gatv2      : GATv2Conv        （dynamic attention・既存）
+#   transformer: TransformerConv  （graph transformer。edge_attr で方向を渡せる→左右非対称に効きうる）
+#   sage       : SAGEConv(aggr=max)（max集約で穴際の応力ピークを保持。頑健で速い）
+#   gin        : GINConv          （WL最大表現力。トポロジ依存タスク向け）
+#   gine       : GINEConv         （GIN + edge_attr。常に幾何エッジ特徴を使用）
+#   resgated   : ResGatedGraphConv（エッジ毎ゲートでノイズDSPSSを抑制）
+#   pna        : PNAConv          （mean/min/max/std の多集約。応力場の局所統計を一気に拾う）
+# =============================================================================
+_HEADS = 4
+
+
+def _make_conv(conv_type, in_dim, out_dim, deg=None, edge_dim=None):
+    """(conv, needs_edge_attr) を返す。out_dim は必ず指定どおりに揃える。"""
+    ct = str(conv_type).lower()
+    if ct in ('gat', 'gatv2'):
+        Conv = GATv2Conv if ct == 'gatv2' else GATConv
+        assert out_dim % _HEADS == 0
+        return Conv(in_dim, out_dim // _HEADS, heads=_HEADS, concat=True), False
+    if ct == 'transformer':
+        assert out_dim % _HEADS == 0
+        return TransformerConv(in_dim, out_dim // _HEADS, heads=_HEADS,
+                               concat=True, edge_dim=edge_dim), (edge_dim is not None)
+    if ct == 'sage':
+        return SAGEConv(in_dim, out_dim, aggr='max'), False
+    if ct == 'resgated':
+        return ResGatedGraphConv(in_dim, out_dim), False
+    if ct == 'gin':
+        mlp = nn.Sequential(nn.Linear(in_dim, out_dim), nn.ReLU(), nn.Linear(out_dim, out_dim))
+        return GINConv(mlp, train_eps=True), False
+    if ct == 'gine':
+        mlp = nn.Sequential(nn.Linear(in_dim, out_dim), nn.ReLU(), nn.Linear(out_dim, out_dim))
+        # GINEConv は edge_attr 必須。edge_dim 指定で内部に edge 用 Linear が入る。
+        return GINEConv(mlp, train_eps=True, edge_dim=(edge_dim or 4)), True
+    if ct == 'pna':
+        if deg is None:
+            raise ValueError("conv_type=pna には deg (次数ヒストグラム) が必要です。")
+        aggregators = ['mean', 'min', 'max', 'std']
+        scalers = ['identity', 'amplification', 'attenuation']
+        return PNAConv(in_dim, out_dim, aggregators=aggregators, scalers=scalers,
+                       deg=deg, edge_dim=edge_dim), (edge_dim is not None)
+    raise ValueError(f"未知の conv_type: {conv_type}")
+
+
 class GATModel(torch.nn.Module):
     def __init__(self, hidden_channels=8, num_classes=19, dropout=0.1, edge_drop_prob=0.01,
-                 in_channels=4, conv_type='gat'):
+                 in_channels=4, conv_type='gat', deg=None, edge_geo_features=False):
         """
         Args:
             hidden_channels: 隠れ層のチャネル数
@@ -444,19 +498,28 @@ class GATModel(torch.nn.Module):
             dropout: Dropout確率（デフォルト: 0.1, 推奨範囲: 0.0~0.3）
             edge_drop_prob: Edge dropout確率（デフォルト: 0.01, 推奨範囲: 0.0~0.05）
             in_channels: 入力ノード特徴量の次元（デフォルト: 4 = x,y,z,DSPSS）
-            conv_type: 'gat'（GATConv, 既存）または 'gatv2'（GATv2Conv, dynamic attention）
+            conv_type: gat/gatv2/transformer/sage/gin/gine/resgated/pna
+            deg: PNA 用の次数ヒストグラム（conv_type=pna のときのみ必須）
+            edge_geo_features: True で座標差分から幾何エッジ特徴 [dx,dy,dz,dist] を内部生成し
+                               transformer/pna に edge_attr として渡す（gine は常に使用）。NDT制約OK（座標由来）。
         """
         super(GATModel, self).__init__()
         self.edge_drop_prob = edge_drop_prob
-        Conv = GATv2Conv if str(conv_type).lower() == 'gatv2' else GATConv
+        ct = str(conv_type).lower()
+        # gine は edge_attr 必須なので幾何エッジ特徴を強制 ON。
+        use_edge = edge_geo_features or ct == 'gine'
+        self._edge_dim = 4 if use_edge else None
 
-        self.conv1 = Conv(in_channels, hidden_channels, heads=4, concat=True)
+        self.conv1, self.needs_edge_attr = _make_conv(
+            conv_type, in_channels, hidden_channels * 4, deg=deg, edge_dim=self._edge_dim)
         self.batch_norm1 = nn.BatchNorm1d(hidden_channels * 4)
 
-        self.conv2 = Conv(hidden_channels * 4, hidden_channels * 2, heads=4, concat=True)
+        self.conv2, _ = _make_conv(
+            conv_type, hidden_channels * 4, hidden_channels * 8, deg=deg, edge_dim=self._edge_dim)
         self.batch_norm2 = nn.BatchNorm1d(hidden_channels * 8)
 
-        self.conv3 = Conv(hidden_channels * 8, hidden_channels, heads=4, concat=True)
+        self.conv3, _ = _make_conv(
+            conv_type, hidden_channels * 8, hidden_channels * 4, deg=deg, edge_dim=self._edge_dim)
         self.batch_norm3 = nn.BatchNorm1d(hidden_channels * 4)
 
         # self.conv4 = Conv(hidden_channels * 4, hidden_channels, heads=4, concat=True)
@@ -472,6 +535,13 @@ class GATModel(torch.nn.Module):
 
         self.apply(initialize_weights)
 
+    def _edge_geo(self, pos, edge_index):
+        """座標差分から幾何エッジ特徴 [dx, dy, dz, dist] を作る（NDT制約OK＝座標由来）。"""
+        src, dst = edge_index[0], edge_index[1]
+        rel = pos[dst] - pos[src]                       # (E, 3) 相対ベクトル＝方向情報
+        dist = rel.norm(dim=1, keepdim=True)            # (E, 1)
+        return torch.cat([rel, dist], dim=1)            # (E, 4)
+
     def forward(self, data):
         x, edge_index = data.x, data.edge_index
 
@@ -479,21 +549,25 @@ class GATModel(torch.nn.Module):
         if self.training:
             edge_index = edge_dropout(edge_index, drop_prob=self.edge_drop_prob)
 
+        # 幾何エッジ特徴（transformer/gine/pna のみ。座標は入力 x の先頭3列）。
+        edge_attr = self._edge_geo(x[:, :3], edge_index) if self.needs_edge_attr else None
+        ekw = {'edge_attr': edge_attr} if self.needs_edge_attr else {}
+
         # Layer 1 with residual connection (成功版と同じ方法)
         x_res = self.proj1(x)
-        x = F.relu(self.conv1(x, edge_index)) + x_res
+        x = F.relu(self.conv1(x, edge_index, **ekw)) + x_res
         x = self.batch_norm1(x)
         x = self.dropout(x)
-        
+
         # Layer 2 with residual connection
         x_res = self.proj2(x)
-        x = F.relu(self.conv2(x, edge_index)) + x_res
+        x = F.relu(self.conv2(x, edge_index, **ekw)) + x_res
         x = self.batch_norm2(x)
         x = self.dropout(x)
-        
+
         # Layer 3 with residual connection
         x_res = self.proj3(x)
-        x = F.relu(self.conv3(x, edge_index)) + x_res
+        x = F.relu(self.conv3(x, edge_index, **ekw)) + x_res
         x = self.batch_norm3(x)
         x = self.dropout(x)
         
@@ -2095,6 +2169,12 @@ def main(args):
     extra_geo_features = getattr(args, 'extra_geo_features', False)
     in_channels = 4 + (2 if extra_geo_features else 0)
     conv_type = getattr(args, 'conv_type', 'gat')
+    edge_geo_features = getattr(args, 'edge_geo_features', False)
+    # PNA は次数ヒストグラム deg が必須。固定メッシュの edge_index から一度だけ計算。
+    deg = None
+    if str(conv_type).lower() == 'pna':
+        d = _pyg_degree(edge_index[1], num_nodes=13942, dtype=torch.long)
+        deg = torch.bincount(d, minlength=int(d.max().item()) + 1)
     model = GATModel(
         hidden_channels=args.hidden_channels,
         num_classes=19,
@@ -2102,10 +2182,12 @@ def main(args):
         edge_drop_prob=edge_drop_prob,
         in_channels=in_channels,
         conv_type=conv_type,
+        deg=deg,
+        edge_geo_features=edge_geo_features,
     ).to(device)
     if rank == 0:
         print(f"Model: GATModel(conv_type={conv_type}, in_channels={in_channels}, "
-              f"extra_geo_features={extra_geo_features})")
+              f"extra_geo_features={extra_geo_features}, edge_geo_features={edge_geo_features})")
     
     # Create the DDP model after initializing the process group
     # device_idsはlocal_rankを使用（利用可能なGPU数に合わせる）
@@ -3261,9 +3343,16 @@ if __name__ == '__main__':
     parser.add_argument('--layer_constraint_weight', type=float, default=1.0, help='Weight for layer constraint penalty (default: 1.0, higher=stronger constraint)')
 
     # ===== Accuracy-improvement options (all default-OFF; baseline unchanged) =====
-    # #4 GATv2 / 入力次元
-    parser.add_argument('--conv_type', type=str, default='gat', choices=['gat', 'gatv2'],
-                        help='Graph conv type: gat (GATConv, default/baseline) or gatv2 (GATv2Conv, dynamic attention).')
+    # #4 Conv zoo / 入力次元
+    parser.add_argument('--conv_type', type=str, default='gat',
+                        choices=['gat', 'gatv2', 'transformer', 'sage', 'gin', 'gine', 'resgated', 'pna'],
+                        help='Graph conv type. gat=baseline. gatv2=dynamic attention. '
+                             'transformer=graph transformer (edge_attr capable). sage=GraphSAGE(max). '
+                             'gin/gine=GIN(+edge). resgated=ResGatedGraphConv. pna=PNA(multi-aggregator).')
+    # #4b 幾何エッジ特徴（座標差分 dx,dy,dz,dist）を transformer/pna に edge_attr として供給。gine は常時ON。
+    parser.add_argument('--edge_geo_features', action='store_true', default=False,
+                        help='Feed coordinate-difference edge features [dx,dy,dz,dist] as edge_attr to '
+                             'transformer/pna (gine always uses them). NDT-safe (geometry only). Helps L/R asymmetry.')
     # #3 幾何特徴量（座標由来 r,theta。NDT制約下でOK = 既知形状のみ使用）
     parser.add_argument('--extra_geo_features', action='store_true', default=False,
                         help='Append coordinate-derived geometric features (r=sqrt(x^2+y^2), theta) to node features. in_channels 4->6.')

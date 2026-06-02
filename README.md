@@ -42,7 +42,8 @@ results/            # 最新の結果図（混同行列・F1）
 
 | フラグ | 内容 | 狙い |
 |---|---|---|
-| `--conv_type gatv2` | GATConv→GATv2Conv（dynamic attention） | 表現力 |
+| `--conv_type {gatv2,transformer,sage,gin,gine,resgated,pna}` | GAT 以外のアーキへ差し替え（出力次元は不変＝フェア比較） | 表現力・集約多様性 |
+| `--edge_geo_features` | 座標差分エッジ特徴 `[dx,dy,dz,dist]` を transformer/pna に供給（gine は常時） | 左右非対称（弱点②）・方向情報 |
 | `--extra_geo_features` | 座標由来 r=√(x²+y²), θ を追加（4→6次元） | 穴周り誤推定（基準不要化） |
 | `--train_noise_std S` | 学習中DSPSS列にGaussianノイズをオンライン注入 | ノイズ頑健＋過学習抑制 |
 | `--train_noise_curriculum` | ノイズ強度を 0→S に線形増加 | 早期崩壊回避 |
