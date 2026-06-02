@@ -58,4 +58,16 @@ run plain_all --data_base "${PLAIN_BASE}" --conv_type gatv2 --extra_geo_features
               --train_noise_std 0.1 --train_noise_curriculum \
               --mirror_augment --mirror_perm_path "${MIRROR_PERM}"
 
+# --- D. Conv zoo（GATv2 以外のアーキ比較。差分ベースで横並び）---
+#   transformer/pna は --edge_geo_features で座標差分エッジ特徴 [dx,dy,dz,dist] を併用すると
+#   左右非対称（論文の弱点②）に効きうる。gine は常時エッジ特徴を使用。
+run diff_sage         --data_base "${DIFF_BASE}" --conv_type sage
+run diff_resgated     --data_base "${DIFF_BASE}" --conv_type resgated
+run diff_gin          --data_base "${DIFF_BASE}" --conv_type gin
+run diff_gine         --data_base "${DIFF_BASE}" --conv_type gine
+run diff_transformer  --data_base "${DIFF_BASE}" --conv_type transformer
+run diff_transformer_edge --data_base "${DIFF_BASE}" --conv_type transformer --edge_geo_features
+run diff_pna          --data_base "${DIFF_BASE}" --conv_type pna
+run diff_pna_edge     --data_base "${DIFF_BASE}" --conv_type pna --edge_geo_features
+
 echo "=== ablation done. group-purged 正直評価は各runに --group_purge_eval を足す ==="
