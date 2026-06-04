@@ -2054,7 +2054,8 @@ def cleanup(device=None, rank=0):
 # メイン関数
 # ----------------------------
 def main(args):
-    set_seed(42)
+    _seed = getattr(args, 'seed', 42)
+    set_seed(_seed)  # deterministic torch/np/random/cuda seeding
 
     # DDP Debug Environment Variables (optional, for troubleshooting):
     # Set these before running to get detailed NCCL/PyTorch distributed debug info:
@@ -2084,6 +2085,7 @@ def main(args):
         print(f"  {command_str}")
         print(f"{'='*60}\n")
         
+        print(f"Seed: {_seed}")
         print(f"Rank: {rank}, World Size: {world_size}, Master Addr: {master_addr}, Master Port: {master_port}")
         print(f"CUDA available: {torch.cuda.is_available()}")
         if torch.cuda.is_available():
@@ -2132,14 +2134,31 @@ def main(args):
     edge_index = torch.tensor(edges.T, dtype=torch.long)  # CPUのまま
 
     # train/val/testからデータファイルを読み込む
-    train_data_files = [f for f in os.listdir(train_data_folder) if f.startswith("Defect_L") and f.endswith(".npy")]
+    _incl_ndf = getattr(args, 'include_ndf', False)  # [NDF-PORT] opt-in: add NoiseDefectFree negatives to TRAIN only
+    _ndf_count = getattr(args, 'ndf_count', 0)        # cap NDF negatives (0=all, deterministic: sorted then first N)
+    _defect_cap = getattr(args, 'defect_cap', 0)      # cap Defect_L* TRAIN samples (0=no cap, seeded random sample)
+
+    # Defect_L* TRAIN samples (optionally capped for BALANCED training)
+    train_defect_files = sorted(f for f in os.listdir(train_data_folder) if f.startswith("Defect_L") and f.endswith(".npy"))
+    if _defect_cap > 0 and len(train_defect_files) > _defect_cap:
+        _rng = random.Random(_seed)  # deterministic seeded sample (master --seed)
+        train_defect_files = sorted(_rng.sample(train_defect_files, _defect_cap))
+
+    # NoiseDefectFree_* negatives (TRAIN only; optionally capped: sorted then first N)
+    train_ndf_files = []
+    if _incl_ndf:
+        train_ndf_files = sorted(f for f in os.listdir(train_data_folder) if f.startswith("NoiseDefectFree") and f.endswith(".npy"))
+        if _ndf_count > 0:
+            train_ndf_files = train_ndf_files[:_ndf_count]
+
+    train_data_files = train_defect_files + train_ndf_files
     val_data_files = [f for f in os.listdir(val_data_folder) if f.startswith("Defect_L") and f.endswith(".npy")]
     test_data_files = [f for f in os.listdir(test_data_folder) if f.startswith("Defect_L") and f.endswith(".npy")]
-    
+
     # ラベルファイルを読み込む
     label_files = [
         f for f in os.listdir(label_data_folder)
-        if f.startswith("Defect_L") and f.endswith("_19label.npy")
+        if (f.startswith("Defect_L") or (_incl_ndf and f.startswith("NoiseDefectFree"))) and f.endswith("_19label.npy")
     ]
 
     if rank == 0:
@@ -3497,6 +3516,12 @@ if __name__ == '__main__':
     parser.add_argument('--no_best_report', dest='best_report', action='store_false', help='Disable best-update diagnostics printing.')
     parser.add_argument('--best_report_topk', type=int, default=5, help='How many worst classes (by F1, support>0) to summarize on best update (default: 5).')
     parser.add_argument('--best_report_confusion_topk', type=int, default=3, help='Top-K absorb targets to show per worst class (default: 3).')
+
+    # [NDF-PORT] NoiseDefectFree negatives + balanced training recipe (replaces INCLUDE_NDF env hack)
+    parser.add_argument('--include_ndf', action='store_true', default=False, help='Include NoiseDefectFree_* negatives in TRAIN only (replaces INCLUDE_NDF env var).')
+    parser.add_argument('--ndf_count', type=int, default=0, help='Cap number of NDF negatives (deterministic: sorted then first N). 0 = all (default).')
+    parser.add_argument('--defect_cap', type=int, default=0, help='Cap number of Defect_L* TRAIN samples (deterministic seeded sample) for BALANCED training. 0 = no cap (default).')
+    parser.add_argument('--seed', type=int, default=42, help='Master seed (torch/np/random/cuda) for reproducibility (default: 42).')
 
     args = parser.parse_args()
 
