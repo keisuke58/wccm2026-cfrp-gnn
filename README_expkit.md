@@ -190,6 +190,7 @@ runs/<name>/<run_id>/
   cmd.txt        # full launch command + env
   train.log      # captured stdout/stderr
   metrics.json   # parsed summary (schema below)
+  tb/            # TensorBoard event files (when tensorboard is enabled)
 ```
 
 `metrics.json` schema (produced by `expkit.metrics`):
@@ -221,6 +222,39 @@ CUDA_VISIBLE_DEVICES=0 LD_LIBRARY_PATH=/home/nishioka/miniconda3/lib \
 ```
 
 (The runner does all of this for you; the snippet just shows the moving parts.)
+
+### TensorBoard
+
+`train.py` logs per-epoch scalars and final hparams to TensorBoard when enabled
+(rank 0 only). Enable it via the config field `tensorboard: true` (the default)
+or, for a hand-launched run, the `--tensorboard` flag. If the `tensorboard`
+package is not installed in the env, `train.py` prints a warning and continues
+without it — training never crashes on a missing TensorBoard.
+
+Logged each epoch: `loss/train`, `loss/val`, `f1/macro_val`, `acc/val`, `lr`,
+and per-class `f1_class/<i>`; at the end, `add_hparams` records the key
+hyperparameters against `best_macro_f1`.
+
+The runner points each run's log dir at `{run_dir}/tb/`, so every run's events
+live inside its own run-dir (unless you set `tb_dir` explicitly in the config,
+which is honored as-is). View one run, or aggregate every run under an
+`output_root`, with:
+
+```bash
+# all runs at once (each run shows up as a separate TensorBoard run)
+tensorboard --logdir runs
+
+# a single run
+tensorboard --logdir runs/<name>/<run_id>/tb
+```
+
+Or build the command from Python:
+
+```python
+from expkit import runner
+cmd = runner.tensorboard_cmd("runs", port=6006)
+# -> ['tensorboard', '--logdir', 'runs', '--port', '6006']
+```
 
 ---
 

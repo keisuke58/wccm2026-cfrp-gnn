@@ -189,6 +189,40 @@ def test_include_ndf_store_true():
 
 
 # --------------------------------------------------------------------------- #
+# to_cli_args — TensorBoard
+# --------------------------------------------------------------------------- #
+def test_tensorboard_defaults(base_cfg):
+    # default config has TensorBoard on and no explicit tb_dir
+    assert base_cfg.tensorboard is True
+    assert base_cfg.tb_dir == ""
+    a = base_cfg.to_cli_args()
+    assert "--tensorboard" in a
+    assert "--tb_dir" not in a  # empty tb_dir is omitted
+
+
+def test_tensorboard_store_true():
+    assert "--tensorboard" in ExpConfig(tensorboard=True).to_cli_args()
+    assert "--tensorboard" not in ExpConfig(tensorboard=False).to_cli_args()
+
+
+def test_tb_dir_emitted_when_set():
+    a = ExpConfig(tb_dir="/runs/exp1/tb").to_cli_args()
+    p = _pairs(a)
+    assert p["--tb_dir"] == "/runs/exp1/tb"
+
+
+def test_tb_dir_omitted_when_empty():
+    assert "--tb_dir" not in ExpConfig(tb_dir="").to_cli_args()
+
+
+def test_tensorboard_off_but_tb_dir_set():
+    # tb_dir is independent of the --tensorboard toggle
+    a = ExpConfig(tensorboard=False, tb_dir="/runs/x/tb").to_cli_args()
+    assert "--tensorboard" not in a
+    assert _pairs(a)["--tb_dir"] == "/runs/x/tb"
+
+
+# --------------------------------------------------------------------------- #
 # launch helpers
 # --------------------------------------------------------------------------- #
 def test_env_contract(named_cfg):

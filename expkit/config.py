@@ -98,6 +98,10 @@ class ExpConfig:
     defect_cap: int = 5000                 # 0 = no cap; skipped when 0
     seed: int = 42
 
+    # ----- TensorBoard logging -----
+    tensorboard: bool = True               # store_true; emit --tensorboard when True
+    tb_dir: str = ""                       # empty => runner sets {run_dir}/tb
+
     # ------------------------------------------------------------------ #
     # (de)serialization
     # ------------------------------------------------------------------ #
@@ -240,6 +244,12 @@ class ExpConfig:
         if self.defect_cap:  # skip 0 (= no cap)
             val("--defect_cap", self.defect_cap)
         val("--seed", self.seed)
+
+        # TensorBoard (store_true; tb_dir only when explicitly set)
+        if self.tensorboard:
+            a.append("--tensorboard")
+        if self.tb_dir:
+            val("--tb_dir", self.tb_dir)
 
         return a
 
