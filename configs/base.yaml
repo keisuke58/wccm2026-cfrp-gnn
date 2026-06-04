@@ -1,0 +1,76 @@
+# configs/base.yaml — baseline ExpConfig for the WCCM CFRP-GNN framework.
+#
+# Any field omitted here falls back to the ExpConfig dataclass default
+# (see expkit/config.py). This file documents the BALANCED recipe baseline:
+# the NDF negatives + Defect cap that make training a 5000:5000 problem.
+#
+# Load:  ExpConfig.from_yaml("configs/base.yaml")
+
+name: base
+gpu: 0
+master_port: 29500
+
+# ----- core hyperparameters -----
+hidden_channels: 16
+learning_rate: 0.002
+batch_size: 64
+epochs: 100
+weight_decay: 0.0005
+patience: 60
+gamma: 3.0
+class_weight_multiplier: 5.0
+
+# ----- loss / logit adjustment -----
+use_logit_adjust: true
+logit_adjust_tau: 1.5
+use_log_softmax: false
+label_smoothing: 0.0
+
+# ----- training infra -----
+use_amp: false
+use_onecycle: true
+onecycle_final_div_factor: 10000.0
+
+# ----- samplers -----
+use_minority_sampler: false
+minority_weight_power: 1.0
+use_class_frequency_sampler: true
+
+# ----- regularization / augmentation -----
+dropout: 0.1
+edge_drop_prob: 0.01
+data_usage_ratio: 1.0
+train_noise_std: 0.0
+train_noise_curriculum: false
+mirror_augment: false
+
+# ----- layer constraint -----
+use_layer_constraint: true
+layer_constraint_weight: 1.0
+
+# ----- architecture -----
+conv_type: gat
+mgn_blocks: 10
+edge_geo_features: false
+extra_geo_features: false
+
+# ----- data sources -----
+data_base: /home/nishioka/GNN/GNN_hole_2026/all_sub_hole_defect_zscore_noise
+
+# ----- leakage / grouping -----
+group_key: LBel
+group_purge_eval: true
+group_purge_target: valtest
+
+# ----- checkpoint / reporting -----
+save_on_best: true
+save_every: 100
+best_report: true
+best_report_topk: 5
+best_report_confusion_topk: 3
+
+# ----- NDF / balanced recipe -----
+include_ndf: true
+ndf_count: 5000
+defect_cap: 5000
+seed: 42

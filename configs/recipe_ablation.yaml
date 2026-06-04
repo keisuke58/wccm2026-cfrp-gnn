@@ -1,0 +1,30 @@
+# configs/recipe_ablation.yaml — DATA-RECIPE ablation (the headline experiment).
+#
+# Holds the architecture fixed (gat) and toggles the recipe knobs that turn an
+# imbalanced Defect-only problem into a BALANCED 5000:5000 one:
+#   * include_ndf : add NoiseDefectFree class-0 negatives to TRAIN
+#   * defect_cap  : cap the Defect_L* train samples
+#
+# The cartesian product over these axes yields the recipe matrix; the balanced
+# corner (include_ndf=true, defect_cap=5000) is the recipe shown to dominate
+# architecture choice. ndf_count is pinned so the balanced corner is exactly
+# 5000:5000.
+#
+#   python -m expkit.sweep --config configs/recipe_ablation.yaml --dry-run
+
+name: recipe_ablation
+master_port: 29700
+
+base:
+  gpu: 0
+  conv_type: gat
+  ndf_count: 5000     # used only when include_ndf=true
+  epochs: 500
+  patience: 120
+  use_onecycle: true
+  batch_size: 64
+  seed: 42
+
+grid:
+  include_ndf: [true, false]
+  defect_cap: [0, 5000]   # 0 = no cap (full imbalanced set); 5000 = balanced cap
