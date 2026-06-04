@@ -2545,6 +2545,19 @@ def main(args):
     if rank == 0:
         os.makedirs(checkpoint_dir, exist_ok=True)
 
+    # TensorBoard logging (rank 0 only; import gracefully, never crash training)
+    writer = None
+    if rank == 0 and getattr(args, 'tensorboard', False):
+        try:
+            from torch.utils.tensorboard import SummaryWriter
+            tb_log_dir = getattr(args, 'tb_dir', '') or f"runs/tb_{timestamp}"
+            os.makedirs(tb_log_dir, exist_ok=True)
+            writer = SummaryWriter(log_dir=tb_log_dir)
+            print(f"[TensorBoard] Logging enabled -> {tb_log_dir}")
+        except Exception as e:
+            writer = None
+            print(f"[WARNING] TensorBoard unavailable, logging disabled: {e}")
+
     for epoch in range(1, args.epochs + 1):
         # Don't check for early stopping at the start - check at the end after synchronization
         # This prevents race conditions with pending NCCL operations
@@ -2818,6 +2831,22 @@ def main(args):
             val_accuracy_per_epoch.append(val_accuracy.item())
             train_loss_per_epoch.append(avg_train_loss.item())
             val_loss_per_epoch.append(avg_val_loss.item())
+
+            # TensorBoard scalars (rank 0 only)
+            if writer is not None:
+                writer.add_scalar('loss/train', avg_train_loss.item(), epoch)
+                writer.add_scalar('loss/val', avg_val_loss.item(), epoch)
+                writer.add_scalar('f1/macro_val', macro_f1, epoch)
+                writer.add_scalar('acc/val', val_accuracy.item(), epoch)
+                writer.add_scalar('lr', optimizer.param_groups[0]['lr'], epoch)
+                # per-class F1 when readily available from this epoch's predictions
+                if all_preds_np is not None and all_labels_np is not None and len(all_preds_np) > 0:
+                    try:
+                        _f1pc = macro_f1_variants(all_labels_np, all_preds_np, num_classes=19)["f1_per_class"]
+                        for _ci, _f1v in enumerate(_f1pc):
+                            writer.add_scalar(f'f1_class/{_ci}', float(_f1v), epoch)
+                    except Exception as e:
+                        print(f"[WARNING] TensorBoard per-class F1 logging failed: {e}")
 
         # Update learning rate scheduler (for CosineAnnealingLR)
         if not use_onecycle:
@@ -3115,7 +3144,27 @@ def main(args):
         print(f"\nExecution Command (for reference):")
         print(f"  {command_str}")
         print(f"{'='*60}\n")
-        
+
+        # TensorBoard hparams + close (rank 0 only)
+        if writer is not None:
+            try:
+                hparams = {
+                    'conv_type': getattr(args, 'conv_type', ''),
+                    'hidden_channels': getattr(args, 'hidden_channels', 0),
+                    'learning_rate': getattr(args, 'learning_rate', 0.0),
+                    'batch_size': getattr(args, 'batch_size', 0),
+                    'epochs': getattr(args, 'epochs', 0),
+                    'include_ndf': getattr(args, 'include_ndf', False),
+                    'ndf_count': getattr(args, 'ndf_count', 0),
+                    'defect_cap': getattr(args, 'defect_cap', 0),
+                    'seed': getattr(args, 'seed', 0),
+                }
+                writer.add_hparams(hparams, {'best_macro_f1': best_macro_f1})
+            except Exception as e:
+                print(f"[WARNING] TensorBoard add_hparams failed: {e}")
+            finally:
+                writer.close()
+
         # Ensure best model is loaded (if not already loaded during early stopping)
         if best_model_state is not None:
             try:
@@ -3522,6 +3571,10 @@ if __name__ == '__main__':
     parser.add_argument('--ndf_count', type=int, default=0, help='Cap number of NDF negatives (deterministic: sorted then first N). 0 = all (default).')
     parser.add_argument('--defect_cap', type=int, default=0, help='Cap number of Defect_L* TRAIN samples (deterministic seeded sample) for BALANCED training. 0 = no cap (default).')
     parser.add_argument('--seed', type=int, default=42, help='Master seed (torch/np/random/cuda) for reproducibility (default: 42).')
+
+    # ----- TensorBoard logging (rank 0 only) -----
+    parser.add_argument('--tensorboard', action='store_true', default=False, help='Enable TensorBoard scalar/hparam logging on rank 0 (default: False).')
+    parser.add_argument('--tb_dir', type=str, default='', help='TensorBoard log_dir. Empty = sensible default (runs/tb_<timestamp>).')
 
     args = parser.parse_args()
 

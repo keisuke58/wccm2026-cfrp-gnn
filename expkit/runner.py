@@ -90,6 +90,15 @@ def _write_cmd_txt(path: str, cmd: List[str], env_overrides: Dict[str, str]) -> 
         fh.write("\n".join(parts))
 
 
+def tensorboard_cmd(logdir: str, port: int = 6006) -> List[str]:
+    """Build the `tensorboard` launch command for a given log dir.
+
+    Point ``logdir`` at a single run's ``tb/`` or at ``output_root`` to
+    aggregate all runs in one TensorBoard instance.
+    """
+    return ["tensorboard", "--logdir", logdir, "--port", str(port)]
+
+
 # ------------------------------------------------------------------ #
 # main entry point
 # ------------------------------------------------------------------ #
@@ -124,6 +133,10 @@ def run(
     # --- create run dir ---
     run_dir = os.path.join(output_root, cfg.name, run_id)
     os.makedirs(run_dir, exist_ok=True)
+
+    # --- per-run TensorBoard log dir (don't overwrite an explicit tb_dir) ---
+    if not cfg.tb_dir:
+        cfg.tb_dir = os.path.join(run_dir, "tb")
 
     # --- build cmd + env ---
     cmd = cfg.torchrun_cmd(train_py)
