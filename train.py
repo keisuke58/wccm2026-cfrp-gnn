@@ -593,6 +593,245 @@ class MeshGraphNetModel(torch.nn.Module):
         return _apply_layer_mask(logits, data)
 
 
+# =============================================================================
+# MeshGraphNet 変種 (WCCM 6/23 用・新規性ねらい)。MESHGRAPHNET_VARIANTS.md 準拠。
+#   meshgraphkan : node encoder を Fourier-KAN に置換 = スペクトルバイアス対策。
+#                  応力集中の高周波成分を学習可能 Fourier 係数で表現（cf. tancik2020fourier）。
+#   hybridmgn    : mesh edge + 表裏 cross-layer "world edge"。z 座標で2層分離し、
+#                  対層の最近傍 xy ノードを別エッジ型として message passing（表裏を構造的に分離）。
+#   bistridemgn  : 各ブロックでグラフ単位 global context を broadcast = マルチスケール(簡易)。
+#   mgntransformer: MGN ブロック列に global self-attention を挿入 = 長距離相互作用(under-reaching対策)。
+# いずれも Encode-Process-Decode と座標差分エッジ特徴 [dx,dy,dz,dist] は標準 MGN を踏襲。
+# =============================================================================
+class _FourierKANLayer(nn.Module):
+    """naive Fourier-KAN: 各入力次元を学習可能 Fourier 級数で展開して線形結合。"""
+    def __init__(self, in_dim, out_dim, gridsize=8):
+        super().__init__()
+        self.in_dim, self.out_dim, self.G = in_dim, out_dim, gridsize
+        scale = 1.0 / (in_dim * gridsize) ** 0.5
+        self.cos_w = nn.Parameter(torch.randn(out_dim, in_dim, gridsize) * scale)
+        self.sin_w = nn.Parameter(torch.randn(out_dim, in_dim, gridsize) * scale)
+        self.bias = nn.Parameter(torch.zeros(out_dim))
+
+    def forward(self, x):
+        k = torch.arange(1, self.G + 1, device=x.device, dtype=x.dtype)  # (G,)
+        xk = x.unsqueeze(-1) * k                                          # (N,in,G)
+        yc = torch.einsum('nig,oig->no', torch.cos(xk), self.cos_w)
+        ys = torch.einsum('nig,oig->no', torch.sin(xk), self.sin_w)
+        return yc + ys + self.bias
+
+
+class MeshGraphKANModel(torch.nn.Module):
+    """標準 MGN の node encoder を Fourier-KAN に差し替えた版。"""
+    def __init__(self, hidden_channels=8, num_classes=19, dropout=0.1, edge_drop_prob=0.01,
+                 in_channels=4, num_blocks=10, kan_grid=8, **_ignored):
+        super().__init__()
+        hidden = hidden_channels * 4
+        self.edge_drop_prob = edge_drop_prob
+        self.node_encoder = nn.Sequential(
+            _FourierKANLayer(in_channels, hidden, gridsize=kan_grid),
+            nn.LayerNorm(hidden))
+        self.edge_encoder = _mlp(4, hidden, hidden)
+        self.blocks = nn.ModuleList([_GraphNetBlock(hidden) for _ in range(num_blocks)])
+        self.dropout = nn.Dropout(p=dropout)
+        self.decoder = nn.Sequential(nn.Linear(hidden, hidden), nn.ReLU(),
+                                     nn.Linear(hidden, num_classes))
+        self.apply(initialize_weights)
+
+    def _edge_geo(self, pos, edge_index):
+        src, dst = edge_index[0], edge_index[1]
+        rel = pos[dst] - pos[src]
+        dist = rel.norm(dim=1, keepdim=True)
+        return torch.cat([rel, dist], dim=1)
+
+    def forward(self, data):
+        x, edge_index = data.x, data.edge_index
+        if self.training:
+            edge_index = edge_dropout(edge_index, drop_prob=self.edge_drop_prob)
+        edge_attr = self._edge_geo(x[:, :3], edge_index)
+        h = self.node_encoder(x)
+        e = self.edge_encoder(edge_attr)
+        for block in self.blocks:
+            h, e = block(h, edge_index, e)
+            h = self.dropout(h)
+        return _apply_layer_mask(self.decoder(h), data)
+
+
+class _HybridBlock(nn.Module):
+    """mesh edge と world edge を別々に更新し、node を両集約で残差更新。"""
+    def __init__(self, hidden):
+        super().__init__()
+        self.mesh_edge_mlp = _mlp(hidden * 3, hidden, hidden)
+        self.world_edge_mlp = _mlp(hidden * 3, hidden, hidden)
+        self.node_mlp = _mlp(hidden * 3, hidden, hidden)  # [x, agg_mesh, agg_world]
+
+    def forward(self, x, mesh_ei, e_m, world_ei, e_w):
+        from torch_geometric.utils import scatter
+        ms, md = mesh_ei[0], mesh_ei[1]
+        e_m = e_m + self.mesh_edge_mlp(torch.cat([e_m, x[ms], x[md]], dim=1))
+        agg_m = scatter(e_m, md, dim=0, dim_size=x.size(0), reduce='sum')
+        ws, wd = world_ei[0], world_ei[1]
+        e_w = e_w + self.world_edge_mlp(torch.cat([e_w, x[ws], x[wd]], dim=1))
+        agg_w = scatter(e_w, wd, dim=0, dim_size=x.size(0), reduce='sum')
+        x = x + self.node_mlp(torch.cat([x, agg_m, agg_w], dim=1))
+        return x, e_m, e_w
+
+
+class HybridMeshGraphNetModel(torch.nn.Module):
+    """mesh edge + 表裏 cross-layer world edge の2エッジ型 MGN。"""
+    def __init__(self, hidden_channels=8, num_classes=19, dropout=0.1, edge_drop_prob=0.01,
+                 in_channels=4, num_blocks=10, **_ignored):
+        super().__init__()
+        hidden = hidden_channels * 4
+        self.edge_drop_prob = edge_drop_prob
+        self.node_encoder = _mlp(in_channels, hidden, hidden)
+        self.mesh_edge_encoder = _mlp(4, hidden, hidden)
+        self.world_edge_encoder = _mlp(4, hidden, hidden)
+        self.blocks = nn.ModuleList([_HybridBlock(hidden) for _ in range(num_blocks)])
+        self.dropout = nn.Dropout(p=dropout)
+        self.decoder = nn.Sequential(nn.Linear(hidden, hidden), nn.ReLU(),
+                                     nn.Linear(hidden, num_classes))
+        self._world_cache = None  # (2,E) for ONE graph (固定ジオメトリなので使い回し)
+        self.apply(initialize_weights)
+
+    @staticmethod
+    def _edge_geo(pos, ei):
+        rel = pos[ei[1]] - pos[ei[0]]
+        return torch.cat([rel, rel.norm(dim=1, keepdim=True)], dim=1)
+
+    def _world_one_graph(self, pos):
+        """1グラフ分の表裏 world edge を構築（z 中央値で2層分離→対層 xy 最近傍を双方向接続）。"""
+        z = pos[:, 2]
+        thr = z.median()
+        A = torch.nonzero(z <= thr, as_tuple=False).flatten()
+        B = torch.nonzero(z > thr, as_tuple=False).flatten()
+        if A.numel() == 0 or B.numel() == 0:  # 退避: 層分離できない場合は空
+            return torch.empty(2, 0, dtype=torch.long, device=pos.device)
+        d = torch.cdist(pos[A, :2], pos[B, :2])      # (|A|,|B|)
+        a2b = B[d.argmin(dim=1)]                      # A_i -> nearest B
+        b2a = A[d.argmin(dim=0)]                      # B_j -> nearest A
+        src = torch.cat([A, B, a2b, b2a])
+        dst = torch.cat([a2b, b2a, A, B])             # 双方向
+        return torch.stack([src, dst], dim=0)
+
+    def _world_edges(self, pos, batch):
+        M = pos.size(0) if batch is None else int((batch == 0).sum().item())
+        if self._world_cache is None or self._world_cache.size(1) == 0:
+            self._world_cache = self._world_one_graph(pos[:M]).to(pos.device)
+        w = self._world_cache
+        if batch is None:
+            return w
+        n_graphs = int(batch.max().item()) + 1
+        offs = (torch.arange(n_graphs, device=pos.device) * M).view(1, -1, 1)
+        return (w.unsqueeze(1) + offs).reshape(2, -1)
+
+    def forward(self, data):
+        x, mesh_ei = data.x, data.edge_index
+        batch = getattr(data, 'batch', None)
+        world_ei = self._world_edges(x[:, :3], batch)
+        if self.training:
+            mesh_ei = edge_dropout(mesh_ei, drop_prob=self.edge_drop_prob)
+        e_m = self.mesh_edge_encoder(self._edge_geo(x[:, :3], mesh_ei))
+        e_w = self.world_edge_encoder(self._edge_geo(x[:, :3], world_ei))
+        h = self.node_encoder(x)
+        for block in self.blocks:
+            h, e_m, e_w = block(h, mesh_ei, e_m, world_ei, e_w)
+            h = self.dropout(h)
+        return _apply_layer_mask(self.decoder(h), data)
+
+
+class BiStrideMeshGraphNetModel(torch.nn.Module):
+    """MGN + グラフ単位 global context broadcast（マルチスケール簡易版）。"""
+    def __init__(self, hidden_channels=8, num_classes=19, dropout=0.1, edge_drop_prob=0.01,
+                 in_channels=4, num_blocks=10, **_ignored):
+        super().__init__()
+        hidden = hidden_channels * 4
+        self.edge_drop_prob = edge_drop_prob
+        self.node_encoder = _mlp(in_channels, hidden, hidden)
+        self.edge_encoder = _mlp(4, hidden, hidden)
+        self.blocks = nn.ModuleList([_GraphNetBlock(hidden) for _ in range(num_blocks)])
+        self.global_mlp = nn.ModuleList([_mlp(hidden * 2, hidden, hidden) for _ in range(num_blocks)])
+        self.dropout = nn.Dropout(p=dropout)
+        self.decoder = nn.Sequential(nn.Linear(hidden, hidden), nn.ReLU(),
+                                     nn.Linear(hidden, num_classes))
+        self.apply(initialize_weights)
+
+    def _edge_geo(self, pos, edge_index):
+        rel = pos[edge_index[1]] - pos[edge_index[0]]
+        return torch.cat([rel, rel.norm(dim=1, keepdim=True)], dim=1)
+
+    def forward(self, data):
+        from torch_geometric.utils import scatter
+        x, edge_index = data.x, data.edge_index
+        batch = getattr(data, 'batch', None)
+        if batch is None:
+            batch = torch.zeros(x.size(0), dtype=torch.long, device=x.device)
+        if self.training:
+            edge_index = edge_dropout(edge_index, drop_prob=self.edge_drop_prob)
+        e = self.edge_encoder(self._edge_geo(x[:, :3], edge_index))
+        h = self.node_encoder(x)
+        n_graphs = int(batch.max().item()) + 1
+        for block, gmlp in zip(self.blocks, self.global_mlp):
+            h, e = block(h, edge_index, e)
+            g = scatter(h, batch, dim=0, dim_size=n_graphs, reduce='mean')  # (G,hidden)
+            h = h + gmlp(torch.cat([h, g[batch]], dim=1))                    # broadcast global ctx
+            h = self.dropout(h)
+        return _apply_layer_mask(self.decoder(h), data)
+
+
+class MGNTransformerModel(torch.nn.Module):
+    """MGN ブロック列に global self-attention を挿入（per-graph、長距離相互作用）。"""
+    def __init__(self, hidden_channels=8, num_classes=19, dropout=0.1, edge_drop_prob=0.01,
+                 in_channels=4, num_blocks=10, n_heads=4, attn_every=3, **_ignored):
+        super().__init__()
+        hidden = hidden_channels * 4
+        self.edge_drop_prob = edge_drop_prob
+        self.n_heads, self.attn_every = n_heads, attn_every
+        self.node_encoder = _mlp(in_channels, hidden, hidden)
+        self.edge_encoder = _mlp(4, hidden, hidden)
+        self.blocks = nn.ModuleList([_GraphNetBlock(hidden) for _ in range(num_blocks)])
+        self.qkv = nn.ModuleList([nn.Linear(hidden, hidden * 3) for _ in range(num_blocks)])
+        self.attn_norm = nn.ModuleList([nn.LayerNorm(hidden) for _ in range(num_blocks)])
+        self.hidden = hidden
+        self.dropout = nn.Dropout(p=dropout)
+        self.decoder = nn.Sequential(nn.Linear(hidden, hidden), nn.ReLU(),
+                                     nn.Linear(hidden, num_classes))
+        self.apply(initialize_weights)
+
+    def _edge_geo(self, pos, edge_index):
+        rel = pos[edge_index[1]] - pos[edge_index[0]]
+        return torch.cat([rel, rel.norm(dim=1, keepdim=True)], dim=1)
+
+    def _global_attn(self, h, batch, layer):
+        # per-graph self-attention（固定ノード数 M を仮定して (G,M,hidden) に reshape）
+        M = int((batch == 0).sum().item())
+        G = int(batch.max().item()) + 1
+        if G * M != h.size(0):     # 可変ノード数なら attention をスキップ（安全）
+            return h
+        qkv = self.qkv[layer](h).view(G, M, 3, self.n_heads, self.hidden // self.n_heads)
+        q, k, v = qkv.unbind(dim=2)                       # each (G,M,heads,dh)
+        q, k, v = (t.transpose(1, 2) for t in (q, k, v))  # (G,heads,M,dh)
+        o = torch.nn.functional.scaled_dot_product_attention(q, k, v)
+        o = o.transpose(1, 2).reshape(G * M, self.hidden)
+        return self.attn_norm[layer](h + o)
+
+    def forward(self, data):
+        x, edge_index = data.x, data.edge_index
+        batch = getattr(data, 'batch', None)
+        if batch is None:
+            batch = torch.zeros(x.size(0), dtype=torch.long, device=x.device)
+        if self.training:
+            edge_index = edge_dropout(edge_index, drop_prob=self.edge_drop_prob)
+        e = self.edge_encoder(self._edge_geo(x[:, :3], edge_index))
+        h = self.node_encoder(x)
+        for i, block in enumerate(self.blocks):
+            h, e = block(h, edge_index, e)
+            if (i + 1) % self.attn_every == 0:
+                h = self._global_attn(h, batch, i)
+            h = self.dropout(h)
+        return _apply_layer_mask(self.decoder(h), data)
+
+
 class GATModel(torch.nn.Module):
     def __init__(self, hidden_channels=8, num_classes=19, dropout=0.1, edge_drop_prob=0.01,
                  in_channels=4, conv_type='gat', deg=None, edge_geo_features=False):
@@ -2271,9 +2510,16 @@ def main(args):
     in_channels = 4 + (2 if extra_geo_features else 0)
     conv_type = getattr(args, 'conv_type', 'gat')
     edge_geo_features = getattr(args, 'edge_geo_features', False)
-    if str(conv_type).lower() == 'meshgraphnet':
+    _MGN_VARIANTS = {
+        'meshgraphnet': MeshGraphNetModel,
+        'meshgraphkan': MeshGraphKANModel,
+        'hybridmgn': HybridMeshGraphNetModel,
+        'bistridemgn': BiStrideMeshGraphNetModel,
+        'mgntransformer': MGNTransformerModel,
+    }
+    if str(conv_type).lower() in _MGN_VARIANTS:
         # MeshGraphNet 系（Encode-Process-Decode）。num_blocks=処理段数。
-        model = MeshGraphNetModel(
+        model = _MGN_VARIANTS[str(conv_type).lower()](
             hidden_channels=args.hidden_channels,
             num_classes=19,
             dropout=dropout,
@@ -3507,7 +3753,7 @@ if __name__ == '__main__':
     # #4 Conv zoo / 入力次元
     parser.add_argument('--conv_type', type=str, default='gat',
                         choices=['gat', 'gatv2', 'transformer', 'sage', 'gin', 'gine', 'resgated', 'pna',
-                                 'meshgraphnet'],
+                                 'meshgraphnet', 'meshgraphkan', 'hybridmgn', 'bistridemgn', 'mgntransformer'],
                         help='Graph conv type. gat=baseline. gatv2=dynamic attention. '
                              'transformer=graph transformer (edge_attr capable). sage=GraphSAGE(max). '
                              'gin/gine=GIN(+edge). resgated=ResGatedGraphConv. pna=PNA(multi-aggregator). '
