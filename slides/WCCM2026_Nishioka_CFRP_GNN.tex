@@ -6,7 +6,7 @@
 %  outlook teaser — co-author-safe, per supervisor's instruction.
 %  Build: latexmk -pdf wccm_beamer_paper.tex  (needs biber)
 % =====================================================================
-\documentclass[aspectratio=169,11pt]{beamer}
+\documentclass[aspectratio=169,12pt]{beamer}
 
 % =====================================================================
 %  Clean, thesis-matching look: NO metropolis. Serif (Times via newtx),
@@ -113,6 +113,19 @@ Structures with Holes using Finite Element Analysis and Graph Neural Networks}
 \end{frame}
 
 % ---------------------------------------------------------------------
+\begin{frame}{Contributions}
+\note{State the three contributions up front, then dive in.}
+\begin{enumerate}
+  \item A \textbf{graph attention network} localizing 3-D delamination in
+        \emph{perforated} CFRP interstages directly from FEM surface stress (DSPSS).
+  \item \textbf{61\% macro-F1} over 19 classes (region $\times$ layer) from
+        \emph{surface data only}, with defect false-negative rate $<3\%$.
+  \item \textbf{Noise-robust} training (structured noise $+$ defect-free negatives)
+        --- a step toward experimental infrared-stress data.
+\end{enumerate}
+\end{frame}
+
+% ---------------------------------------------------------------------
 \begin{frame}{Introduction: CFRP in space transportation}
 \note{CFRP is the primary structural material in reusable launch vehicles, for its strength-to-weight ratio. Around bolt holes, interlaminar delamination accumulates and is invisible from the outside. Conventional NDT --- ultrasonic, X-ray CT, tap testing --- is slow, expensive, and operator-dependent. So we need an automated, reliable way to localize these sub-surface defects.}
 \begin{columns}[T]
@@ -163,7 +176,7 @@ sub-surface defects are inferred.
 \end{frame}
 
 % ---------------------------------------------------------------------
-\begin{frame}{Prior work \& problem formulation}
+\begin{frame}{Previous study and purpose}
 \note{Kojima et al. gave a CNN proof-of-concept on non-perforated CFRP. Our setting is harder: perforated interstage, full 3-D location (region times layer), and extreme imbalance. Formally we learn a node classifier on the mesh graph, minimizing focal loss; class zero is defect-free, classes one to eighteen encode region times layer.}
 \textbf{Prior work.} Kojima \textit{et al.}~\cite{kojima,kojima2024_transfer} --- a CNN
 \emph{proof-of-concept} on \emph{non-perforated} CFRP from FEM DSPSS.\\[2pt]
@@ -283,8 +296,8 @@ GAT message passing~\cite{gat1,gnn1,gilmer2017mpnn}:
 \end{column}
 \begin{column}{0.5\textwidth}
   \centering
-  \includegraphics[width=\linewidth]{gnn_model.png}\\
-  {\scriptsize Graph model on the perforated mesh.}
+  \includegraphics[width=0.92\linewidth]{gat_attention.png}\\
+  {\scriptsize Attention-weighted aggregation; arrow thickness $\propto \alpha_{ij}$.}
 \end{column}
 \end{columns}
 \end{frame}
@@ -300,7 +313,10 @@ GAT message passing~\cite{gat1,gnn1,gilmer2017mpnn}:
         \emph{in-plane region} $\times$ \emph{insertion layer}.
   \item One-side labelling so prediction needs only single-surface DSPSS.
 \end{itemize}
-\vspace{0.4em}
+\[
+  p_{i,c}=\frac{e^{z_{i,c}}}{\sum_{k=0}^{18} e^{z_{i,k}}},\qquad
+  \hat y_i=\arg\max_{c} \,p_{i,c}.
+\]
 \begin{block}{Severe imbalance}
 Defect nodes are $<3\%$ of all nodes — handled by the loss (next slide).
 \end{block}
@@ -353,18 +369,10 @@ $\mathrm{TDPS}=\tfrac12(R{+}P_{\mathrm{gauss}})$.}
 \end{column}
 \begin{column}{0.5\textwidth}
   \centering
-  \includegraphics[width=\linewidth]{tdps_layer.png}\\
-  {\scriptsize TDPS by insertion layer \& ply angle --- mid-thickness (9--12) best.}
+  \includegraphics[width=\linewidth]{pred_l10.png}\\
+  {\scriptsize Input $\rightarrow$ ground truth $\rightarrow$ prediction (Layer-10 cases).}
 \end{column}
 \end{columns}
-\end{frame}
-
-% ---------------------------------------------------------------------
-\begin{frame}{Qualitative predictions}
-\note{Representative Layer-10 test cases: for each, the normalized DSPSS input, the ground-truth labels, and the model prediction. The model recovers both the in-plane region and the layer for clear cases; harder cases show adjacent-layer slip.}
-\centering
-\includegraphics[width=0.88\linewidth]{pred_l10.png}\\[3pt]
-{\scriptsize Input (i) $\rightarrow$ ground truth (ii) $\rightarrow$ prediction (iii) for representative Layer-10 cases.}
 \end{frame}
 
 % ---------------------------------------------------------------------
@@ -375,6 +383,10 @@ $\mathrm{TDPS}=\tfrac12(R{+}P_{\mathrm{gauss}})$.}
   \begin{block}{Headline}
   \best{Macro-F1 $= 61\%$} across 19 classes, using \emph{surface DSPSS only}.
   \end{block}
+  \[
+    \mathrm{F1}_c=\frac{2P_cR_c}{P_c+R_c},\quad
+    \text{macro-F1}=\frac{1}{19}\sum_{c=0}^{18}\mathrm{F1}_c.
+  \]
   \begin{itemize}
     \item Dominant diagonal; residual \emph{adjacent-layer} confusion.
     \item False positives cluster near the hole edge.

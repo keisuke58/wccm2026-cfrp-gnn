@@ -165,3 +165,30 @@ ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
 ax.set_title(r"Focal loss down-weights easy (high $p_t$) nodes")
 fig.savefig(f"{OUT}/focal_curve.png", bbox_inches="tight"); plt.close(fig)
 print("done ->", OUT)
+
+# Fig 8: original GAT attention schematic (drawn here -> no copyright issue)
+from matplotlib.patches import FancyArrowPatch, Circle
+fig, ax = plt.subplots(figsize=(5.6, 4.4))
+import math
+ci = (0.0, 0.0)
+neigh = [(math.cos(a)*1.35, math.sin(a)*1.35) for a in
+         [math.radians(d) for d in (150, 95, 35, -40, -120)]]
+alphas = [0.30, 0.55, 0.85, 0.45, 0.20]          # illustrative attention weights
+amax = max(alphas)
+for (x, y), al in zip(neigh, alphas):
+    ar = FancyArrowPatch((x, y), ci, arrowstyle='-|>', mutation_scale=14,
+                         lw=0.8 + 3.2*al/amax, color=plt.cm.Reds(0.35 + 0.6*al/amax),
+                         shrinkA=12, shrinkB=14, zorder=1)
+    ax.add_patch(ar)
+for (x, y) in neigh:
+    ax.add_patch(Circle((x, y), 0.16, fc="#d7e3f4", ec="#142b54", lw=1.0, zorder=2))
+    ax.text(x, y, r"$j$", ha="center", va="center", fontsize=12, zorder=3)
+ax.add_patch(Circle(ci, 0.20, fc="#142b54", ec="white", lw=1.2, zorder=4))
+ax.text(*ci, r"$i$", ha="center", va="center", color="white", fontsize=13, zorder=5)
+# annotate the attention weight on the strongest edge (no in-figure equation:
+# the full formula already appears on the slide, and it overlapped a node here)
+ax.text(0.74, 0.78, r"$\alpha_{ij}$", color="#a01c1c", fontsize=13)
+ax.set_xlim(-1.9, 1.9); ax.set_ylim(-1.7, 1.9); ax.set_aspect("equal"); ax.axis("off")
+ax.set_title(r"GAT: attention-weighted aggregation over neighbours")
+fig.savefig(f"{OUT}/gat_attention.png", bbox_inches="tight"); plt.close(fig)
+print("gat_attention done")
