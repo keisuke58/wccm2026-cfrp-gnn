@@ -35,13 +35,37 @@ not just an FEA artefact.
 
 ## B. Session-specific (differentiation)
 
-**Q (Cueto-style): Your GNN has no physics/thermodynamic structure — why not a structure-preserving
-or GENERIC-based GNN?**
-A: Our target is *inference* of a hidden defect from a measured field, not forward PDE solving or
-conserving an energy. The physics enters through the FEA-generated data and the thermoelastic feature
-(DSPSS). Structure-preserving GNNs (Hernández/Cueto) are exactly what we cite as future work to make the
-model physically consistent — but for a localization/classification task on real NDT data, a data-driven
-GAT is the pragmatic first step.
+**Q (Cueto-style, the one to nail): "Your GNN has no physics / thermodynamic structure — why not a
+structure-preserving or GENERIC-based GNN?"**
+
+*What the question means.* The Cueto/Hernández line builds GNNs whose architecture **hard-codes physical
+laws** — energy conservation and non-negative entropy production (the GENERIC formalism), or symmetries
+(equivariance). The network *cannot* violate the law by construction, which helps generalization and
+trust in **forward simulation** of a dynamical system. "No physics-conservation structure" means our GAT
+is a generic function approximator: nothing in its layers forces it to obey a conservation law.
+
+*Why that is fine for us (layered answer — give 1, add 2–3 if pressed).*
+1. **Different problem class.** They *solve/advance* a physical state and must conserve energy/momentum
+   along a trajectory. We do **static inverse inference**: given one measured stress field, classify
+   which node is defective. There is no time evolution and no conserved quantity to preserve along — so a
+   GENERIC bracket has nothing to act on here.
+2. **Physics is already in the pipeline.** The input is not raw pixels: it is the **thermoelastic sum of
+   principal stresses** (ΔT = −kTΔσ_sum), and the fields come from **FEA that already enforces
+   equilibrium and the constitutive law**. The conservation physics lives in the data generation; the
+   network only has to read the residual signature.
+3. **The right inductive bias for *this* task is locality, not conservation.** The defect signature is a
+   local stress-valley whose shape encodes the ply layer. Attention over mesh neighbours captures that
+   directly. A conservation constraint would not improve *classification* of a discrete label.
+4. **It is our explicit future work — and a bridge to your method.** Making the model physically
+   consistent (structure-preserving / equivariant GNNs, Hernández & Cueto) is exactly the direction we
+   cite for the sim-to-real and forward-field stages. So we see their work as complementary, not a gap.
+
+*One-sentence version if time is short:* "We do static defect inference, not forward dynamics — there's
+no conserved trajectory to preserve; the physics enters through the FEA data and the thermoelastic
+feature, and structure-preserving GNNs are our planned next step."
+
+*Do NOT say:* "physics doesn't matter" or "we didn't think about it." Frame it as a deliberate scoping
+choice with a clear bridge to their methods.
 
 **Q (Sharma/Fink-style): Could a physics-informed / conservation-based loss help?**
 A: Possibly for the forward stress field, but our quantity of interest is a discrete defect label, not

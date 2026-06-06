@@ -369,76 +369,54 @@ composite structures.
 \begin{frame}{New focus: robustness for real operation}
 \note{Now the new part for this congress. The published model assumes clean FEM fields. Real infrared measurements carry noise --- temperature drift, emissivity, sensor noise. And in practice almost the entire structure is healthy, so false alarms are very costly. So here we focus on robustness under realistic noise and on suppressing false detection. On the right, the input with and without injected noise --- the defect signature still survives.}
 \begin{columns}[T]
-\begin{column}{0.55\textwidth}
-The published model assumes clean FEM fields. In practice:
-\begin{itemize}
-  \item infrared stress measurement carries \textbf{acquisition noise}
-        (temperature fluctuation, emissivity, sensor);
-  \item the vast majority of a real structure is \textbf{defect-free} — false
-        detections there are costly.
-\end{itemize}
-\vspace{0.4em}
+\begin{column}{0.52\textwidth}
+The published model assumes clean FEM fields. In practice infrared measurement
+carries \textbf{acquisition noise}, and almost the whole structure is
+\textbf{defect-free} — false alarms are costly.
+\end{column}
+\begin{column}{0.48\textwidth}
 \begin{alertblock}{WCCM contribution}
-Train for \emph{robustness under experimentally-motivated noise} and explicitly
-\emph{suppress false detection} on defect-free regions.
+Robustness under realistic noise \emph{and} explicit suppression of false
+detection on healthy regions.
 \end{alertblock}
 \end{column}
-\begin{column}{0.45\textwidth}
-  \centering
-  \includegraphics[width=\linewidth]{noise_clean.png}\\
-  {\scriptsize Clean vs.\ noise-injected Z-score input — the defect signature survives.}
-\end{column}
 \end{columns}
+\vspace{0.4em}
+\begin{center}\includegraphics[width=0.92\linewidth]{noise_clean.png}\end{center}
+\vspace{-0.4em}{\centering\scriptsize Clean vs.\ noise-injected Z-score input — the defect signature survives.\par}
 \end{frame}
 
 % ---------------------------------------------------------------------
 \begin{frame}{Noise-augmented dataset \& defect-free negatives (NDF)}
 \note{We do two things. First, defect-free negatives: we add five thousand samples that are a zero field plus Gaussian noise at ten percent of the data standard deviation, so the model explicitly learns what no-defect looks like. Second, we add structured noise to the defect data --- line noise along the fibre direction, attenuated noise across it, and global white noise --- to mimic measurement artefacts.}
 \begin{columns}[T]
-\begin{column}{0.52\textwidth}
-\textbf{Defect-free negatives (NDF):}
-\begin{itemize}
-  \item base field set to zero (no defect);
-  \item additive Gaussian noise ($10\%$ of data std);
-  \item $5{,}000$ samples added to training.
-\end{itemize}
-\textbf{Noise model on defect data:}
-\begin{itemize}
-  \item line noise along the fibre ($z$) direction (random intensity/width);
-  \item attenuated noise in $x$; global white noise.
-\end{itemize}
+\begin{column}{0.5\textwidth}
+\textbf{Defect-free negatives (NDF):} zero field $+$ Gaussian noise
+($10\%$ of data std), $5{,}000$ samples added to training.
 \end{column}
-\begin{column}{0.48\textwidth}
-  \centering
-  \includegraphics[width=\linewidth]{ndf_clean.png}\\
-  {\scriptsize A defect-free sample (zero field $+$ 10\% noise) — teaches ``no defect''.}
+\begin{column}{0.5\textwidth}
+\textbf{Structured noise on defect data:} line noise along the fibre ($z$),
+attenuated noise in $x$, and global white noise.
 \end{column}
 \end{columns}
+\vspace{0.4em}
+\begin{center}\includegraphics[width=0.92\linewidth]{ndf2_clean.png}\end{center}
+\vspace{-0.4em}{\centering\scriptsize Left: defect-free $+$ noise (teaches ``no defect''). \ Right: defect $+$ structured noise.\par}
 \end{frame}
 
 % ---------------------------------------------------------------------
 \begin{frame}{Results under noise}
 \note{The outcome: with the difference-DSPSS input, the model still estimates defects across the full region; prediction stays accurate on noise-injected data; and the defect-free negatives remove spurious activations, so we get essentially no false detection on healthy inputs. Here, the noisy input on the left still yields the correct target localization on the right. This makes the framework robust enough to move toward real experimental data.}
-\begin{columns}[T]
-\begin{column}{0.5\textwidth}
 \begin{itemize}
-  \item Difference-DSPSS input enables \textbf{full-region} defect estimation.
-  \item Prediction stays accurate on \textbf{noise-injected} data.
+  \item Difference-DSPSS input enables \textbf{full-region} defect estimation;
+        prediction stays accurate on \textbf{noise-injected} data.
   \item \textbf{No false detection} on defect-free inputs — the NDF negatives
-        remove spurious activations.
+        remove spurious activations. $\Rightarrow$ robust enough to move toward
+        \emph{experimental} infrared stress data.
 \end{itemize}
-\vspace{0.4em}
-\begin{block}{Takeaway}
-The framework is robust enough to move toward \emph{experimental} infrared
-stress data.
-\end{block}
-\end{column}
-\begin{column}{0.5\textwidth}
-  \centering
-  \includegraphics[width=\linewidth]{result_clean.png}\\
-  {\scriptsize Noisy input (left) $\rightarrow$ correct defect localization (right).}
-\end{column}
-\end{columns}
+\vspace{0.2em}
+\begin{center}\includegraphics[width=0.92\linewidth]{result_clean.png}\end{center}
+\vspace{-0.4em}{\centering\scriptsize Noisy input (left) $\rightarrow$ correct defect localization (right).\par}
 \end{frame}
 
 % ---------------------------------------------------------------------
@@ -458,7 +436,7 @@ stress data.
 
 % ---------------------------------------------------------------------
 \begin{frame}[allowframebreaks]{References}
-\renewcommand*{\bibfont}{\scriptsize}
+\renewcommand*{\bibfont}{\tiny}
 \printbibliography[heading=none]
 \end{frame}
 
