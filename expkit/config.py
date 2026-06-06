@@ -41,7 +41,11 @@ class ExpConfig:
     class_weight_multiplier: float = 5.0
 
     # ----- loss / logit adjustment -----
-    use_logit_adjust: bool = True          # --no_logit_adjust when False
+    # IMPORTANT: logit-adjust default was True; with tau=1.5 on this extreme imbalance
+    # (class-0 prior ~0.998) it over-boosts minority classes -> over-prediction collapse
+    # (high recall / ~0 precision, macro-F1 stuck ~0.16). Verified 2026-06-06: disabling it
+    # recovers learning (gat climbs past 0.30 like the old script -> 0.70). Default OFF.
+    use_logit_adjust: bool = False         # --no_logit_adjust when False
     logit_adjust_tau: float = 1.5
     use_log_softmax: bool = False          # store_true
     label_smoothing: float = 0.0
