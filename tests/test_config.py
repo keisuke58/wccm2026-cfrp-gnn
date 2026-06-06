@@ -141,9 +141,18 @@ def test_default_true_flags_emit_negation_when_false():
 
 def test_default_true_flags_no_negation_when_true(base_cfg):
     a = base_cfg.to_cli_args()
-    for neg in ("--no_logit_adjust", "--no_onecycle", "--no_layer_constraint",
+    # default-True paired flags -> their --no_* form must NOT appear
+    for neg in ("--no_onecycle", "--no_layer_constraint",
                 "--no_save_on_best", "--no_best_report"):
         assert neg not in a
+
+
+def test_logit_adjust_off_by_default(base_cfg):
+    # use_logit_adjust default is False (fixes the over-prediction collapse) ->
+    # --no_logit_adjust IS emitted to disable train.py's aggressive LogitAdjustLoss.
+    assert base_cfg.use_logit_adjust is False
+    assert "--no_logit_adjust" in base_cfg.to_cli_args()
+    assert "--no_logit_adjust" not in ExpConfig(use_logit_adjust=True).to_cli_args()
 
 
 def test_class_frequency_sampler_store_true(base_cfg):
