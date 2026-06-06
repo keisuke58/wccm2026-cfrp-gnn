@@ -13,3 +13,13 @@ for doc in wccm_beamer wccm_beamer_paper; do
   cp -f "$doc.tex" "$DEST/$doc.tex"
   echo "synced -> $DEST/$doc.{pdf,tex}"
 done
+
+# pympress speaker-notes build of the paper deck: slide | notes side-by-side.
+# Open wccm_beamer_paper_notes.pdf in pympress -> presenter window shows the notes.
+if [ -f wccm_beamer_paper.tex ]; then
+  latexmk -pdf -interaction=nonstopmode \
+    -jobname=wccm_beamer_paper_notes \
+    -usepretex='\def\NOTESBUILD{}' wccm_beamer_paper.tex
+  cp -f wccm_beamer_paper_notes.pdf "$DEST/wccm_beamer_paper_notes.pdf"
+  echo "synced -> $DEST/wccm_beamer_paper_notes.pdf (pympress)"
+fi
