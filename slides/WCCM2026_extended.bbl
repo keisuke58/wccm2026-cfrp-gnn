@@ -1,0 +1,785 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.3 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \datalist[entry]{none/global//global/global/global}
+    \entry{dulieubarton1998development}{article}{}{}
+      \name{author}{2}{}{%
+        {{hash=089444d138826a038c672be7f3035fe8}{%
+           family={Dulieu-Barton},
+           familyi={D\bibinithyphendelim B\bibinitperiod},
+           given={J.\bibnamedelimi M.},
+           giveni={J\bibinitperiod\bibinitdelim M\bibinitperiod}}}%
+        {{hash=1c2f4382efd8018a4d955d6898e137a3}{%
+           family={Stanley},
+           familyi={S\bibinitperiod},
+           given={P.},
+           giveni={P\bibinitperiod}}}%
+      }
+      \strng{namehash}{cfdd38f3ee7d91f2885b960e8fb66109}
+      \strng{fullhash}{cfdd38f3ee7d91f2885b960e8fb66109}
+      \strng{fullhashraw}{cfdd38f3ee7d91f2885b960e8fb66109}
+      \strng{bibnamehash}{cfdd38f3ee7d91f2885b960e8fb66109}
+      \strng{authorbibnamehash}{cfdd38f3ee7d91f2885b960e8fb66109}
+      \strng{authornamehash}{cfdd38f3ee7d91f2885b960e8fb66109}
+      \strng{authorfullhash}{cfdd38f3ee7d91f2885b960e8fb66109}
+      \strng{authorfullhashraw}{cfdd38f3ee7d91f2885b960e8fb66109}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{annotation}{[VERIFIED] Reviews the development of TSA from infrared thermography, the calibration of the thermoelastic constant, and its application to stress-field measurement and FE validation. — RELEVANCE: Establishes TSA / infrared stress measurement as a full-field, non-contact experimental method giving the sum of principal stresses on a surface — the experimental basis the synthetic DSPSS fields emulate. — CHECK: Fully verified via CrossRef DOI resolution and SAGE Journals. All metadata correct.}
+      \field{journaltitle}{The Journal of Strain Analysis for Engineering Design, 33(2), 93-104}
+      \field{title}{Development and applications of thermoelastic stress analysis}
+      \field{year}{1998}
+      \verb{doi}
+      \verb 10.1243/0309324981512841
+      \endverb
+    \endentry
+    \entry{pitarresi2003review}{article}{}{}
+      \name{author}{2}{}{%
+        {{hash=c993633c22e6812be7778630e7ab857d}{%
+           family={Pitarresi},
+           familyi={P\bibinitperiod},
+           given={G.},
+           giveni={G\bibinitperiod}}}%
+        {{hash=b37da5d8a71acb193608c084ea4a694d}{%
+           family={Patterson},
+           familyi={P\bibinitperiod},
+           given={E.\bibnamedelimi A.},
+           giveni={E\bibinitperiod\bibinitdelim A\bibinitperiod}}}%
+      }
+      \strng{namehash}{a855ace77331e0f8e06c7dfdff9ca01a}
+      \strng{fullhash}{a855ace77331e0f8e06c7dfdff9ca01a}
+      \strng{fullhashraw}{a855ace77331e0f8e06c7dfdff9ca01a}
+      \strng{bibnamehash}{a855ace77331e0f8e06c7dfdff9ca01a}
+      \strng{authorbibnamehash}{a855ace77331e0f8e06c7dfdff9ca01a}
+      \strng{authornamehash}{a855ace77331e0f8e06c7dfdff9ca01a}
+      \strng{authorfullhash}{a855ace77331e0f8e06c7dfdff9ca01a}
+      \strng{authorfullhashraw}{a855ace77331e0f8e06c7dfdff9ca01a}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{annotation}{[VERIFIED] Comprehensive derivation, from thermodynamics, of the thermoelastic effect law linking cyclic surface temperature change to the sum of principal stresses, with discussion of the technique's real limitations. — RELEVANCE: Foundational theory reference establishing that the thermoelastic temperature change is proportional to the change in the first stress invariant (sum of principal surface stresses) — directly justifies the paper's use of DSPSS as the physically measurable quantity. — CHECK: Fully verified via CrossRef DOI resolution and SAGE Journals. Title, authors, year, venue, pages, and DOI all match exactly.}
+      \field{journaltitle}{The Journal of Strain Analysis for Engineering Design, 38(5), 405-417}
+      \field{title}{A review of the general theory of thermoelastic stress analysis}
+      \field{year}{2003}
+      \verb{doi}
+      \verb 10.1243/03093240360713469
+      \endverb
+    \endentry
+    \entry{nishioka2025development}{article}{}{}
+      \name{author}{6}{}{%
+        {{hash=e360f2a67d0595fde068418ecb2dee51}{%
+           family={Nishioka},
+           familyi={N\bibinitperiod},
+           given={K.},
+           giveni={K\bibinitperiod}}}%
+        {{hash=a51a511514d5876bf837c26739d8cdcd}{%
+           family={Kojima},
+           familyi={K\bibinitperiod},
+           given={Y.},
+           giveni={Y\bibinitperiod}}}%
+        {{hash=446f617a034cd2490a5e6e611e5377b3}{%
+           family={Saito},
+           familyi={S\bibinitperiod},
+           given={T.},
+           giveni={T\bibinitperiod}}}%
+        {{hash=a97a55c6902c648a8479ee1580430cb5}{%
+           family={Kawakami},
+           familyi={K\bibinitperiod},
+           given={K.},
+           giveni={K\bibinitperiod}}}%
+        {{hash=46ecdeda9d09bab3a4a7026ad106325a}{%
+           family={Washiya},
+           familyi={W\bibinitperiod},
+           given={M.},
+           giveni={M\bibinitperiod}}}%
+        {{hash=2d23e793429bcf1b0a09854103c2fbcf}{%
+           family={Muramatsu},
+           familyi={M\bibinitperiod},
+           given={M.},
+           giveni={M\bibinitperiod}}}%
+      }
+      \strng{namehash}{07fdb9726c462f0740f7aac281dc4f27}
+      \strng{fullhash}{9a296a3b4bff871bfbcf75dfd4881d5a}
+      \strng{fullhashraw}{9a296a3b4bff871bfbcf75dfd4881d5a}
+      \strng{bibnamehash}{07fdb9726c462f0740f7aac281dc4f27}
+      \strng{authorbibnamehash}{07fdb9726c462f0740f7aac281dc4f27}
+      \strng{authornamehash}{07fdb9726c462f0740f7aac281dc4f27}
+      \strng{authorfullhash}{9a296a3b4bff871bfbcf75dfd4881d5a}
+      \strng{authorfullhashraw}{9a296a3b4bff871bfbcf75dfd4881d5a}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{annotation}{[VERIFIED] Integrates FEA-generated sum-of-principal-stresses surface fields with a graph attention network to 3D-localize delamination defects (insertion layer + planar position) in perforated CFRP interstage specimens, reaching macro-F1 61\%. — RELEVANCE: This is the authors' own immediate prior work and the direct baseline the target paper extends (same DSPSS+GAT pipeline, CFRP interstage with holes); essential for Introduction, Methods baseline, and Results comparison. — CHECK: Confirmed real. Frontiers in Materials. Full author list: Keisuke Nishioka, Yuta Kojima, Toshiya Saito, Kosuke Kawakami, Masahito Washiya, Mayu Muramatsu (Keio University / JAXA). Integrates FEM-generated DSPSS fields with a GNN to localize defects in perforated CFRP rocket interstage structures. Metadata correct.}
+      \field{journaltitle}{Frontiers in Materials, 12, 1652484}
+      \field{title}{Development of defect localization method for perforated carbon-fiber-reinforced plastic specimens using finite element method and graph neural network}
+      \field{year}{2025}
+      \verb{doi}
+      \verb 10.3389/fmats.2025.1652484
+      \endverb
+    \endentry
+    \entry{hernandez2022thermodynamics}{article}{}{}
+      \name{author}{4}{}{%
+        {{hash=fbfed343771f1998f68a48f292394666}{%
+           family={Hernandez},
+           familyi={H\bibinitperiod},
+           given={Quercus},
+           giveni={Q\bibinitperiod}}}%
+        {{hash=f7fa22bf643155b28bd03f304c004f9e}{%
+           family={Badias},
+           familyi={B\bibinitperiod},
+           given={Alberto},
+           giveni={A\bibinitperiod}}}%
+        {{hash=387729112d9b3ef8ab4a11507c0b4ec5}{%
+           family={Chinesta},
+           familyi={C\bibinitperiod},
+           given={Francisco},
+           giveni={F\bibinitperiod}}}%
+        {{hash=5710385eb1eb1a65836e1bf1af7ec0b6}{%
+           family={Cueto},
+           familyi={C\bibinitperiod},
+           given={Elias},
+           giveni={E\bibinitperiod}}}%
+      }
+      \strng{namehash}{de7c7bd3f3f9f0f9441b209bbb1c6866}
+      \strng{fullhash}{cb087174e828366a1613bd66e35270f9}
+      \strng{fullhashraw}{cb087174e828366a1613bd66e35270f9}
+      \strng{bibnamehash}{de7c7bd3f3f9f0f9441b209bbb1c6866}
+      \strng{authorbibnamehash}{de7c7bd3f3f9f0f9441b209bbb1c6866}
+      \strng{authornamehash}{de7c7bd3f3f9f0f9441b209bbb1c6866}
+      \strng{authorfullhash}{cb087174e828366a1613bd66e35270f9}
+      \strng{authorfullhashraw}{cb087174e828366a1613bd66e35270f9}
+      \field{extraname}{1}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{annotation}{[VERIFIED] Combines the geometric bias of GNNs with thermodynamic (GENERIC/metriplectic) inductive biases to predict the time evolution of dissipative solid and fluid systems with relative errors below 3\%. — RELEVANCE: Core reference for the Cueto-school thermodynamics-informed/GENERIC GNN line that this MS090E session is built around; positions the target paper relative to structure-preserving graph approaches even though it uses a discriminative rather than generative formulation. — CHECK: Confirmed. Published in IEEE Transactions on Artificial Intelligence (2022), arXiv:2203.01874. Code at github.com/quercushernandez/ThermodynamicsGNN. Authors/year/venue correct.}
+      \field{eprinttype}{arXiv}
+      \field{journaltitle}{IEEE Transactions on Artificial Intelligence}
+      \field{title}{Thermodynamics-informed graph neural networks}
+      \field{year}{2022}
+      \verb{doi}
+      \verb 10.1109/TAI.2022.3179681
+      \endverb
+      \verb{eprint}
+      \verb 2203.01874
+      \endverb
+    \endentry
+    \entry{hernandez2021structure}{article}{}{}
+      \name{author}{5}{}{%
+        {{hash=fbfed343771f1998f68a48f292394666}{%
+           family={Hernandez},
+           familyi={H\bibinitperiod},
+           given={Quercus},
+           giveni={Q\bibinitperiod}}}%
+        {{hash=f7fa22bf643155b28bd03f304c004f9e}{%
+           family={Badias},
+           familyi={B\bibinitperiod},
+           given={Alberto},
+           giveni={A\bibinitperiod}}}%
+        {{hash=cb9e53cf7977c148ce3fca01f6e46c38}{%
+           family={Gonzalez},
+           familyi={G\bibinitperiod},
+           given={David},
+           giveni={D\bibinitperiod}}}%
+        {{hash=387729112d9b3ef8ab4a11507c0b4ec5}{%
+           family={Chinesta},
+           familyi={C\bibinitperiod},
+           given={Francisco},
+           giveni={F\bibinitperiod}}}%
+        {{hash=5710385eb1eb1a65836e1bf1af7ec0b6}{%
+           family={Cueto},
+           familyi={C\bibinitperiod},
+           given={Elias},
+           giveni={E\bibinitperiod}}}%
+      }
+      \strng{namehash}{de7c7bd3f3f9f0f9441b209bbb1c6866}
+      \strng{fullhash}{548a579b2512633aada5a87a7ad5c37c}
+      \strng{fullhashraw}{548a579b2512633aada5a87a7ad5c37c}
+      \strng{bibnamehash}{de7c7bd3f3f9f0f9441b209bbb1c6866}
+      \strng{authorbibnamehash}{de7c7bd3f3f9f0f9441b209bbb1c6866}
+      \strng{authornamehash}{de7c7bd3f3f9f0f9441b209bbb1c6866}
+      \strng{authorfullhash}{548a579b2512633aada5a87a7ad5c37c}
+      \strng{authorfullhashraw}{548a579b2512633aada5a87a7ad5c37c}
+      \field{extraname}{2}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{annotation}{[VERIFIED] Learns dynamical systems from data while enforcing the first and second laws of thermodynamics via the GENERIC metriplectic structure, yielding energy conservation and entropy dissipation as built-in guarantees. — RELEVANCE: Origin of the GENERIC structure-preserving NN framework underpinning the session peers (Cueto et al.); important background for the thermodynamics-informed/structure-preserving learning context of MS090E. — CHECK: Confirmed. J. Comput. Phys. vol. 426, article 109950 (2021); ADS bibcode 2021JCoPh.42609950H corroborates DOI 10.1016/j.jcp.2020.109950 and arXiv:2004.04653. Authors/year/venue correct.}
+      \field{eprinttype}{arXiv}
+      \field{journaltitle}{Journal of Computational Physics, vol. 426, 109950}
+      \field{title}{Structure-preserving neural networks}
+      \field{year}{2021}
+      \verb{doi}
+      \verb 10.1016/j.jcp.2020.109950
+      \endverb
+      \verb{eprint}
+      \verb 2004.04653
+      \endverb
+    \endentry
+    \entry{tancik2020fourier}{inproceedings}{}{}
+      \name{author}{9}{}{%
+        {{hash=9a18985a5c8b8be23d0ec9de0a3c87b9}{%
+           family={Tancik},
+           familyi={T\bibinitperiod},
+           given={Matthew},
+           giveni={M\bibinitperiod}}}%
+        {{hash=b503d22b8c86fb9dfd477d2f70a59650}{%
+           family={Srinivasan},
+           familyi={S\bibinitperiod},
+           given={Pratul\bibnamedelima P.},
+           giveni={P\bibinitperiod\bibinitdelim P\bibinitperiod}}}%
+        {{hash=a3567364ab52973659adf74ee0c6e6f3}{%
+           family={Mildenhall},
+           familyi={M\bibinitperiod},
+           given={Ben},
+           giveni={B\bibinitperiod}}}%
+        {{hash=c631c1dd8a471790086b4fb6e8af17f2}{%
+           family={Fridovich-Keil},
+           familyi={F\bibinithyphendelim K\bibinitperiod},
+           given={Sara},
+           giveni={S\bibinitperiod}}}%
+        {{hash=2152b6c2198feaeff5c94f252fb79dbd}{%
+           family={Raghavan},
+           familyi={R\bibinitperiod},
+           given={Nithin},
+           giveni={N\bibinitperiod}}}%
+        {{hash=00e559de135e71ebad6dd7421dd674b1}{%
+           family={Singhal},
+           familyi={S\bibinitperiod},
+           given={Utkarsh},
+           giveni={U\bibinitperiod}}}%
+        {{hash=e7e274981ceb0dd123d44af35cc7bedf}{%
+           family={Ramamoorthi},
+           familyi={R\bibinitperiod},
+           given={Ravi},
+           giveni={R\bibinitperiod}}}%
+        {{hash=562f3254a241932db4a6d44a97473ec5}{%
+           family={Barron},
+           familyi={B\bibinitperiod},
+           given={Jonathan\bibnamedelima T.},
+           giveni={J\bibinitperiod\bibinitdelim T\bibinitperiod}}}%
+        {{hash=96e30bdc2cf905aa1109c46617b16252}{%
+           family={Ng},
+           familyi={N\bibinitperiod},
+           given={Ren},
+           giveni={R\bibinitperiod}}}%
+      }
+      \strng{namehash}{0a8e4a1bb132a987a311c08bcf4f0f16}
+      \strng{fullhash}{6703418f19639ae65db633afd8767e59}
+      \strng{fullhashraw}{6703418f19639ae65db633afd8767e59}
+      \strng{bibnamehash}{0a8e4a1bb132a987a311c08bcf4f0f16}
+      \strng{authorbibnamehash}{0a8e4a1bb132a987a311c08bcf4f0f16}
+      \strng{authornamehash}{0a8e4a1bb132a987a311c08bcf4f0f16}
+      \strng{authorfullhash}{6703418f19639ae65db633afd8767e59}
+      \strng{authorfullhashraw}{6703418f19639ae65db633afd8767e59}
+      \field{sortinit}{5}
+      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{annotation}{[VERIFIED 2026-06-03] Shows a simple Fourier feature mapping of inputs lets MLPs overcome spectral bias and learn high-frequency functions, analyzed via the neural tangent kernel. — RELEVANCE: The methodological origin of 'Fourier-embedded' networks underpinning the Fourier-PINN/DIC works and any Fourier embedding the target paper uses to resolve sharp DSPSS gradients around holes; cite as the canonical Fourier-feature reference. — CHECK: VERIFIED via web 2026-06-03 (arXiv/DOI/venue cross-checked).}
+      \field{booktitle}{NeurIPS 2020}
+      \field{eprinttype}{arXiv}
+      \field{title}{Fourier Features Let Networks Learn High Frequency Functions in Low Dimensional Domains}
+      \field{year}{2020}
+      \verb{eprint}
+      \verb 2006.10739
+      \endverb
+    \endentry
+    \entry{rong2020dropedge}{inproceedings}{}{}
+      \name{author}{4}{}{%
+        {{hash=f292ec47b3dca3814617cd5390916824}{%
+           family={Rong},
+           familyi={R\bibinitperiod},
+           given={Yu},
+           giveni={Y\bibinitperiod}}}%
+        {{hash=0ee4909a832e993602aa62ad48918b29}{%
+           family={Huang},
+           familyi={H\bibinitperiod},
+           given={Wenbing},
+           giveni={W\bibinitperiod}}}%
+        {{hash=bc4a291289dd8cc0a090f4585626d4f6}{%
+           family={Xu},
+           familyi={X\bibinitperiod},
+           given={Tingyang},
+           giveni={T\bibinitperiod}}}%
+        {{hash=10b0bc00e8e92345a8bc3f6c1e6bb625}{%
+           family={Huang},
+           familyi={H\bibinitperiod},
+           given={Junzhou},
+           giveni={J\bibinitperiod}}}%
+      }
+      \strng{namehash}{10e0b3852a636107e8d5fcb831c4c87b}
+      \strng{fullhash}{4aa5968b8d3b105cfe35682390c30d27}
+      \strng{fullhashraw}{4aa5968b8d3b105cfe35682390c30d27}
+      \strng{bibnamehash}{10e0b3852a636107e8d5fcb831c4c87b}
+      \strng{authorbibnamehash}{10e0b3852a636107e8d5fcb831c4c87b}
+      \strng{authornamehash}{10e0b3852a636107e8d5fcb831c4c87b}
+      \strng{authorfullhash}{4aa5968b8d3b105cfe35682390c30d27}
+      \strng{authorfullhashraw}{4aa5968b8d3b105cfe35682390c30d27}
+      \field{sortinit}{7}
+      \field{sortinithash}{108d0be1b1bee9773a1173443802c0a3}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{annotation}{[VERIFIED] Randomly removes a fraction of graph edges each training epoch, acting simultaneously as a data augmenter and a message-passing reducer that mitigates over-fitting and over-smoothing in deep GCNs. — RELEVANCE: Directly supports the data-augmentation/regularization methodology section: DropEdge is the canonical edge-dropping augmentation the authors can apply to their surface element-graph to regularize the GAT and improve robustness on the imbalanced 19-class node classification. — CHECK: Confirmed. Published at ICLR 2020 (OpenReview Hkx1qkrKPr); dblp RongHXH20. Authors, year, venue, and arXiv ID all correct.}
+      \field{booktitle}{ICLR 2020}
+      \field{eprinttype}{arXiv}
+      \field{title}{DropEdge: Towards Deep Graph Convolutional Networks on Node Classification}
+      \field{year}{2020}
+      \verb{eprint}
+      \verb 1907.10903
+      \endverb
+    \endentry
+    \entry{lin2017focal}{inproceedings}{}{}
+      \name{author}{5}{}{%
+        {{hash=08f925fe4692d130a1d7cb7d94483351}{%
+           family={Lin},
+           familyi={L\bibinitperiod},
+           given={Tsung-Yi},
+           giveni={T\bibinithyphendelim Y\bibinitperiod}}}%
+        {{hash=d87be7c19fa16049347907c9820816c6}{%
+           family={Goyal},
+           familyi={G\bibinitperiod},
+           given={Priya},
+           giveni={P\bibinitperiod}}}%
+        {{hash=bd5dadbe57bedc5957c19a3154c4d424}{%
+           family={Girshick},
+           familyi={G\bibinitperiod},
+           given={Ross},
+           giveni={R\bibinitperiod}}}%
+        {{hash=6b4b60e909e78633945f3f9c9dc83e01}{%
+           family={He},
+           familyi={H\bibinitperiod},
+           given={Kaiming},
+           giveni={K\bibinitperiod}}}%
+        {{hash=ecd149fdcb3e0503881d49e545744c3d}{%
+           family={Dollár},
+           familyi={D\bibinitperiod},
+           given={Piotr},
+           giveni={P\bibinitperiod}}}%
+      }
+      \strng{namehash}{3b7e00bc88d7aca4d4d5ddb8c252e36c}
+      \strng{fullhash}{4ccabcfdf9c34f3d9a88fdca5bb95dd5}
+      \strng{fullhashraw}{4ccabcfdf9c34f3d9a88fdca5bb95dd5}
+      \strng{bibnamehash}{3b7e00bc88d7aca4d4d5ddb8c252e36c}
+      \strng{authorbibnamehash}{3b7e00bc88d7aca4d4d5ddb8c252e36c}
+      \strng{authornamehash}{3b7e00bc88d7aca4d4d5ddb8c252e36c}
+      \strng{authorfullhash}{4ccabcfdf9c34f3d9a88fdca5bb95dd5}
+      \strng{authorfullhashraw}{4ccabcfdf9c34f3d9a88fdca5bb95dd5}
+      \field{sortinit}{8}
+      \field{sortinithash}{a231b008ebf0ecbe0b4d96dcc159445f}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{annotation}{[VERIFIED] Introduces focal loss, which reshapes cross-entropy by down-weighting well-classified (easy) examples so training focuses on hard examples, directly tackling extreme foreground-background class imbalance. — RELEVANCE: Canonical citation for the loss the target paper needs to handle its >97\% defect-free node imbalance; supports the loss-function/methods section justifying focal loss for node classification. — CHECK: Confirmed via ICCV 2017 Open Access (CVF), arXiv, and ACM/IEEE. Authors, year, venue, and both identifiers all match. The RetinaNet/focal loss paper.}
+      \field{booktitle}{IEEE International Conference on Computer Vision (ICCV), pp. 2980-2988}
+      \field{eprinttype}{arXiv}
+      \field{title}{Focal Loss for Dense Object Detection}
+      \field{year}{2017}
+      \verb{doi}
+      \verb 10.1109/ICCV.2017.324
+      \endverb
+      \verb{eprint}
+      \verb 1708.02002
+      \endverb
+    \endentry
+    \entry{cao2019learning}{inproceedings}{}{}
+      \name{author}{5}{}{%
+        {{hash=154615b7c020b8f4795a4d5060f73707}{%
+           family={Cao},
+           familyi={C\bibinitperiod},
+           given={Kaidi},
+           giveni={K\bibinitperiod}}}%
+        {{hash=f82aaeda30fe4e41d8d329eafa383e52}{%
+           family={Wei},
+           familyi={W\bibinitperiod},
+           given={Colin},
+           giveni={C\bibinitperiod}}}%
+        {{hash=4310b5568f7680f83c3e4c70d4f4d7a1}{%
+           family={Gaidon},
+           familyi={G\bibinitperiod},
+           given={Adrien},
+           giveni={A\bibinitperiod}}}%
+        {{hash=5b14c560c54fe6c9f53c8b71340965ab}{%
+           family={Arechiga},
+           familyi={A\bibinitperiod},
+           given={Nikos},
+           giveni={N\bibinitperiod}}}%
+        {{hash=5bd4a91e09b499d15e82bc929acf1e34}{%
+           family={Ma},
+           familyi={M\bibinitperiod},
+           given={Tengyu},
+           giveni={T\bibinitperiod}}}%
+      }
+      \strng{namehash}{7aef9fe3ae97c9dfcff6a8d064056607}
+      \strng{fullhash}{0b97df58e04e611fe32aa84ba78b3c12}
+      \strng{fullhashraw}{0b97df58e04e611fe32aa84ba78b3c12}
+      \strng{bibnamehash}{7aef9fe3ae97c9dfcff6a8d064056607}
+      \strng{authorbibnamehash}{7aef9fe3ae97c9dfcff6a8d064056607}
+      \strng{authornamehash}{7aef9fe3ae97c9dfcff6a8d064056607}
+      \strng{authorfullhash}{0b97df58e04e611fe32aa84ba78b3c12}
+      \strng{authorfullhashraw}{0b97df58e04e611fe32aa84ba78b3c12}
+      \field{sortinit}{9}
+      \field{sortinithash}{0a5ebc79d83c96b6579069544c73c7d4}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{annotation}{[VERIFIED] Proposes the LDAM loss (class-dependent margins ∝ n^{-1/4} from a generalization bound) plus a deferred re-weighting (DRW) training schedule that delays re-weighting until representations are learned. — RELEVANCE: Offers a margin-based and training-schedule strategy the target paper can cite/compare against for minority defect classes, complementing focal loss and logit adjustment. — CHECK: Confirmed via NeurIPS proceedings (hash 621461af90...), arXiv, and official LDAM-DRW GitHub. Authors, year, venue, and arXiv ID match exactly.}
+      \field{booktitle}{Advances in Neural Information Processing Systems (NeurIPS 2019), vol. 32}
+      \field{eprinttype}{arXiv}
+      \field{title}{Learning Imbalanced Datasets with Label-Distribution-Aware Margin Loss}
+      \field{year}{2019}
+      \verb{eprint}
+      \verb 1906.07413
+      \endverb
+    \endentry
+    \entry{menon2020long}{inproceedings}{}{}
+      \name{author}{6}{}{%
+        {{hash=d5918aa4a3a43984bc6bd2bf025e1869}{%
+           family={Menon},
+           familyi={M\bibinitperiod},
+           given={Aditya\bibnamedelima Krishna},
+           giveni={A\bibinitperiod\bibinitdelim K\bibinitperiod}}}%
+        {{hash=e8f83e110cddd5c7d32df4e3fb080d92}{%
+           family={Jayasumana},
+           familyi={J\bibinitperiod},
+           given={Sadeep},
+           giveni={S\bibinitperiod}}}%
+        {{hash=8591482d0b6f9a103131dc09cc958846}{%
+           family={Rawat},
+           familyi={R\bibinitperiod},
+           given={Ankit\bibnamedelima Singh},
+           giveni={A\bibinitperiod\bibinitdelim S\bibinitperiod}}}%
+        {{hash=a7ee3f759bf5ccf1b94bebde9d2af758}{%
+           family={Jain},
+           familyi={J\bibinitperiod},
+           given={Himanshu},
+           giveni={H\bibinitperiod}}}%
+        {{hash=fef2684833146eb1bd778cddca8caf2e}{%
+           family={Veit},
+           familyi={V\bibinitperiod},
+           given={Andreas},
+           giveni={A\bibinitperiod}}}%
+        {{hash=3b0b77d59993d2550f1dac0336347c8a}{%
+           family={Kumar},
+           familyi={K\bibinitperiod},
+           given={Sanjiv},
+           giveni={S\bibinitperiod}}}%
+      }
+      \strng{namehash}{5c7593bd4c393505aea0fa43edf74a06}
+      \strng{fullhash}{0e95853ed978b2e7d36b1c471e2ad3c7}
+      \strng{fullhashraw}{0e95853ed978b2e7d36b1c471e2ad3c7}
+      \strng{bibnamehash}{5c7593bd4c393505aea0fa43edf74a06}
+      \strng{authorbibnamehash}{5c7593bd4c393505aea0fa43edf74a06}
+      \strng{authornamehash}{5c7593bd4c393505aea0fa43edf74a06}
+      \strng{authorfullhash}{0e95853ed978b2e7d36b1c471e2ad3c7}
+      \strng{authorfullhashraw}{0e95853ed978b2e7d36b1c471e2ad3c7}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{annotation}{[VERIFIED] Proposes logit adjustment based on class label frequencies, applied either post-hoc to a trained model or as a loss-time margin, with statistical (Bayes-consistent) grounding for long-tailed classification. — RELEVANCE: Provides a principled, frequency-aware alternative/complement to focal loss for the paper's extreme imbalance and 19-class problem; directly named in the assigned sub-topic. — CHECK: Confirmed via arXiv (posted 2020) and OpenReview (forum id 37nvvqkCo5). Published at ICLR 2021. Authors and arXiv ID match exactly.}
+      \field{booktitle}{International Conference on Learning Representations (ICLR 2021); arXiv preprint 2020}
+      \field{eprinttype}{arXiv}
+      \field{title}{Long-tail learning via logit adjustment}
+      \field{year}{2020}
+      \verb{eprint}
+      \verb 2007.07314
+      \endverb
+    \endentry
+    \entry{zhao2021graphsmote}{inproceedings}{}{}
+      \name{author}{3}{}{%
+        {{hash=ac6ba3f33f67ce74e81648f9ae093d0c}{%
+           family={Zhao},
+           familyi={Z\bibinitperiod},
+           given={Tianxiang},
+           giveni={T\bibinitperiod}}}%
+        {{hash=87f628db6da99dc0a2a20f276e51b3ac}{%
+           family={Zhang},
+           familyi={Z\bibinitperiod},
+           given={Xiang},
+           giveni={X\bibinitperiod}}}%
+        {{hash=d51786a0dffbd8ee68a63e5263f05e7f}{%
+           family={Wang},
+           familyi={W\bibinitperiod},
+           given={Suhang},
+           giveni={S\bibinitperiod}}}%
+      }
+      \strng{namehash}{331c4da6d63c8b5b491760f1ba83e665}
+      \strng{fullhash}{920243f38efdbe62a222cd700a81e343}
+      \strng{fullhashraw}{920243f38efdbe62a222cd700a81e343}
+      \strng{bibnamehash}{331c4da6d63c8b5b491760f1ba83e665}
+      \strng{authorbibnamehash}{331c4da6d63c8b5b491760f1ba83e665}
+      \strng{authornamehash}{331c4da6d63c8b5b491760f1ba83e665}
+      \strng{authorfullhash}{920243f38efdbe62a222cd700a81e343}
+      \strng{authorfullhashraw}{920243f38efdbe62a222cd700a81e343}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{annotation}{[VERIFIED] Extends SMOTE oversampling to graphs by interpolating minority nodes in a GNN embedding space and synthesizing their edges via an edge generator, avoiding out-of-domain synthetic samples. — RELEVANCE: Directly addresses minority oversampling for imbalanced GNN node classification, the exact graph setting of the target paper's surface-mesh GAT; key prior work for the imbalance-on-graphs discussion. — CHECK: Confirmed via arXiv, ACM Digital Library, and official GitHub (TianxiangZhao/GraphSmote). Authors, year, venue, and both identifiers match.}
+      \field{booktitle}{14th ACM International Conference on Web Search and Data Mining (WSDM)}
+      \field{eprinttype}{arXiv}
+      \field{title}{GraphSMOTE: Imbalanced Node Classification on Graphs with Graph Neural Networks}
+      \field{year}{2021}
+      \verb{doi}
+      \verb 10.1145/3437963.3441720
+      \endverb
+      \verb{eprint}
+      \verb 2103.08826
+      \endverb
+    \endentry
+    \entry{velickovic2018graph}{inproceedings}{}{}
+      \name{author}{6}{}{%
+        {{hash=f67895f351a1964153a455b6672b7a28}{%
+           family={Velickovic},
+           familyi={V\bibinitperiod},
+           given={Petar},
+           giveni={P\bibinitperiod}}}%
+        {{hash=c30bc5878e196747275a7ff581c6ed22}{%
+           family={Cucurull},
+           familyi={C\bibinitperiod},
+           given={Guillem},
+           giveni={G\bibinitperiod}}}%
+        {{hash=5a0765951987db22af274a31732111fa}{%
+           family={Casanova},
+           familyi={C\bibinitperiod},
+           given={Arantxa},
+           giveni={A\bibinitperiod}}}%
+        {{hash=8e0f06556535de7b7d9d04d390dc4ac3}{%
+           family={Romero},
+           familyi={R\bibinitperiod},
+           given={Adriana},
+           giveni={A\bibinitperiod}}}%
+        {{hash=428d424e2bc446d7420e2cf047380cf0}{%
+           family={Lio},
+           familyi={L\bibinitperiod},
+           given={Pietro},
+           giveni={P\bibinitperiod}}}%
+        {{hash=40a8e4774982146adc2688546f54efb2}{%
+           family={Bengio},
+           familyi={B\bibinitperiod},
+           given={Yoshua},
+           giveni={Y\bibinitperiod}}}%
+      }
+      \strng{namehash}{5e54f32cfc80b218f9d67b5b392aea9d}
+      \strng{fullhash}{19937c8555e05e4cd741518b9891b465}
+      \strng{fullhashraw}{19937c8555e05e4cd741518b9891b465}
+      \strng{bibnamehash}{5e54f32cfc80b218f9d67b5b392aea9d}
+      \strng{authorbibnamehash}{5e54f32cfc80b218f9d67b5b392aea9d}
+      \strng{authornamehash}{5e54f32cfc80b218f9d67b5b392aea9d}
+      \strng{authorfullhash}{19937c8555e05e4cd741518b9891b465}
+      \strng{authorfullhashraw}{19937c8555e05e4cd741518b9891b465}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{annotation}{[VERIFIED] Introduces GAT: masked self-attentional layers let each node assign different learned weights to its neighbors without costly matrix operations or prior knowledge of the full graph structure. — RELEVANCE: The foundational architecture the target paper builds on; must be cited as the origin of the GAT attention layer used for 19-class node classification of defect region/insertion layer. — CHECK: Confirmed. Foundational GAT paper, ICLR 2018, arXiv:1710.10903. Authors and all metadata correct.}
+      \field{booktitle}{International Conference on Learning Representations (ICLR 2018)}
+      \field{eprinttype}{arXiv}
+      \field{title}{Graph Attention Networks}
+      \field{year}{2018}
+      \verb{eprint}
+      \verb 1710.10903
+      \endverb
+    \endentry
+    \entry{brody2022how}{inproceedings}{}{}
+      \name{author}{3}{}{%
+        {{hash=86d0ba615d85774041089279c4eb703a}{%
+           family={Brody},
+           familyi={B\bibinitperiod},
+           given={Shaked},
+           giveni={S\bibinitperiod}}}%
+        {{hash=a0026e806b0c3123f7fb978a2c810b66}{%
+           family={Alon},
+           familyi={A\bibinitperiod},
+           given={Uri},
+           giveni={U\bibinitperiod}}}%
+        {{hash=1336db0a6cad45c95c6bc395c65379e3}{%
+           family={Yahav},
+           familyi={Y\bibinitperiod},
+           given={Eran},
+           giveni={E\bibinitperiod}}}%
+      }
+      \strng{namehash}{88c667f7184955776569f92daf644764}
+      \strng{fullhash}{9705d33bb0999c91d130dedcbd404697}
+      \strng{fullhashraw}{9705d33bb0999c91d130dedcbd404697}
+      \strng{bibnamehash}{88c667f7184955776569f92daf644764}
+      \strng{authorbibnamehash}{88c667f7184955776569f92daf644764}
+      \strng{authornamehash}{88c667f7184955776569f92daf644764}
+      \strng{authorfullhash}{9705d33bb0999c91d130dedcbd404697}
+      \strng{authorfullhashraw}{9705d33bb0999c91d130dedcbd404697}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{annotation}{[VERIFIED] Shows GAT's attention is only 'static' (neighbor ranking is query-independent) and proposes GATv2, which moves the nonlinearity after concatenation to yield strictly more expressive 'dynamic' attention, outperforming GAT on 11 benchmarks at equal cost. — RELEVANCE: Directly justifies the target paper's choice of GATv2 over the original GAT for ranking node importance in non-uniform DSPSS fields; central methodological citation. — CHECK: Confirmed. ICLR 2022 (OpenReview id=F72ximsx7C1), arXiv:2105.14491. Introduces GATv2. Minor: paper states GATv2 outperforms GAT across 12 benchmarks (abstract), not 11 as in the key\_point; otherwise metadata correct.}
+      \field{booktitle}{International Conference on Learning Representations (ICLR 2022)}
+      \field{eprinttype}{arXiv}
+      \field{title}{How Attentive are Graph Attention Networks? (GATv2)}
+      \field{year}{2022}
+      \verb{eprint}
+      \verb 2105.14491
+      \endverb
+    \endentry
+    \entry{pfaff2021learning}{inproceedings}{}{}
+      \name{author}{4}{}{%
+        {{hash=a726408819b6f955652c3ffaaedef966}{%
+           family={Pfaff},
+           familyi={P\bibinitperiod},
+           given={Tobias},
+           giveni={T\bibinitperiod}}}%
+        {{hash=dfc7f8069848dbc66435c3acc3172871}{%
+           family={Fortunato},
+           familyi={F\bibinitperiod},
+           given={Meire},
+           giveni={M\bibinitperiod}}}%
+        {{hash=cfe62c9365c523ba7d4f7fd1147cff41}{%
+           family={Sanchez-Gonzalez},
+           familyi={S\bibinithyphendelim G\bibinitperiod},
+           given={Alvaro},
+           giveni={A\bibinitperiod}}}%
+        {{hash=2e5b4b0fd5bc4903da838ce86f63998b}{%
+           family={Battaglia},
+           familyi={B\bibinitperiod},
+           given={Peter\bibnamedelima W.},
+           giveni={P\bibinitperiod\bibinitdelim W\bibinitperiod}}}%
+      }
+      \strng{namehash}{27055f9d7ff2885284c907973547bedf}
+      \strng{fullhash}{50c51d06ac37a13d5c329f216a76b4ff}
+      \strng{fullhashraw}{50c51d06ac37a13d5c329f216a76b4ff}
+      \strng{bibnamehash}{27055f9d7ff2885284c907973547bedf}
+      \strng{authorbibnamehash}{27055f9d7ff2885284c907973547bedf}
+      \strng{authornamehash}{27055f9d7ff2885284c907973547bedf}
+      \strng{authorfullhash}{50c51d06ac37a13d5c329f216a76b4ff}
+      \strng{authorfullhashraw}{50c51d06ac37a13d5c329f216a76b4ff}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{annotation}{[VERIFIED] Introduces MeshGraphNets, an encode-process-decode GNN that treats a simulation mesh as a graph and learns to predict physical dynamics (aerodynamics, structural mechanics, cloth) via message passing, generalizing across mesh geometries and resolutions. — RELEVANCE: Foundational graph-based neural PDE/FEA surrogate that justifies the target paper's core modeling choice of treating the Abaqus surface mesh as a graph (nodes=elements) for learning over FEA fields; ideal anchor citation for the methods/related-work section. — CHECK: Confirmed. Published at ICLR 2021 (OpenReview id=roNqYL0\_XP, arXiv:2010.03409). Authors/year correct. One correction: it was an ICLR 2021 Spotlight, not an 'outstanding paper award' — no evidence of an outstanding-paper award designation.}
+      \field{booktitle}{International Conference on Learning Representations (ICLR 2021)}
+      \field{eprinttype}{arXiv}
+      \field{title}{Learning Mesh-Based Simulation with Graph Networks}
+      \field{year}{2021}
+      \verb{eprint}
+      \verb 2010.03409
+      \endverb
+    \endentry
+    \entry{sanchezgonzalez2020learning}{inproceedings}{}{}
+      \name{author}{6}{}{%
+        {{hash=cfe62c9365c523ba7d4f7fd1147cff41}{%
+           family={Sanchez-Gonzalez},
+           familyi={S\bibinithyphendelim G\bibinitperiod},
+           given={Alvaro},
+           giveni={A\bibinitperiod}}}%
+        {{hash=3f8b59cd2dfceed714d405a08c389acb}{%
+           family={Godwin},
+           familyi={G\bibinitperiod},
+           given={Jonathan},
+           giveni={J\bibinitperiod}}}%
+        {{hash=a726408819b6f955652c3ffaaedef966}{%
+           family={Pfaff},
+           familyi={P\bibinitperiod},
+           given={Tobias},
+           giveni={T\bibinitperiod}}}%
+        {{hash=6b37c8aefa150635663b2a6525952a7a}{%
+           family={Ying},
+           familyi={Y\bibinitperiod},
+           given={Rex},
+           giveni={R\bibinitperiod}}}%
+        {{hash=900d107125ff0ca84698cb909e4f6c51}{%
+           family={Leskovec},
+           familyi={L\bibinitperiod},
+           given={Jure},
+           giveni={J\bibinitperiod}}}%
+        {{hash=2e5b4b0fd5bc4903da838ce86f63998b}{%
+           family={Battaglia},
+           familyi={B\bibinitperiod},
+           given={Peter\bibnamedelima W.},
+           giveni={P\bibinitperiod\bibinitdelim W\bibinitperiod}}}%
+      }
+      \strng{namehash}{14d8f3954a2d583ad1e2230c17d6060a}
+      \strng{fullhash}{3d5b64021935f881dbba3091a29904aa}
+      \strng{fullhashraw}{3d5b64021935f881dbba3091a29904aa}
+      \strng{bibnamehash}{14d8f3954a2d583ad1e2230c17d6060a}
+      \strng{authorbibnamehash}{14d8f3954a2d583ad1e2230c17d6060a}
+      \strng{authornamehash}{14d8f3954a2d583ad1e2230c17d6060a}
+      \strng{authorfullhash}{3d5b64021935f881dbba3091a29904aa}
+      \strng{authorfullhashraw}{3d5b64021935f881dbba3091a29904aa}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{annotation}{[VERIFIED] Defines the Graph Network Simulator (GNS) framework with encoder-processor-decoder message passing over particle/node graphs and demonstrates strong generalization across fluids, rigids, and deformables. — RELEVANCE: Foundational 'graph network simulator' reference establishing the encode-process-decode paradigm and out-of-distribution generalization that the target paper invokes for OOD generalization to unseen micro defect sizes. — CHECK: Confirmed. ICML 2020 (ACM/PMLR doi 10.5555/3524938.3525722). Authors, year, venue, arXiv ID all match. The GNS framework.}
+      \field{booktitle}{ICML 2020 (PMLR Proceedings of the 37th ICML)}
+      \field{eprinttype}{arXiv}
+      \field{title}{Learning to Simulate Complex Physics with Graph Networks}
+      \field{year}{2020}
+      \verb{eprint}
+      \verb 2002.09405
+      \endverb
+    \endentry
+    \entry{satorras2021equivariant}{inproceedings}{}{}
+      \name{author}{3}{}{%
+        {{hash=a9c40c6be2a06d47fb58e0bdfd28a1f3}{%
+           family={Satorras},
+           familyi={S\bibinitperiod},
+           given={Victor\bibnamedelima Garcia},
+           giveni={V\bibinitperiod\bibinitdelim G\bibinitperiod}}}%
+        {{hash=3217062971cd751f410c7479cd9c280a}{%
+           family={Hoogeboom},
+           familyi={H\bibinitperiod},
+           given={Emiel},
+           giveni={E\bibinitperiod}}}%
+        {{hash=53d2880ad8047b61cdae2c6b2803e763}{%
+           family={Welling},
+           familyi={W\bibinitperiod},
+           given={Max},
+           giveni={M\bibinitperiod}}}%
+      }
+      \strng{namehash}{3d45a0160934cbf19d121cff53d7db31}
+      \strng{fullhash}{40192b6345076c7fe7f0e9204ffb25bc}
+      \strng{fullhashraw}{40192b6345076c7fe7f0e9204ffb25bc}
+      \strng{bibnamehash}{3d45a0160934cbf19d121cff53d7db31}
+      \strng{authorbibnamehash}{3d45a0160934cbf19d121cff53d7db31}
+      \strng{authornamehash}{3d45a0160934cbf19d121cff53d7db31}
+      \strng{authorfullhash}{40192b6345076c7fe7f0e9204ffb25bc}
+      \strng{authorfullhashraw}{40192b6345076c7fe7f0e9204ffb25bc}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{annotation}{[VERIFIED] Proposes a GNN equivariant to rotations, translations, reflections, and permutations without expensive higher-order tensor representations, scalable to higher dimensions. — RELEVANCE: Underpins the symmetry/equivariant-augmentation angle: motivates encoding the structure's reflection/mirror symmetry directly in the network rather than only via mirror data augmentation, relevant for the geometric symmetry of the CFRP interstage with holes. — CHECK: Confirmed. ICML 2021, PMLR v139 pp. 9323-9332. E(n)-equivariant (rotation/translation/reflection/permutation) GNN. Authors, year, venue, and arXiv ID all correct.}
+      \field{booktitle}{ICML 2021 (PMLR 139, pp. 9323-9332)}
+      \field{eprinttype}{arXiv}
+      \field{title}{E(n) Equivariant Graph Neural Networks (EGNN)}
+      \field{year}{2021}
+      \verb{eprint}
+      \verb 2102.09844
+      \endverb
+    \endentry
+  \enddatalist
+\endrefsection
+\endinput
+

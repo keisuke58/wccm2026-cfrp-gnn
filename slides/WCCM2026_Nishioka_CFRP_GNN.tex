@@ -101,6 +101,18 @@ Structures with Holes using Finite Element Analysis and Graph Neural Networks}
 \note{Good morning. I am Keisuke Nishioka, from Keio University and Leibniz Universitaet Hannover, with co-authors at Nagoya University and JAXA. Today I show how we localize hidden delamination in perforated CFRP interstage structures using finite-element analysis and a graph neural network: 61\% macro-F1 from surface stress alone, and how we make it robust to measurement noise. About 15 minutes.}
 
 % ---------------------------------------------------------------------
+\begin{frame}{Outline}
+\note{Quick roadmap: motivation and the DSPSS measurement, the method, the published results, the new noise-robustness work, and outlook. About 15 minutes.}
+\begin{enumerate}
+  \item Motivation \& measurement --- defects in CFRP, infrared stress (DSPSS)
+  \item Method --- difference-normalized input \& a GAT on the FEM mesh
+  \item Results --- 19-class 3-D localization (macro-F1 $61\%$)
+  \item New: robustness to measurement noise (defect-free negatives)
+  \item Outlook
+\end{enumerate}
+\end{frame}
+
+% ---------------------------------------------------------------------
 \begin{frame}{Introduction: CFRP in space transportation}
 \note{CFRP is the primary structural material in reusable launch vehicles, for its strength-to-weight ratio. Around bolt holes, interlaminar delamination accumulates and is invisible from the outside. Conventional NDT --- ultrasonic, X-ray CT, tap testing --- is slow, expensive, and operator-dependent. So we need an automated, reliable way to localize these sub-surface defects.}
 \begin{columns}[T]
@@ -180,7 +192,8 @@ sub-surface defects are inferred.
         between selected plies.
 \end{itemize}
 \vspace{0.3em}
-Synthetic dataset $\Rightarrow$ DSPSS fields with known ground-truth defects.
+\textbf{Dataset:} 1 reference $+$ \textbf{1386} defect specimens; 5-fold CV
+($\approx$1110 train / 278 test per fold).
 \end{column}
 \begin{column}{0.46\textwidth}
   \centering

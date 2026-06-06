@@ -1,12 +1,12 @@
 #!/bin/bash
 # Build the WCCM Beamer decks and copy tex+pdf to the LUHsummer26 viewing folder.
 # (real copies, NOT symlinks — PDF viewers / VSCode do not follow symlinks.)
-#   wccm_beamer.tex        : extended deck (architecture sweep + 4 variants)
-#   wccm_beamer_paper.tex  : paper-faithful deck (Frontiers 2025; supervisor-requested)
+#   WCCM2026_Nishioka_CFRP_GNN.tex : paper-faithful deck (Frontiers 2025; the official talk)
+#   WCCM2026_extended.tex          : extended deck (architecture sweep + 4 variants; research)
 set -e
 cd "$(dirname "$0")"
 DEST=/home/nishioka/LUHsummer26/40_Academic/WCCM2026
-for doc in wccm_beamer wccm_beamer_paper; do
+for doc in WCCM2026_extended WCCM2026_Nishioka_CFRP_GNN; do
   [ -f "$doc.tex" ] || continue
   latexmk -pdf -interaction=nonstopmode "$doc.tex"
   cp -f "$doc.pdf" "$DEST/$doc.pdf"
@@ -15,11 +15,11 @@ for doc in wccm_beamer wccm_beamer_paper; do
 done
 
 # pympress speaker-notes build of the paper deck: slide | notes side-by-side.
-# Open wccm_beamer_paper_notes.pdf in pympress -> presenter window shows the notes.
-if [ -f wccm_beamer_paper.tex ]; then
+# Open WCCM2026_Nishioka_CFRP_GNN_notes.pdf in pympress -> presenter window shows notes.
+if [ -f WCCM2026_Nishioka_CFRP_GNN.tex ]; then
   latexmk -pdf -interaction=nonstopmode \
-    -jobname=wccm_beamer_paper_notes \
-    -usepretex='\def\NOTESBUILD{}' wccm_beamer_paper.tex
-  cp -f wccm_beamer_paper_notes.pdf "$DEST/wccm_beamer_paper_notes.pdf"
-  echo "synced -> $DEST/wccm_beamer_paper_notes.pdf (pympress)"
+    -jobname=WCCM2026_Nishioka_CFRP_GNN_notes \
+    -usepretex='\def\NOTESBUILD{}' WCCM2026_Nishioka_CFRP_GNN.tex
+  cp -f WCCM2026_Nishioka_CFRP_GNN_notes.pdf "$DEST/WCCM2026_Nishioka_CFRP_GNN_notes.pdf"
+  echo "synced -> $DEST/WCCM2026_Nishioka_CFRP_GNN_notes.pdf (pympress)"
 fi
