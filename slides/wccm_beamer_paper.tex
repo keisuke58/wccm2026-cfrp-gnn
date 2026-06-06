@@ -6,16 +6,21 @@
 %  outlook teaser — co-author-safe, per supervisor's instruction.
 %  Build: latexmk -pdf wccm_beamer_paper.tex  (needs biber)
 % =====================================================================
-\documentclass[aspectratio=169,10pt]{beamer}
+\documentclass[aspectratio=169,11pt]{beamer}
 
-\usetheme{metropolis}
-\usecolortheme{default}
+% =====================================================================
+%  Clean, thesis-matching look: NO metropolis. Serif (Times via newtx),
+%  understated navy accent, plain frame title with a thin rule, no colour
+%  bars or progress bar — mirrors the master-thesis document style.
+% =====================================================================
+\usetheme{default}
+\setbeamertemplate{navigation symbols}{}
 
 \usefonttheme{professionalfonts}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage{newtxtext,newtxmath}
-\usepackage[protrusion=true,expansion=true]{microtype}  % thesis-grade typography
+\usepackage[protrusion=true,expansion=true]{microtype}
 
 \usepackage{booktabs}
 \usepackage{amsmath,amssymb}
@@ -28,28 +33,45 @@
 \usepackage[style=numeric-comp,sorting=none,backend=biber,maxnames=2,giveninits=true]{biblatex}
 \addbibresource{refs_submission.bib}
 \renewcommand*{\bibfont}{\scriptsize}
-\AtEveryCite{\scriptsize\color{luhblue}}
 
-\definecolor{luhblue}{RGB}{21,101,192}
-\definecolor{alertred}{RGB}{198,40,40}
+% understated academic palette (thesis-like)
+\definecolor{accent}{RGB}{20,43,84}      % deep navy
+\definecolor{accentlt}{RGB}{225,229,238}
+\definecolor{alertred}{RGB}{150,28,28}
 \definecolor{okgreen}{RGB}{27,94,32}
-\setbeamercolor{frametitle}{bg=luhblue, fg=white}
-\setbeamercolor{progress bar}{fg=luhblue}
+\AtEveryCite{\scriptsize\color{accent}}
+
+\setbeamercolor{structure}{fg=accent}
+\setbeamercolor{title}{fg=accent}
+\setbeamercolor{frametitle}{fg=accent,bg=}
+\setbeamercolor{normal text}{fg=black!90}
 \setbeamercolor{alerted text}{fg=alertred}
 \setbeamercolor{example text}{fg=okgreen}
-\metroset{progressbar=frametitle, block=fill}
+\setbeamercolor{block title}{fg=accent,bg=accentlt}
+\setbeamercolor{block body}{bg=accentlt!40}
+\setbeamercolor{block title alerted}{fg=white,bg=alertred}
+\setbeamercolor{block title example}{fg=white,bg=okgreen}
+\setbeamerfont{title}{series=\bfseries}
+\setbeamerfont{frametitle}{series=\bfseries,size=\large}
+\setbeamertemplate{blocks}[rounded][shadow=false]
+\setbeamertemplate{itemize item}{\small\textbullet}
+\setbeamertemplate{itemize subitem}{\scriptsize--}
 
-\usepackage{multicol}
+% plain serif frame title with a thin navy rule beneath (no colour bar)
+\setbeamertemplate{frametitle}{%
+  \vskip0.7em%
+  {\usebeamerfont{frametitle}\usebeamercolor[fg]{frametitle}\insertframetitle\par}%
+  \vskip2pt{\color{accent}\hrule height 0.5pt}\vskip2pt}
 
-% tiny source-attribution footer on every content slide (very light, bottom).
-% (Our own Frontiers paper is attributed here, NOT cited as prior work in-text.)
+% tiny source-attribution footer (very light, bottom). Our own Frontiers paper
+% is attributed here, NOT cited as prior work in-text.
 \setbeamertemplate{footline}{%
   \hbox{}\vspace{1pt}%
-  \hbox to \paperwidth{\hskip2mm
-    {\tiny\color{gray!70!black} Nishioka \textit{et al.}, Front.\ Mater.\ \textbf{12}:1652484 (2025)}%
+  \hbox to \paperwidth{\hskip2.5mm
+    {\tiny\color{gray!60!black} Nishioka \textit{et al.}, Front.\ Mater.\ \textbf{12}:1652484 (2025)}%
     \hfill
-    {\tiny\color{gray!70!black}\insertframenumber}\hskip2mm}%
-  \vspace{2pt}}
+    {\tiny\color{gray!60!black}\insertframenumber}\hskip2.5mm}%
+  \vspace{2.5pt}}
 
 \graphicspath{{figures_paper/}{../results/}}
 \newcommand{\best}[1]{{\color{okgreen}\textbf{#1}}}
@@ -422,8 +444,11 @@ stress data.
 % =====================================================================
 \appendix
 
-\begin{frame}[standout]
-Appendix
+\begin{frame}
+\vfill
+\centering
+{\usebeamercolor[fg]{title}\Large\bfseries Appendix}
+\vfill
 \end{frame}
 
 % ---------------------------------------------------------------------
