@@ -111,4 +111,57 @@ fig, ax = plt.subplots(figsize=(5.2, 2.9))
 im = fld(ax, grid(lab, L), r"Ground-truth defect class (target)", CLS, 0, 18)
 cbar(fig, im, ax, "class id", ticks=[0, 6, 12, 18], shrink=0.85)
 fig.savefig(f"{OUT}/label_clean.png", bbox_inches="tight"); plt.close(fig)
+
+# Fig 6: prior-work schematic — CNN image grid (Kojima et al.) vs our GNN mesh
+import matplotlib.patches as mpatches
+fig, ax = plt.subplots(1, 2, figsize=(9.4, 3.7))
+# (left) CNN image grid with a hole that breaks the regular sampling
+ng = 8
+holecells = {(3, 3), (3, 4), (4, 3), (4, 4)}
+for i in range(ng):
+    for j in range(ng):
+        if (i, j) in holecells:
+            ax[0].add_patch(mpatches.Rectangle((j, i), 1, 1, facecolor="white",
+                            edgecolor="#a01c1c", lw=1.3, ls="--", hatch="//"))
+        else:
+            ax[0].add_patch(mpatches.Rectangle((j, i), 1, 1, facecolor="#d7e3f4",
+                            edgecolor="#6b7280", lw=0.6))
+ax[0].set_xlim(0, ng); ax[0].set_ylim(0, ng); ax[0].set_aspect("equal")
+ax[0].invert_yaxis(); ax[0].set_xticks([]); ax[0].set_yticks([])
+ax[0].set_title(r"Previous: CNN on an image grid")
+ax[0].text(ng/2, ng+0.55, r"holes break the regular grid", ha="center", va="top",
+           fontsize=11, color="#a01c1c")
+# (right) GNN on the FEM mesh: nodes + edges, hole left empty
+rng2 = np.random.default_rng(3)
+xs, ys = [], []
+for i in range(7):
+    for j in range(7):
+        if (2 <= i <= 3) and (2 <= j <= 3):   # hole region: no nodes
+            continue
+        xs.append(j + 0.12*rng2.standard_normal()); ys.append(i + 0.12*rng2.standard_normal())
+xs, ys = np.array(xs), np.array(ys)
+P = np.c_[xs, ys]
+for a in range(len(P)):                        # connect near neighbours -> mesh edges
+    d = np.hypot(*(P - P[a]).T)
+    for b in np.argsort(d)[1:4]:
+        if d[b] < 1.5:
+            ax[1].plot([P[a, 0], P[b, 0]], [P[a, 1], P[b, 1]], color="#9aa3b2", lw=0.6, zorder=1)
+ax[1].scatter(xs, ys, s=46, c="#142b54", zorder=2, edgecolors="white", linewidths=0.5)
+ax[1].set_aspect("equal"); ax[1].invert_yaxis(); ax[1].set_xticks([]); ax[1].set_yticks([])
+for s in ax[1].spines.values(): s.set_visible(False)
+ax[1].set_title(r"This work: GNN on the FEM mesh")
+ax[1].text(3, 7.2, r"nodes $=$ elements, edges $=$ connectivity", ha="center", va="top", fontsize=11, color="#142b54")
+fig.savefig(f"{OUT}/prior_cnn_gnn.png", bbox_inches="tight"); plt.close(fig)
+
+# Fig 7: focal-loss curves (gamma = 0 is cross-entropy)
+fig, ax = plt.subplots(figsize=(5.6, 3.6))
+p = np.linspace(0.012, 1.0, 300)
+for g, ls in zip([0, 1, 2, 3], ["-", "--", "-.", ":"]):
+    ax.plot(p, -(1 - p)**g * np.log(p), ls, lw=1.8,
+            label=(r"$\gamma=0$ (cross-entropy)" if g == 0 else rf"$\gamma={g}$"))
+ax.set_xlabel(r"$p_t$ (prob.\ of true class)"); ax.set_ylabel(r"loss")
+ax.set_xlim(0, 1); ax.set_ylim(0, 5); ax.legend(frameon=False, fontsize=10)
+ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
+ax.set_title(r"Focal loss down-weights easy (high $p_t$) nodes")
+fig.savefig(f"{OUT}/focal_curve.png", bbox_inches="tight"); plt.close(fig)
 print("done ->", OUT)

@@ -121,8 +121,8 @@ Structures with Holes using Finite Element Analysis and Graph Neural Networks}
 \end{column}
 \begin{column}{0.44\textwidth}
   \centering
-  \includegraphics[width=\linewidth]{fem_condition.png}\\
-  {\scriptsize Perforated CFRP interstage panel (FEM).}
+  \includegraphics[width=\linewidth]{interstage_photo.png}\\
+  {\scriptsize CFRP interstage structure of a launch vehicle.}
 \end{column}
 \end{columns}
 \end{frame}
@@ -162,11 +162,9 @@ sub-surface defects are inferred.
         (in-plane region $\times$ insertion layer) in perforated CFRP interstage
         structures.
 \end{itemize}
-\vspace{0.4em}
-\begin{block}{Why a graph?}
-The FEM surface mesh is naturally a graph; a GNN handles the irregular,
-hole-perforated topology that a CNN grid cannot.
-\end{block}
+\vspace{0.2em}
+\begin{center}\includegraphics[width=0.84\linewidth]{prior_cnn_gnn.png}\end{center}
+\vspace{-0.3em}{\centering\scriptsize The FEM mesh is naturally a graph; a GNN handles the hole-perforated topology a CNN grid cannot.\par}
 \end{frame}
 
 % ---------------------------------------------------------------------
@@ -221,18 +219,26 @@ $\Rightarrow$ robust localization even near the opening.
 % ---------------------------------------------------------------------
 \begin{frame}{Stress distribution around the defect}
 \note{Looking closer, each defect produces a stress valley at its centre. The depth and width of that valley depend on the ply angle above it: ninety-degree plies give sharp narrow valleys, zero and forty-five broaden them. This ply-angle signature is exactly the cue the network uses to tell which layer the delamination is in. It is a fine spatial-frequency problem, which motivates local attention.}
+\begin{columns}[T]
+\begin{column}{0.54\textwidth}
 \begin{itemize}
   \item DSPSS exhibits a clear \textbf{stress valley} at the defect centre.
   \item Depth and width of the valley depend on \textbf{ply angle}:
         $90^\circ$ plies give sharp narrow valleys; $0^\circ/45^\circ$ broaden them.
-  \item This ply-angle signature is what the network must learn to separate
-        \emph{which layer} the delamination sits in.
+  \item This signature tells the network \emph{which layer} the delamination sits in.
 \end{itemize}
-\vspace{0.5em}
+\vspace{0.3em}
 \begin{exampleblock}{Implication}
 Layer discrimination is a \emph{fine spatial-frequency} problem — motivating
-attention over local neighbourhoods.
+local attention.
 \end{exampleblock}
+\end{column}
+\begin{column}{0.46\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{dspss_profile.png}\\
+  {\scriptsize Normalized DSPSS profile across the defect.}
+\end{column}
+\end{columns}
 \end{frame}
 
 % ---------------------------------------------------------------------
@@ -285,6 +291,8 @@ Defect nodes are $<3\%$ of all nodes — handled by the loss (next slide).
 % ---------------------------------------------------------------------
 \begin{frame}{Loss function: Focal loss}
 \note{To handle that imbalance we use focal loss, which down-weights the easy, abundant defect-free nodes and focuses learning on the rare defect classes. Without it, the model simply predicts defect-free everywhere.}
+\begin{columns}[T]
+\begin{column}{0.52\textwidth}
 \[
   \mathrm{FL}(p_t) = -\,\alpha_t\,(1-p_t)^{\gamma}\,\log p_t .
 \]
@@ -293,8 +301,12 @@ Defect nodes are $<3\%$ of all nodes — handled by the loss (next slide).
         emphasises rare defect-class nodes~\cite{focal_loss}.
   \item Crucial because intact regions dominate ($>97\%$).
 \end{itemize}
-\vspace{0.4em}
-Node features normalized; a single fixed edge list reused across all graphs.
+\end{column}
+\begin{column}{0.48\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{focal_curve.png}
+\end{column}
+\end{columns}
 \end{frame}
 
 % ---------------------------------------------------------------------
