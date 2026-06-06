@@ -116,32 +116,7 @@ reproduction reaches \textbf{macro-F1 $\approx 0.70$}, vs.\ $\le 0.08$ without i
 \end{frame}
 
 % ---------------------------------------------------------------------
-\begin{frame}{A debugging detour: the silent collapse}
-\begin{columns}[T]
-\begin{column}{0.55\textwidth}
-Our refactored trainer \bad{stalled at macro-F1 $\approx 0.16$} across
-\emph{every} architecture — while the legacy script reached $0.70$.
-
-\vspace{0.8em}
-\textbf{Root cause:} a default-on \texttt{LogitAdjustLoss}\,($\tau{=}1.5$).
-On a $0.998$ class-0 prior it \emph{over-boosts} minority classes
-$\Rightarrow$ mass over-prediction (high recall, precision $\approx 0$).
-
-\vspace{0.6em}
-Fix: \texttt{--no\_logit\_adjust} (Focal loss) $\Rightarrow$ full recovery.
-\end{column}
-\begin{column}{0.45\textwidth}
-\begin{exampleblock}{Lesson}
-On extreme imbalance, logit adjustment and class balancing
-\emph{compound}. Calibrate the loss to the \emph{already-balanced}
-sampler, not the raw prior.
-\end{exampleblock}
-\end{column}
-\end{columns}
-\end{frame}
-
-% ---------------------------------------------------------------------
-\begin{frame}{Corrected architecture sweep}
+\begin{frame}{Architecture sweep under the balanced recipe}
 \centering
 Same recipe, 120 epochs, balanced 5000:5000, group-purged eval.
 \vspace{0.6em}
@@ -160,7 +135,7 @@ PNA                      & 0.613 & multi-aggregator \\
 
 \vspace{0.8em}
 \begin{block}{Takeaway}
-Under correct training, the \textbf{mesh-physics architecture
+Under the balanced recipe, the \textbf{mesh-physics architecture
 (MeshGraphNet) wins} — beating the legacy GAT recipe (0.70) and the
 published baseline (0.61).
 \end{block}
@@ -260,7 +235,7 @@ Cross the \textbf{0.80} macro-F1 line with a physically-motivated variant.
 \begin{itemize}
   \item The \textbf{data recipe} (noise-aug difference $+$ NDF negatives $+$
         balancing) is the dominant factor: $0.08 \to 0.70$.
-  \item Under correct training, \textbf{MeshGraphNet} is the best
+  \item Under the balanced recipe, \textbf{MeshGraphNet} is the best
         architecture (\best{0.764}), beating the published GAT baseline (0.61).
   \item Two \textbf{novel layered-NDT variants} — Fourier-KAN and
         front/back Hybrid edges — target $>0.80$.
