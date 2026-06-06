@@ -163,20 +163,23 @@ sub-surface defects are inferred.
 \end{frame}
 
 % ---------------------------------------------------------------------
-\begin{frame}{Previous study and purpose}
-\note{A previous study used transfer learning with a CNN to estimate defect position and size. But a CNN works on a regular image grid and struggles with the irregular, hole-perforated geometry. Our idea is to treat the FEM surface mesh directly as a graph and use a graph attention network. The task is the full 3-D location: both the in-plane region and which layer the delamination sits in.}
-\begin{itemize}
-  \item \textbf{Previous study}~\cite{kojima,kojima2024_transfer}:
-        transfer learning with a CNN estimates defect position/size — but is
-        tied to image grids and struggles on irregular, perforated geometry.
-  \item \textbf{This work}: a \textbf{Graph Neural Network} (GAT) that
-        consumes FEM-generated DSPSS to predict the \emph{3-D defect location}
-        (in-plane region $\times$ insertion layer) in perforated CFRP interstage
-        structures.
-\end{itemize}
-\vspace{0.2em}
-\begin{center}\includegraphics[width=0.84\linewidth]{prior_cnn_gnn.png}\end{center}
-\vspace{-0.3em}{\centering\scriptsize The FEM mesh is naturally a graph; a GNN handles the hole-perforated topology a CNN grid cannot.\par}
+\begin{frame}{Prior work \& problem formulation}
+\note{Kojima et al. gave a CNN proof-of-concept on non-perforated CFRP. Our setting is harder: perforated interstage, full 3-D location (region times layer), and extreme imbalance. Formally we learn a node classifier on the mesh graph, minimizing focal loss; class zero is defect-free, classes one to eighteen encode region times layer.}
+\textbf{Prior work.} Kojima \textit{et al.}~\cite{kojima,kojima2024_transfer} --- a CNN
+\emph{proof-of-concept} on \emph{non-perforated} CFRP from FEM DSPSS.\\[2pt]
+\textbf{This work --- harder setting:} \emph{perforated} interstage $\times$ \emph{3-D}
+location (region $\times$ layer) $\times$ extreme imbalance ($<3\%$ defect nodes).
+
+\vspace{0.5em}
+\textbf{Problem} --- node classification on the mesh graph $\mathcal G=(\mathcal V,\mathcal E)$,
+node features $\mathbf x_i=(x,y,z,\hat\sigma_{\mathrm{sum}})_i$; learn
+$f_\theta:\mathcal G\to\mathbb R^{|\mathcal V|\times 19}$,
+\[
+  \hat y_i=\!\arg\max_{c\in\{0,\dots,18\}}\!\big[\mathrm{softmax}\,f_\theta(\mathcal G)\big]_{i,c},
+  \quad
+  \theta^\star=\arg\min_{\theta}\sum_{i\in\mathcal V}\mathrm{FL}\!\big(p_{i,y_i}\big),
+\]
+class $0=$ defect-free; classes $1\text{–}18=$ (in-plane region $\times$ insertion layer).
 \end{frame}
 
 % ---------------------------------------------------------------------
@@ -215,10 +218,13 @@ masking the defect signal.
 Remedy (paper):
 \begin{itemize}
   \item \textbf{Difference} field: damaged $-$ defect-free reference;
-  \item \textbf{Z-score normalization} (per node), improving depth-direction
-        discrimination.
+  \item \textbf{Z-score normalization} (per node), improving depth discrimination.
 \end{itemize}
-\vspace{0.4em}
+\vspace{-0.2em}
+\[
+  d_i=\sigma_i^{\mathrm{dmg}}-\sigma_i^{\mathrm{ref}},\qquad
+  \hat\sigma_i=\frac{d_i-\mu_d}{s_d}.
+\]
 $\Rightarrow$ robust localization even near the opening.
 \end{column}
 \begin{column}{0.48\textwidth}
@@ -259,15 +265,21 @@ local attention.
 \note{We represent each surface element as a node, with features being its coordinates and the normalized stress. Edges are the fixed mesh connectivity, reused across all specimens. We use a graph attention network: three GAT layers, sixty-four to two-hundred-fifty-six channels, multi-head, with batch-norm, dropout and residual connections. Attention lets each node weight its neighbours adaptively, which suits the highly non-uniform stress field.}
 \begin{columns}[T]
 \begin{column}{0.5\textwidth}
-\begin{itemize}
-  \item \textbf{Nodes} = FEM surface elements;
-        features $=(x,y,z,\hat\sigma_{\mathrm{sum}})$.
-  \item \textbf{Edges} = fixed mesh connectivity (reused across graphs).
-  \item \textbf{GAT}~\cite{gat1,gnn1}: attention weights learn neighbour
-        importance; message passing~\cite{gilmer2017mpnn} over the mesh.
-  \item Architecture: $3\times$ GATConv ($64{\to}256{\to}256$), multi-head,
-        batch-norm + dropout + residual connections.
-\end{itemize}
+Nodes $=$ elements ($\mathbf x_i$), edges $=$ fixed mesh connectivity.
+GAT message passing~\cite{gat1,gnn1,gilmer2017mpnn}:
+\vspace{-0.3em}
+\[
+  e_{ij}=\mathrm{LeakyReLU}\!\big(\mathbf a^{\!\top}[\mathbf W\mathbf h_i\,\Vert\,\mathbf W\mathbf h_j]\big),
+\]
+\vspace{-0.9em}
+\[
+  \alpha_{ij}=\frac{\exp e_{ij}}{\sum_{k\in\mathcal N(i)}\exp e_{ik}},
+\]
+\vspace{-0.9em}
+\[
+  \mathbf h_i'=\Big\Vert_{m=1}^{M}\,\sigma\!\Big(\sum_{j\in\mathcal N(i)}\alpha_{ij}^{(m)}\mathbf W^{(m)}\mathbf h_j\Big).
+\]
+{\scriptsize $3$ layers $64\!\to\!256\!\to\!256$, $M$ heads, BN $+$ dropout $+$ residual.}
 \end{column}
 \begin{column}{0.5\textwidth}
   \centering
@@ -335,14 +347,24 @@ Test-set metrics:
         $\mathrm{TDPS}\ge 0.82$.
   \item False-negative rate for defect nodes \textbf{$<3\%$}.
 \end{itemize}
+\vspace{0.3em}
+{\scriptsize $R$: planar F1.\quad $P_{\mathrm{gauss}}$: Gaussian depth score ($\sigma{=}2$).\quad
+$\mathrm{TDPS}=\tfrac12(R{+}P_{\mathrm{gauss}})$.}
 \end{column}
 \begin{column}{0.5\textwidth}
   \centering
-  \includegraphics[height=0.34\textheight]{pred_l4.png}\\
-  \includegraphics[height=0.34\textheight]{pred_l10.png}\\
-  {\scriptsize Predicted vs.\ true defect regions.}
+  \includegraphics[width=\linewidth]{tdps_layer.png}\\
+  {\scriptsize TDPS by insertion layer \& ply angle --- mid-thickness (9--12) best.}
 \end{column}
 \end{columns}
+\end{frame}
+
+% ---------------------------------------------------------------------
+\begin{frame}{Qualitative predictions}
+\note{Representative Layer-10 test cases: for each, the normalized DSPSS input, the ground-truth labels, and the model prediction. The model recovers both the in-plane region and the layer for clear cases; harder cases show adjacent-layer slip.}
+\centering
+\includegraphics[width=0.88\linewidth]{pred_l10.png}\\[3pt]
+{\scriptsize Input (i) $\rightarrow$ ground truth (ii) $\rightarrow$ prediction (iii) for representative Layer-10 cases.}
 \end{frame}
 
 % ---------------------------------------------------------------------
