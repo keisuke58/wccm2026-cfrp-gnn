@@ -8,3 +8,7 @@
 *.fdb_latexmk
 *.synctex.gz
 *.vrb
+*.bbl
+*.bcf
+*.blg
+*.run.xml
