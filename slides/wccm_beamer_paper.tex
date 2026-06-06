@@ -343,8 +343,8 @@ Train for \emph{robustness under experimentally-motivated noise} and explicitly
 \end{column}
 \begin{column}{0.45\textwidth}
   \centering
-  \includegraphics[width=\linewidth]{noise_defect_0.png}\\
-  {\scriptsize Original vs.\ noise-injected DSPSS input.}
+  \includegraphics[width=\linewidth]{noise_clean.png}\\
+  {\scriptsize Clean vs.\ noise-injected Z-score input — the defect signature survives.}
 \end{column}
 \end{columns}
 \end{frame}
@@ -367,8 +367,8 @@ Train for \emph{robustness under experimentally-motivated noise} and explicitly
 \end{column}
 \begin{column}{0.48\textwidth}
   \centering
-  \includegraphics[width=\linewidth]{ndf_make_0.png}\\
-  {\scriptsize Defect-free noised samples teach the model what ``no defect'' looks like.}
+  \includegraphics[width=\linewidth]{ndf_clean.png}\\
+  {\scriptsize A defect-free sample (zero field $+$ 10\% noise) — teaches ``no defect''.}
 \end{column}
 \end{columns}
 \end{frame}
@@ -391,8 +391,8 @@ stress data.
 \end{column}
 \begin{column}{0.5\textwidth}
   \centering
-  \includegraphics[width=\linewidth]{noise_pred_0.png}\\
-  {\scriptsize Prediction on noisy input.}
+  \includegraphics[width=\linewidth]{label_clean.png}\\
+  {\scriptsize Ground-truth defect class to be localized (target).}
 \end{column}
 \end{columns}
 \end{frame}
@@ -412,11 +412,9 @@ stress data.
 \end{frame}
 
 % ---------------------------------------------------------------------
-\begin{frame}{References}
-\renewcommand*{\bibfont}{\tiny}
-\begin{multicols}{2}
+\begin{frame}[allowframebreaks]{References}
+\renewcommand*{\bibfont}{\scriptsize}
 \printbibliography[heading=none]
-\end{multicols}
 \end{frame}
 
 % =====================================================================
@@ -443,8 +441,8 @@ hole's baseline field.
 \end{column}
 \begin{column}{0.5\textwidth}
   \centering
-  \includegraphics[width=\linewidth]{diff_calc_0.png}\\
-  {\scriptsize Original $-$ reference $=$ difference field.}
+  \includegraphics[width=\linewidth]{diff_clean.png}\\
+  {\scriptsize With-defect $-$ no-defect reference $=$ difference field (defect localized).}
 \end{column}
 \end{columns}
 \end{frame}
