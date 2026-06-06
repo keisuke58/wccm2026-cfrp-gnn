@@ -38,6 +38,18 @@
 \setbeamercolor{example text}{fg=okgreen}
 \metroset{progressbar=frametitle, block=fill}
 
+\usepackage{multicol}
+
+% tiny source-attribution footer on every content slide (very light, bottom).
+% (Our own Frontiers paper is attributed here, NOT cited as prior work in-text.)
+\setbeamertemplate{footline}{%
+  \hbox{}\vspace{1pt}%
+  \hbox to \paperwidth{\hskip2mm
+    {\tiny\color{gray!70!black} Nishioka \textit{et al.}, Front.\ Mater.\ \textbf{12}:1652484 (2025)}%
+    \hfill
+    {\tiny\color{gray!70!black}\insertframenumber}\hskip2mm}%
+  \vspace{2pt}}
+
 \graphicspath{{figures_paper/}{../results/}}
 \newcommand{\best}[1]{{\color{okgreen}\textbf{#1}}}
 
@@ -307,11 +319,88 @@ composite structures.
 \end{block}
 \end{frame}
 
+% =====================================================================
+%  NEW CONTRIBUTION (beyond last year's paper): noise robustness + NDF.
+%  This is exactly the WCCM-abstract delta ("robustness under
+%  experimentally motivated noise conditions") — co-author-vetted.
+% =====================================================================
+\begin{frame}{New focus: robustness for real operation}
+\begin{columns}[T]
+\begin{column}{0.55\textwidth}
+The published model assumes clean FEM fields. In practice:
+\begin{itemize}
+  \item infrared stress measurement carries \textbf{acquisition noise}
+        (temperature fluctuation, emissivity, sensor);
+  \item the vast majority of a real structure is \textbf{defect-free} — false
+        detections there are costly.
+\end{itemize}
+\vspace{0.4em}
+\begin{alertblock}{WCCM contribution}
+Train for \emph{robustness under experimentally-motivated noise} and explicitly
+\emph{suppress false detection} on defect-free regions.
+\end{alertblock}
+\end{column}
+\begin{column}{0.45\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{noise_defect_0.png}\\
+  {\scriptsize Original vs.\ noise-injected DSPSS input.}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ---------------------------------------------------------------------
+\begin{frame}{Noise-augmented dataset \& defect-free negatives (NDF)}
+\begin{columns}[T]
+\begin{column}{0.52\textwidth}
+\textbf{Defect-free negatives (NDF):}
+\begin{itemize}
+  \item base field set to zero (no defect);
+  \item additive Gaussian noise ($10\%$ of data std);
+  \item $5{,}000$ samples added to training.
+\end{itemize}
+\textbf{Noise model on defect data:}
+\begin{itemize}
+  \item line noise along the fibre ($z$) direction (random intensity/width);
+  \item attenuated noise in $x$; global white noise.
+\end{itemize}
+\end{column}
+\begin{column}{0.48\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{ndf_make_0.png}\\
+  {\scriptsize Defect-free noised samples teach the model what ``no defect'' looks like.}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ---------------------------------------------------------------------
+\begin{frame}{Results under noise}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\begin{itemize}
+  \item Difference-DSPSS input enables \textbf{full-region} defect estimation.
+  \item Prediction stays accurate on \textbf{noise-injected} data.
+  \item \textbf{No false detection} on defect-free inputs — the NDF negatives
+        remove spurious activations.
+\end{itemize}
+\vspace{0.4em}
+\begin{block}{Takeaway}
+The framework is robust enough to move toward \emph{experimental} infrared
+stress data.
+\end{block}
+\end{column}
+\begin{column}{0.5\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{noise_pred_0.png}\\
+  {\scriptsize Prediction on noisy input.}
+\end{column}
+\end{columns}
+\end{frame}
+
 % ---------------------------------------------------------------------
 \begin{frame}{Outlook \quad {\small[ongoing, beyond the published paper]}}
 \begin{itemize}
-  \item \textbf{Noise robustness:} training with simulated acquisition noise
-        (line + white noise) toward sim-to-real transfer.
+  \item \textbf{Sim-to-real:} apply the noise-robust model to \emph{experimental}
+        infrared-stress (TSA) measurements.
   \item \textbf{Architecture study (preliminary):} extending from attention
         GNNs to \emph{mesh-physics} GNNs (MeshGraphNet) and layered variants;
         early results are encouraging and under evaluation with co-authors.
@@ -322,8 +411,78 @@ composite structures.
 \end{frame}
 
 % ---------------------------------------------------------------------
-\begin{frame}[allowframebreaks]{References}
+\begin{frame}{References}
+\renewcommand*{\bibfont}{\tiny}
+\begin{multicols}{2}
 \printbibliography[heading=none]
+\end{multicols}
+\end{frame}
+
+% =====================================================================
+%  APPENDIX — difference-data details (course-1 / 差分データ)
+% =====================================================================
+\appendix
+
+\begin{frame}[standout]
+Appendix
+\end{frame}
+
+% ---------------------------------------------------------------------
+\begin{frame}{Appendix: difference-data construction}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+Raw DSPSS near a hole is dominated by geometric stress concentration.
+We remove it by a per-specimen \textbf{difference}:
+\[
+  \text{Difference} = \underbrace{\text{Original (defect)}}_{\text{damaged}}
+  - \underbrace{\text{Reference (no defect)}}_{\text{pristine}} .
+\]
+The residual isolates the defect-induced perturbation, independent of the
+hole's baseline field.
+\end{column}
+\begin{column}{0.5\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{diff_calc_0.png}\\
+  {\scriptsize Original $-$ reference $=$ difference field.}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ---------------------------------------------------------------------
+\begin{frame}{Appendix: Z-score normalization}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+The difference field is standardized per node (Z-score):
+\[
+  \hat\sigma = \frac{\sigma - \mu}{s}.
+\]
+\begin{itemize}
+  \item equalizes magnitude across regions/specimens;
+  \item improves \textbf{depth-direction} (layer) discrimination;
+  \item keeps the network NDT-admissible (coordinate/stress only).
+\end{itemize}
+\end{column}
+\begin{column}{0.5\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{dspss_normalized.png}\\
+  {\scriptsize Normalized DSPSS input (paper figure).}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ---------------------------------------------------------------------
+\begin{frame}{Appendix: DSPSS profile around the defect}
+\begin{columns}[T]
+\begin{column}{0.46\textwidth}
+The difference-DSPSS shows a pronounced \textbf{stress valley} at the defect
+centre; its depth and width encode the insertion layer (ply-angle dependence).
+\end{column}
+\begin{column}{0.54\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{dspss_profile.png}\\
+  {\scriptsize Profile of the normalized DSPSS across the defect (paper figure).}
+\end{column}
+\end{columns}
 \end{frame}
 
 \end{document}
