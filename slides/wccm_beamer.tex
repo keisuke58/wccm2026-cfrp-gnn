@@ -26,7 +26,9 @@
 % ---- bibliography ----
 \usepackage[style=numeric-comp,sorting=none,backend=biber,maxnames=2,giveninits=true]{biblatex}
 \addbibresource{references_gnn.bib}
+% citation の見た目調整: インライン [n] は小さめ＆LUHブルーで控えめに、一覧は scriptsize
 \renewcommand*{\bibfont}{\scriptsize}
+\AtEveryCite{\footnotesize\color{luhblue}}
 
 \definecolor{luhblue}{RGB}{21,101,192}
 \definecolor{luhdark}{RGB}{30,30,30}
