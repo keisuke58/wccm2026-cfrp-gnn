@@ -447,6 +447,18 @@ attenuated noise in $x$, and global white noise.
 \end{frame}
 
 % ---------------------------------------------------------------------
+\begin{frame}{Acknowledgements}
+\note{Thank the co-authors and JAXA, then invite questions.}
+\begin{itemize}
+  \item Conducted in collaboration with \textbf{JAXA} (Research \& Development Directorate, Research Unit IV).
+  \item Co-authors at \textbf{Keio University}, \textbf{Nagoya University}, and \textbf{JAXA}.
+  \item Built on the FEA-generated CFRP interstage dataset of the prior study~\cite{kojima}.
+\end{itemize}
+\vspace{0.8em}
+\centering Thank you for your attention --- questions welcome.
+\end{frame}
+
+% ---------------------------------------------------------------------
 \begin{frame}[allowframebreaks]{References}
 \renewcommand*{\bibfont}{\tiny}
 \printbibliography[heading=none]
@@ -520,6 +532,22 @@ centre; its depth and width encode the insertion layer (ply-angle dependence).
   {\scriptsize Profile of the normalized DSPSS across the defect (paper figure).}
 \end{column}
 \end{columns}
+\end{frame}
+
+% ---------------------------------------------------------------------
+\begin{frame}{Appendix: evaluation metrics}
+\begin{itemize}
+  \item \textbf{$R$} --- in-plane (planar) F1 score for defect vs.\ non-defect at the
+        correct location.
+  \item \textbf{$P_{\mathrm{gauss}}$} --- depth-direction score: Gaussian-weighted
+        ($\sigma = 2$ layers) credit for predicting the correct or a near-correct
+        insertion layer.
+  \item \textbf{TDPS} (Total Defect Prediction Score) $= \tfrac{1}{2}\,(R + P_{\mathrm{gauss}})$.
+  \item \textbf{macro-F1} --- unweighted mean F1 over all 19 classes (the headline metric).
+\end{itemize}
+\vspace{0.4em}
+These quantify in-plane localization ($R$), depth/layer accuracy ($P_{\mathrm{gauss}}$),
+and their combination (TDPS), complementing the class-level macro-F1.
 \end{frame}
 
 \end{document}
