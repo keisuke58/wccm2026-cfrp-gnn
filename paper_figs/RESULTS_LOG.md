@@ -26,3 +26,8 @@
 
 ## ログ
 - 2026-06-07: アーキ横断OOD完了（主張1-4確定）。図2枚作成。アブレ/逆実験 実行中。指標パネルを既定化(`ood_metrics.py`/`train.py full_metrics_panel`)。
+
+## 定量目標（2026-06-07設定）
+- in-dist: HybridMGN macro-F1 ≥0.80(現0.792) / defect-F1 ≥0.80(現0.781) / exact ≥0.85(現0.852✓)。
+- **OODギャップ縮小**: 非アーキ手段で OOD defect-F1 ≥0.30(現≈0) or OOD detRec ≥0.85 @ FPR ≤0.10。
+- rigor: 勝ち構成3シード±std / アブレ確定 / OOD ≥2軸(サイズ＋位置 or 層)。
