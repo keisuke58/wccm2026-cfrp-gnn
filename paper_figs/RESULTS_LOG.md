@@ -13,10 +13,26 @@
 - `fig_arch_indist_vs_ood.png` — 主張2（アーキ比較, in-dist vs OOD）。
 - `fig_detection_vs_localization.png` — 主張3（検出 vs 局在パネル, 3アーキ × in-dist/OOD）。
 
+## アブレーション結果（2026-06-07 確定、GAT hidden16、多指標パネル）
+| 構成 | macroF1 | defectF1 | exact | detRec | detFPR | AUPRC | AUC |
+|---|---|---|---|---|---|---|---|
+| **edge_geo（幾何エッジ特徴）** | **0.692** | **0.675** | 0.713 | 0.977 | 0.0003 | 0.988 | 0.9999 |
+| baseline GAT（参考） | ~0.61 | – | – | – | – | – | – |
+| logit-adjust + log_softmax | 0.065 | 0.043 | 0.217 | 1.000 | 0.707 | 0.944 | 0.938 |
+| focal（誤killでtest未到達） | 0.555* | – | – | – | – | – | – | (*train best)
+
+- **主張5候補: エッジ幾何特徴がGATを大きく押し上げる（0.61→0.69 macroF1, defectF1 0.675, detFPR 0.0003）**。メッセージ伝搬に相対位置/距離を入れる効果。
+- **logit-adjust + log_softmax は有害**（macroF1 0.065、detFPR 0.71＝ほぼ全部欠陥判定で崩壊）。この不均衡設定には不適。
+
+## 逆方向OOD（train 1×1 → test 2/4/8）2026-06-07
+- reverse macroF1 **0.462**（AUC 0.861） vs forward (2/4/8→1×1) 0.332。
+- **主張6候補: OODは非対称＝最小サイズ（穴1個）で訓練する方が大サイズへ汎化する**（小さい局所応力場が大サイズの部分集合になるため）。サイズ汎化の実用指針。
+
 ## まだ足りない（1年で貯める結果）
-- [ ] 複数シード ±std（rigor、勝ち構成だけでも）
-- [ ] アブレーション確定（loss: CE/focal/logit-adjust、NDF、balance、edge特徴、sampler）← 2026-06-07 実行中
-- [ ] 逆方向OOD（train 1×1 → test 2/4/8）の非対称性 ← 実行中
+- [ ] 複数シード ±std（rigor、勝ち構成=edge_geoだけでも）
+- [x] アブレーション（edge_geo勝ち / logit-adj有害 / focalは要再走）← 2026-06-07確定
+- [x] 逆方向OOD非対称性（reverse 0.462 > forward 0.332）← 2026-06-07確定
+- [ ] focal再走（誤killで未完。CE/focal比較を埋める）
 - [ ] 多軸OOD（未知の位置/層/穴形状/ノイズ強度）
 - [ ] OODギャップを埋める非アーキ手段（サイズ認識特徴/augmentation/domain generalization）→ 0.33をどこまで上げられるか
 - [ ] 欠陥単位評価（重心誤差[mm]/IoU）
