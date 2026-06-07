@@ -102,6 +102,44 @@ def macro_f1_variants(y_true: np.ndarray, y_pred: np.ndarray, num_classes: int =
     }
 
 
+def full_metrics_panel(y_true, y_pred, probs=None, num_classes: int = 19):
+    """Default comprehensive evaluation panel (do NOT judge by macro-F1 alone).
+
+    macro-F1 is inflated by class 0 (defect-free ~99.97%). Reports defect-only F1,
+    detection (recall=1-FNR, FPR, AUPRC), surface-group accuracy and exact accuracy.
+    """
+    yt = np.asarray(y_true); yp = np.asarray(y_pred)
+    v = macro_f1_variants(yt, yp, num_classes)
+    cs = [c for c in range(1, num_classes) if (yt == c).any()]; f1s = []
+    for c in cs:
+        tp = int(((yp == c) & (yt == c)).sum()); fp = int(((yp == c) & (yt != c)).sum()); fn = int(((yp != c) & (yt == c)).sum())
+        p = tp / (tp + fp) if tp + fp else 0.0; r = tp / (tp + fn) if tp + fn else 0.0
+        f1s.append(2 * p * r / (p + r) if p + r else 0.0)
+    defF1 = float(np.mean(f1s)) if f1s else 0.0
+    dt = (yt > 0).astype(int); dp = (yp > 0).astype(int)
+    tp = int(((dp == 1) & (dt == 1)).sum()); fp = int(((dp == 1) & (dt == 0)).sum())
+    fn = int(((dp == 0) & (dt == 1)).sum()); tn = int(((dp == 0) & (dt == 0)).sum())
+    detRec = tp / (tp + fn) if tp + fn else 0.0; detFPR = fp / (fp + tn) if fp + tn else 0.0
+    grp = lambda a: np.where(a == 0, 0, np.where(a <= 9, 1, 2)); dm = dt == 1
+    grpAcc = float((grp(yp)[dm] == grp(yt)[dm]).mean()) if dm.any() else 0.0
+    exact = float((yp[dm] == yt[dm]).mean()) if dm.any() else 0.0
+    auprc = float('nan')
+    if probs is not None:
+        try:
+            from sklearn.metrics import average_precision_score
+            pdef = 1.0 - np.asarray(probs)[:, 0]
+            if dt.any() and (dt == 0).any():
+                auprc = float(average_precision_score(dt, pdef))
+        except Exception:
+            pass
+    panel = {'macroF1': v['macro_f1_support_only'], 'defectF1': defF1, 'detRec': detRec,
+             'detFPR': detFPR, 'AUPRC': auprc, 'grpAcc': grpAcc, 'exact': exact}
+    print("=== Evaluation panel (default; judge holistically, NOT macro-F1 alone) ===")
+    print(f"  macroF1(supp)={panel['macroF1']:.4f}  defectF1={defF1:.4f}  exact={exact:.4f}  grpAcc={grpAcc:.4f}")
+    print(f"  detRec(1-FNR)={detRec:.4f}  detFPR={detFPR:.4f}  AUPRC={auprc:.4f}")
+    return panel
+
+
 def _select_macro_f1(variants: dict, macro_mode: str) -> float:
     mode = str(macro_mode).lower()
     if mode in ("support_only", "support", "true_support"):
@@ -790,8 +828,12 @@ class MGNTransformerModel(torch.nn.Module):
         self.node_encoder = _mlp(in_channels, hidden, hidden)
         self.edge_encoder = _mlp(4, hidden, hidden)
         self.blocks = nn.ModuleList([_GraphNetBlock(hidden) for _ in range(num_blocks)])
-        self.qkv = nn.ModuleList([nn.Linear(hidden, hidden * 3) for _ in range(num_blocks)])
-        self.attn_norm = nn.ModuleList([nn.LayerNorm(hidden) for _ in range(num_blocks)])
+        # attention だけ一部ブロックで発火 → 発火位置にのみモジュールを作る（DDP未使用param回避）
+        attn_pos = [i for i in range(num_blocks) if (i + 1) % attn_every == 0]
+        self.attn_at = {i: j for j, i in enumerate(attn_pos)}
+        n_attn = max(1, len(attn_pos))
+        self.qkv = nn.ModuleList([nn.Linear(hidden, hidden * 3) for _ in range(n_attn)])
+        self.attn_norm = nn.ModuleList([nn.LayerNorm(hidden) for _ in range(n_attn)])
         self.hidden = hidden
         self.dropout = nn.Dropout(p=dropout)
         self.decoder = nn.Sequential(nn.Linear(hidden, hidden), nn.ReLU(),
@@ -802,18 +844,18 @@ class MGNTransformerModel(torch.nn.Module):
         rel = pos[edge_index[1]] - pos[edge_index[0]]
         return torch.cat([rel, rel.norm(dim=1, keepdim=True)], dim=1)
 
-    def _global_attn(self, h, batch, layer):
+    def _global_attn(self, h, batch, j):
         # per-graph self-attention（固定ノード数 M を仮定して (G,M,hidden) に reshape）
         M = int((batch == 0).sum().item())
         G = int(batch.max().item()) + 1
         if G * M != h.size(0):     # 可変ノード数なら attention をスキップ（安全）
             return h
-        qkv = self.qkv[layer](h).view(G, M, 3, self.n_heads, self.hidden // self.n_heads)
+        qkv = self.qkv[j](h).view(G, M, 3, self.n_heads, self.hidden // self.n_heads)
         q, k, v = qkv.unbind(dim=2)                       # each (G,M,heads,dh)
         q, k, v = (t.transpose(1, 2) for t in (q, k, v))  # (G,heads,M,dh)
         o = torch.nn.functional.scaled_dot_product_attention(q, k, v)
         o = o.transpose(1, 2).reshape(G * M, self.hidden)
-        return self.attn_norm[layer](h + o)
+        return self.attn_norm[j](h + o)
 
     def forward(self, data):
         x, edge_index = data.x, data.edge_index
@@ -827,7 +869,7 @@ class MGNTransformerModel(torch.nn.Module):
         for i, block in enumerate(self.blocks):
             h, e = block(h, edge_index, e)
             if (i + 1) % self.attn_every == 0:
-                h = self._global_attn(h, batch, i)
+                h = self._global_attn(h, batch, self.attn_at[i])
             h = self.dropout(h)
         return _apply_layer_mask(self.decoder(h), data)
 
@@ -1282,7 +1324,8 @@ def evaluate_and_visualize(final_test_loader, train_loader, ddp_model, device, c
         macro_f1 = f1_score(all_labels_np, all_preds_np, average='macro', zero_division=0)
         macro_precision = precision_score(all_labels_np, all_preds_np, average='macro', zero_division=0)
         macro_recall = recall_score(all_labels_np, all_preds_np, average='macro', zero_division=0)
-        
+        full_metrics_panel(all_labels_np, all_preds_np, all_probs_np)  # default multi-metric panel
+
         # フォルダ名をMacro F1スコアを含む名前に変更
         output_dir_test_predict_new = f"/home/nishioka/GNN/GNN_hole_2026/Predict_data/Predict19ClassZscore_Test{timestamp}_F1_{macro_f1:.2f}"
         if os.path.exists(output_dir_test_predict_temp):
