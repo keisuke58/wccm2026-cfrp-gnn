@@ -2339,6 +2339,11 @@ def main(args):
     _seed = getattr(args, 'seed', 42)
     set_seed(_seed)  # deterministic torch/np/random/cuda seeding
 
+    # cudnn.benchmark: 固定入力サイズなら ON で高速化（再現性は若干低下するが問題ない）
+    if getattr(args, 'cudnn_benchmark', False):
+        torch.backends.cudnn.benchmark = True
+        torch.backends.cudnn.deterministic = False
+
     # DDP Debug Environment Variables (optional, for troubleshooting):
     # Set these before running to get detailed NCCL/PyTorch distributed debug info:
     #   export TORCH_DISTRIBUTED_DEBUG=DETAIL  # PyTorch distributed debug
@@ -2590,6 +2595,14 @@ def main(args):
         print(f"Model: GATModel(conv_type={conv_type}, in_channels={in_channels}, "
               f"extra_geo_features={extra_geo_features}, edge_geo_features={edge_geo_features})")
     
+    # torch.compile (opt-in; RTX 4090/3090 で ~20-50% 高速化)
+    _use_compile = getattr(args, 'compile', False)
+    if _use_compile:
+        _compile_mode = getattr(args, 'compile_mode', 'default')
+        if rank == 0:
+            print(f"[torch.compile] mode={_compile_mode} — first batch will be slow (tracing)")
+        model = torch.compile(model, mode=_compile_mode)
+
     # Create the DDP model after initializing the process group
     # device_idsはlocal_rankを使用（利用可能なGPU数に合わせる）
     if torch.cuda.is_available() and local_rank is not None:
@@ -2691,9 +2704,15 @@ def main(args):
         print("Creating DataLoaders...")
     # Use drop_last=True for training to ensure all ranks have same number of batches (prevents NCCL timeout)
     # For validation, use drop_last=False to avoid empty batches when validation data is small
-    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, sampler=train_sampler, drop_last=True)
-    val_loader = DataLoader(val_dataset, batch_size=args.batch_size, sampler=val_sampler, drop_last=False)
-    test_loader = DataLoader(test_dataset, batch_size=args.batch_size, sampler=test_sampler, drop_last=False)
+    _nw = getattr(args, 'num_workers', 4)
+    _pm = torch.cuda.is_available()
+    _pf = max(2, _nw) if _nw > 0 else None
+    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, sampler=train_sampler, drop_last=True,
+                              num_workers=_nw, pin_memory=_pm, prefetch_factor=_pf, persistent_workers=(_nw > 0))
+    val_loader = DataLoader(val_dataset, batch_size=args.batch_size, sampler=val_sampler, drop_last=False,
+                            num_workers=_nw, pin_memory=_pm, prefetch_factor=_pf, persistent_workers=(_nw > 0))
+    test_loader = DataLoader(test_dataset, batch_size=args.batch_size, sampler=test_sampler, drop_last=False,
+                             num_workers=_nw, pin_memory=_pm, prefetch_factor=_pf, persistent_workers=(_nw > 0))
     
     # DDP Safety: Assert all ranks have non-empty loaders
     assert len(train_loader) > 0, f"Rank {rank}: train_loader is empty!"
@@ -3594,7 +3613,9 @@ def main(args):
             test_loader_eval = DataLoader(
                 test_dataset,
                 batch_size=args.batch_size,
-                shuffle=False
+                shuffle=False,
+                num_workers=getattr(args, 'num_workers', 4),
+                pin_memory=torch.cuda.is_available(),
             )
             
             # テストデータの評価
@@ -3777,6 +3798,16 @@ if __name__ == '__main__':
     parser.add_argument('--no_log_softmax', action='store_false', dest='use_log_softmax', help='Disable log_softmax version of FocalLoss')
     parser.add_argument('--use_amp', action='store_true', default=False, help='Use mixed precision training (AMP) (default: False)')
     parser.add_argument('--no_amp', action='store_false', dest='use_amp', help='Disable mixed precision training')
+    # GPU throughput flags
+    parser.add_argument('--num_workers', type=int, default=4,
+                        help='DataLoader worker processes for async data loading (default: 4; set 0 to disable)')
+    parser.add_argument('--compile', action='store_true', default=False,
+                        help='Enable torch.compile() for ~20-50%% speedup on RTX 4090/3090 (PyTorch 2.x required)')
+    parser.add_argument('--compile_mode', type=str, default='default',
+                        choices=['default', 'reduce-overhead', 'max-autotune'],
+                        help='torch.compile mode (default: default; reduce-overhead=best for repeated shapes)')
+    parser.add_argument('--cudnn_benchmark', action='store_true', default=False,
+                        help='Enable cudnn.benchmark for fixed-size inputs (faster conv selection; reproducibility slightly reduced)')
     parser.add_argument('--use_onecycle', action='store_true', default=True, help='Use OneCycleLR scheduler instead of CosineAnnealingLR (default: True)')
     parser.add_argument('--no_onecycle', dest='use_onecycle', action='store_false', help='Disable OneCycleLR scheduler (use CosineAnnealingLR)')
     parser.add_argument('--onecycle_max_lr', type=float, default=None, help='Max learning rate for OneCycleLR (default: learning_rate * 2.0, recommended: 1e-3 ~ 3e-3 for GAT)')

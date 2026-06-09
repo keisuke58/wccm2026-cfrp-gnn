@@ -34,7 +34,9 @@ run () {  # $1=tag  $2...=extra flags
   echo "flags: $*"
   torchrun --nproc_per_node=${NPROC} ${TRAIN} \
       --epochs ${EPOCHS} --use_onecycle --dropout 0.1 --edge_drop_prob 0.01 \
-      --batch_size 128 --hidden_channels 32 "$@" 2>&1 | tee "${log}"
+      --batch_size 128 --hidden_channels 32 \
+      --num_workers 4 --cudnn_benchmark \
+      "$@" 2>&1 | tee "${log}"
   echo "log -> ${log}"
 }
 
