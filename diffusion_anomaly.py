@@ -88,22 +88,28 @@ def compute_nodefect_grid(x, y, grid_size=GRID_SIZE):
 # ─── dataset ─────────────────────────────────────────────────────────────────
 class CFRPGridDataset(Dataset):
     """
-    Load pre-normalised (subtracted + z-scored) .npy files and project to grid.
-    Returns (1, G, G) tensors.
+    Project .npy node fields onto a (1, G, G) grid tensor.
+    plain=False: files are pre-normalised (subtracted + z-scored)
+    plain=True : files are RAW full-field DSPSS → per-sample z-score.
+                 Self-contained normalisation = directly applicable to a single
+                 measured field (JAXA IR) with no healthy reference needed.
     """
-    def __init__(self, data_dir: str, x, y, max_samples: int = None):
+    def __init__(self, data_dir: str, x, y, max_samples: int = None, plain: bool = False):
         self.files = sorted(glob.glob(os.path.join(data_dir, "*.npy")))
         if max_samples:
             rng = np.random.default_rng(42)
             idx = rng.choice(len(self.files), min(max_samples, len(self.files)), replace=False)
             self.files = [self.files[i] for i in sorted(idx)]
         self.x, self.y = x, y
+        self.plain = plain
 
     def __len__(self):
         return len(self.files)
 
     def __getitem__(self, i):
         dspss = np.load(self.files[i]).astype(np.float32)[:13942]
+        if self.plain:
+            dspss = (dspss - dspss.mean()) / (dspss.std() + 1e-8)
         grid  = nodes_to_grid(dspss, self.x, self.y)          # (G,G)
         # clip to [-5,5] for training stability
         grid  = np.clip(grid, -5.0, 5.0) / 5.0                # → [-1,1]
@@ -280,27 +286,38 @@ def make_sampler(objective: str):
     return FlowMatching(device=DEVICE) if objective == "fm" else DDPM(T=T_MAX, device=DEVICE)
 
 
-def ckpt_path(objective: str):
+# raw full-field dirs (same path mirrored on Vancouver for plain mode)
+RAW_BASE      = "/home/nishioka/CFRP/CFRP_hole/hole_data_inp"
+RAW_1X1_PLAIN = f"{RAW_BASE}/Defect_hole_1x1_Random_npy"
+RAW_2X2_PLAIN = f"{RAW_BASE}/Defect_hole_2x2_Region1_21_npy"
+RAW_4X4_PLAIN = f"{RAW_BASE}/Defect_hole_4x4_Region1_21_npy"
+
+
+def ckpt_path(objective: str, data: str = "sub"):
     obj = "fm" if objective == "fm" else "ddpm"
     g   = "" if GRID_SIZE == 64 else f"_g{GRID_SIZE}"
-    return f"{RESULTS_DIR}/{obj}{g}_best.pt"
+    d   = "" if data == "sub" else "_plain"
+    return f"{RESULTS_DIR}/{obj}{g}{d}_best.pt"
 
 
 # ─── training ────────────────────────────────────────────────────────────────
 def train(args):
-    print(f"[train] device={DEVICE}, grid={GRID_SIZE}x{GRID_SIZE}, objective={args.objective}")
+    plain = args.data == "plain"
+    print(f"[train] device={DEVICE}, grid={GRID_SIZE}x{GRID_SIZE}, "
+          f"objective={args.objective}, data={args.data}")
     x_c, y_c = load_coords()
 
-    ds     = CFRPGridDataset(NORM_1X1, x_c, y_c, max_samples=args.max_train)
+    train_dir = RAW_1X1_PLAIN if plain else NORM_1X1
+    ds     = CFRPGridDataset(train_dir, x_c, y_c, max_samples=args.max_train, plain=plain)
     loader = DataLoader(ds, batch_size=args.batch_size, shuffle=True, num_workers=4)
-    print(f"  training samples: {len(ds)}")
+    print(f"  training samples: {len(ds)}  ({train_dir})")
 
     model   = UNet(base_ch=args.base_ch).to(DEVICE)
     sampler = make_sampler(args.objective)
     optim   = torch.optim.AdamW(model.parameters(), lr=args.lr)
     sched   = torch.optim.lr_scheduler.CosineAnnealingLR(optim, T_max=args.epochs)
 
-    cpath     = ckpt_path(args.objective)
+    cpath     = ckpt_path(args.objective, args.data)
     best_loss = float("inf")
     for epoch in range(1, args.epochs + 1):
         model.train(); total = 0
@@ -337,18 +354,21 @@ def load_labels_onehot(label_dir, filename):
     return None
 
 
-def normalise_sample(fpath, x_c, y_c):
-    """Load one sample, z-score (if raw), project to grid in [-1,1]."""
+def normalise_sample(fpath, x_c, y_c, plain=False):
+    """Load one sample, normalise, project to grid in [-1,1]."""
     vals = np.load(fpath).astype(np.float32)[:13942]
-    if not _ON_VANCOUVER:                 # local dirs hold RAW DSPSS → subtract no-defect
-        nd  = np.load(NODEFECT).astype(np.float32)
+    if plain:
+        # per-sample z-score of the raw full field — no healthy reference needed
+        vals = (vals - vals.mean()) / (vals.std() + 1e-8)
+    elif not _ON_VANCOUVER:               # local dirs hold RAW DSPSS → z-score w/ no-defect stats
+        nd   = np.load(NODEFECT).astype(np.float32)
         vals = (vals - nd.mean()) / (nd.std() + 1e-8)
-    # Vancouver test dirs are already subtracted+z-scored
+    # Vancouver "sub" test dirs are already subtracted+z-scored
     return np.clip(nodes_to_grid(vals, x_c, y_c), -5.0, 5.0) / 5.0
 
 
 def eval_dataset(model, ddpm, raw_dir, label_dir, x_c, y_c, tag,
-                 n_samples=100, pattern="*.npy", n_seeds=4):
+                 n_samples=100, pattern="*.npy", n_seeds=4, plain=False):
     """Evaluate node-level AUROC against 19-class labels.
 
     Anomaly map is averaged over n_seeds independent noise draws — a single
@@ -361,7 +381,7 @@ def eval_dataset(model, ddpm, raw_dir, label_dir, x_c, y_c, tag,
         lbl = load_labels_onehot(label_dir, fpath)
         if lbl is None:
             continue
-        grid   = normalise_sample(fpath, x_c, y_c)
+        grid   = normalise_sample(fpath, x_c, y_c, plain=plain)
         x0     = torch.from_numpy(grid).unsqueeze(0).unsqueeze(0).to(DEVICE)
 
         with torch.no_grad():
@@ -423,18 +443,28 @@ def evaluate(args):
     ddpm  = make_sampler(ckpt.get("objective", args.objective))
     x_c, y_c = load_coords()
 
-    print(f"[eval] checkpoint: {args.ckpt}  (epoch {ckpt['epoch']}, loss {ckpt['loss']:.4f})")
-    # Vancouver test dir mixes sizes → select via filename pattern
-    pat_2x2 = "*H2_W2.npy" if _ON_VANCOUVER else "*.npy"
-    pat_4x4 = "*H4_W4.npy" if _ON_VANCOUVER else "*.npy"
-    pat_8x8 = "*H8_W8.npy" if _ON_VANCOUVER else None
-    eval_dataset(model, ddpm, RAW_2X2, LABEL_2X2, x_c, y_c, "2x2", n_samples=200, pattern=pat_2x2)
-    eval_dataset(model, ddpm, RAW_4X4, LABEL_4X4, x_c, y_c, "4x4", n_samples=100, pattern=pat_4x4)
+    print(f"[eval] checkpoint: {args.ckpt}  (epoch {ckpt['epoch']}, loss {ckpt['loss']:.4f}, data={args.data})")
+    plain = args.data == "plain"
+    if plain:
+        # raw single-size dirs (mirrored on Vancouver), per-sample z-score
+        dir_2x2, dir_4x4 = RAW_2X2_PLAIN, RAW_4X4_PLAIN
+        pat_2x2 = pat_4x4 = "*.npy"; pat_8x8 = None
+    else:
+        dir_2x2, dir_4x4 = RAW_2X2, RAW_4X4
+        # Vancouver test dir mixes sizes → select via filename pattern
+        pat_2x2 = "*H2_W2.npy" if _ON_VANCOUVER else "*.npy"
+        pat_4x4 = "*H4_W4.npy" if _ON_VANCOUVER else "*.npy"
+        pat_8x8 = "*H8_W8.npy" if _ON_VANCOUVER else None
+    eval_dataset(model, ddpm, dir_2x2, LABEL_2X2, x_c, y_c, "2x2",
+                 n_samples=200, pattern=pat_2x2, plain=plain)
+    eval_dataset(model, ddpm, dir_4x4, LABEL_4X4, x_c, y_c, "4x4",
+                 n_samples=100, pattern=pat_4x4, plain=plain)
     if pat_8x8:
-        eval_dataset(model, ddpm, RAW_4X4, LABEL_4X4, x_c, y_c, "8x8", n_samples=100, pattern=pat_8x8)
+        eval_dataset(model, ddpm, dir_4x4, LABEL_4X4, x_c, y_c, "8x8",
+                     n_samples=100, pattern=pat_8x8, plain=plain)
 
     # Visualise one large-defect sample
-    files_4x4 = sorted(glob.glob(os.path.join(RAW_4X4, pat_4x4)))
+    files_4x4 = sorted(glob.glob(os.path.join(dir_4x4, pat_4x4)))
     if files_4x4:
         visualise_anomaly(model, ddpm, files_4x4[0], LABEL_4X4, x_c, y_c,
                           f"{RESULTS_DIR}/anomaly_4x4_example.png")
@@ -446,6 +476,8 @@ def main():
     p.add_argument("--mode",       default="train", choices=["train", "eval"])
     p.add_argument("--objective",  default="ddpm",  choices=["ddpm", "fm"],
                    help="ddpm = ancestral diffusion, fm = rectified flow matching")
+    p.add_argument("--data",       default="sub",   choices=["sub", "plain"],
+                   help="sub = subtracted+zscored (sparse), plain = raw full field, per-sample zscore")
     p.add_argument("--ckpt",       default=None)
     p.add_argument("--epochs",     type=int, default=100)
     p.add_argument("--batch_size", type=int, default=16)
@@ -457,7 +489,7 @@ def main():
     global GRID_SIZE
     GRID_SIZE = args.grid
     if args.ckpt is None:
-        args.ckpt = ckpt_path(args.objective)
+        args.ckpt = ckpt_path(args.objective, args.data)
 
     if args.mode == "train":
         train(args)
