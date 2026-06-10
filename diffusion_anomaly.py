@@ -24,16 +24,31 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-# ─── paths ──────────────────────────────────────────────────────────────────
-DATA_BASE   = "/home/nishioka/CFRP/CFRP_hole/hole_data_inp"
-COORD_DIR   = f"{DATA_BASE}/basicdata_for_holegnn"
-NORM_1X1    = f"{DATA_BASE}/Defect_hole_1x1_subtracted_zscore"
-RAW_2X2     = f"{DATA_BASE}/Defect_hole_2x2_Region1_21_npy"
-RAW_4X4     = f"{DATA_BASE}/Defect_hole_4x4_Region1_21_npy"
-LABEL_1X1   = f"{DATA_BASE}/Def1x1_19class_label"
-LABEL_2X2   = f"{DATA_BASE}/Def2x2_19class_label"
-LABEL_4X4   = f"{DATA_BASE}/Def4x4_19class_label"
-NODEFECT    = f"{DATA_BASE}/hole_no_defect_data/hole_no_defect_original.npy"
+# ─── paths (auto-detect local vs Vancouver) ─────────────────────────────────
+import socket
+_HOST = socket.gethostname()
+_ON_VANCOUVER = _HOST.startswith("vancouver")
+
+if _ON_VANCOUVER:
+    DATA_BASE = "/home/nishioka/GNN/GNN_hole_2026"
+    COORD_DIR = "/home/nishioka/GNN/GNN_hole/GNN_hole_data"
+    NORM_1X1  = f"{DATA_BASE}/all_sub_hole_defect_zscore/train"
+    RAW_2X2   = f"{DATA_BASE}/all_sub_hole_defect_zscore/test"   # mixed sizes → filtered by label
+    RAW_4X4   = f"{DATA_BASE}/all_sub_hole_defect_zscore/test"
+    LABEL_1X1 = f"{DATA_BASE}/all_19class_label/train"
+    LABEL_2X2 = f"{DATA_BASE}/all_19class_label/test"
+    LABEL_4X4 = f"{DATA_BASE}/all_19class_label/test"
+    NODEFECT  = f"{DATA_BASE}/all_sub_hole_defect_zscore/train/hole_no_defect_original.npy"
+else:
+    DATA_BASE = "/home/nishioka/CFRP/CFRP_hole/hole_data_inp"
+    COORD_DIR = f"{DATA_BASE}/basicdata_for_holegnn"
+    NORM_1X1  = f"{DATA_BASE}/Defect_hole_1x1_subtracted_zscore"
+    RAW_2X2   = f"{DATA_BASE}/Defect_hole_2x2_Region1_21_npy"
+    RAW_4X4   = f"{DATA_BASE}/Defect_hole_4x4_Region1_21_npy"
+    LABEL_1X1 = f"{DATA_BASE}/Def1x1_19class_label"
+    LABEL_2X2 = f"{DATA_BASE}/Def2x2_19class_label"
+    LABEL_4X4 = f"{DATA_BASE}/Def4x4_19class_label"
+    NODEFECT  = f"{DATA_BASE}/hole_no_defect_data/hole_no_defect_original.npy"
 RESULTS_DIR = "results/diffusion"
 
 GRID_SIZE   = 64   # spatial grid resolution
