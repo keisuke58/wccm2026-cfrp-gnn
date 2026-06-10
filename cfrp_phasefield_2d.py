@@ -64,7 +64,13 @@ Known limitations (memo §6 — honest accounting):
     quoting strengths (or migrate to Wu's PF-CZM).
   * Isotropic ply elasticity: the crack DRIVING force ignores E1/E2 ≈ 10–20.
   * Interface band is a Gc surrogate, not a cohesive law (see above).
-  * Quasi-static only: no fatigue.  True fatigue PF = Carrara et al. 2020.
+  * Fatigue: implemented after Carrara, Ambati, Alessi & De Lorenzis (2020),
+    CMAME 361:112731 — fatigue history variable ᾱ accumulating the active
+    (degraded) elastic energy density over load cycles, asymptotic fatigue
+    degradation function f(ᾱ) multiplying Gc (see `fatigue_degradation` /
+    `simulate_fatigue_flights`).  ᾱ_T is a CALIBRATION parameter here
+    (normalised units, no S–N anchoring yet) — cycle counts are relative,
+    not absolute lives.
 
 CPU, numpy/scipy only, coarse grids (nx ~ 60): one growth simulation runs in
 seconds; growth_probability over ~20 posterior draws in minutes.
@@ -114,10 +120,26 @@ class LaminateConfig:
     # growth criterion / load stepping
     growth_rel_threshold: float = 0.5  # relative crack-area increase = growth
     n_load_steps: int = 12
+    # fatigue (Carrara et al. 2020, CMAME 361:112731 — asymptotic f(ᾱ))
+    #   ᾱ_T threshold of the fatigue degradation function.  Carrara's
+    #   convenience choice is ᾱ_T = Gc/(6ℓ) (their Eq. 44 with AT2,
+    #   ε_y = sqrt(Gc/3ℓE)); on THIS normalised load scale that puts even the
+    #   "low" load 0.06 (≈ 0.6× the static-critical strain) at ~3 ᾱ_T per
+    #   cycle, i.e. failure within a handful of cycles.  ᾱ_T is a material
+    #   parameter to be fitted to S–N data (Carrara §5); we treat the scale
+    #   factor as that calibration knob and default it so the documented load
+    #   scale maps to a usable HCF window: no growth at 0.06 within ~10
+    #   flights × cycles_per_flight, finite life at 0.08–0.09 (Wöhler-like).
+    fatigue_alpha_T: float | None = None     # if None: scale * Gc_ply/(6 ell)
+    fatigue_alpha_T_scale: float = 1000.0    # calibration multiplier (see above)
+    cycles_per_flight: int = 100             # K load cycles per flight
 
     def __post_init__(self):
         if self.ell is None:
             self.ell = 2.2 * max(self.hx, self.hy)
+        if self.fatigue_alpha_T is None:
+            self.fatigue_alpha_T = (self.fatigue_alpha_T_scale
+                                    * self.Gc_ply / (6.0 * self.ell))
 
     @property
     def hx(self) -> float:
@@ -540,6 +562,161 @@ def simulate_growth(d0: np.ndarray, load: float,
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+#  Fatigue (Carrara, Ambati, Alessi & De Lorenzis 2020, CMAME 361:112731)
+#
+#  Variational AT2 + fatigue: the fracture term of the energy becomes
+#      ∫ f(ᾱ(t)) Gc(x) γ(d, ∇d; A(x)) dV,
+#  with the fatigue history variable (mean-load-independent form, their
+#  Eq. 35) accumulating the ACTIVE, DEGRADED elastic energy density on
+#  loading branches only:
+#      ᾱ(t) = ∫₀ᵗ H(α α̇) |α̇| dτ,     α = g(d) ψ⁺(ε)            (their §3.5)
+#  and the asymptotic fatigue degradation function (their Eq. 37):
+#      f(ᾱ) = 1                        if ᾱ ≤ ᾱ_T
+#      f(ᾱ) = (2 ᾱ_T / (ᾱ + ᾱ_T))²    if ᾱ ≥ ᾱ_T.
+#  The damage Euler–Lagrange equation keeps f INSIDE the divergence (their
+#  ∇f·∇d term), which our spatially varying flux operator gives for free:
+#      -ℓ ∇·(f(ᾱ) Gc A ∇d) + (f(ᾱ) Gc/ℓ + 2H) d = 2H.
+#
+#  Cycle-block integration ("cycle jump", standard for HCF phase-field):
+#  one load cycle 0 → peak → 0 accumulates exactly the loading branch,
+#  Δᾱ_cycle = α_peak, so a block of ΔN cycles at a frozen state adds
+#  ΔN · α_peak(state).  Damage and ᾱ PERSIST across blocks and flights.
+# ─────────────────────────────────────────────────────────────────────────────
+
+def fatigue_degradation(alpha_bar: np.ndarray, alpha_T: float) -> np.ndarray:
+    """Asymptotic fatigue degradation function f(ᾱ) (Carrara 2020, Eq. 37).
+
+    f = 1 below the threshold ᾱ_T, then decays as (2ᾱ_T/(ᾱ+ᾱ_T))² → 0:
+    repeated sub-critical loading erodes the effective toughness f·Gc without
+    bound, so ANY non-zero cyclic load eventually propagates the crack
+    (Wöhler-like behaviour, no endurance limit in this variant).
+    """
+    ab = np.asarray(alpha_bar, dtype=float)
+    f = np.ones_like(ab)
+    m = ab > alpha_T
+    f[m] = (2.0 * alpha_T / (ab[m] + alpha_T)) ** 2
+    return f
+
+
+@dataclass
+class FatigueState:
+    """Persistent state carried across load cycles / flights."""
+    d: np.ndarray             # damage field (ny, nx)
+    H: np.ndarray             # quasi-static history field max_t ψ⁺
+    alpha_bar: np.ndarray     # fatigue history variable ᾱ (ny, nx)
+    cycles: float = 0.0       # total accumulated load cycles
+
+
+@dataclass
+class FatigueResult:
+    grown: bool
+    fail_flight: int | None       # 1-based flight of first growth (None = none)
+    area0: float
+    rel_growth_per_flight: np.ndarray   # (n_flights,) — NaN after early stop
+    state: FatigueState
+
+
+def simulate_fatigue_flights(d0: np.ndarray, load: float, n_flights: int,
+                             cfg: LaminateConfig | None = None,
+                             cycles_per_flight: int | None = None,
+                             blocks_per_flight: int = 3,
+                             ramp_steps_first_flight: int = 6,
+                             state: FatigueState | None = None,
+                             stop_on_growth: bool = True) -> FatigueResult:
+    """Fatigue crack growth over `n_flights` flights of K identical load
+    cycles each (K = cycles_per_flight), Carrara-2020 AT2 fatigue with the
+    laminate Gc/A maps.  Damage d, history H and fatigue variable ᾱ persist
+    across flights (pass `state` to chain inspections between missions).
+
+    Integration scheme per flight:
+      * flight 1 only: quasi-static staggered ramp 0 → peak in
+        `ramp_steps_first_flight` steps (recovers simulate_growth behaviour —
+        a statically critical load fails in flight 1), counting as 1 cycle;
+      * then `blocks_per_flight` cycle blocks: solve elasticity at peak,
+        ᾱ += ΔN·α with α = (1-d)² ψ⁺ (frozen-state cycle jump),
+        f = f(ᾱ), one staggered damage solve with toughness f(ᾱ)·Gc·A.
+
+    Growth criterion: relative d>0.5 area increase vs the SEED exceeding
+    cfg.growth_rel_threshold, checked after each flight; with
+    `stop_on_growth` the simulation stops at the first failed flight
+    (remaining entries of rel_growth_per_flight are NaN).
+
+    Caveat: ᾱ_T (cfg.fatigue_alpha_T) is a calibration parameter in
+    normalised units — cycle counts are RELATIVE severity, not absolute
+    fatigue lives (no S–N anchoring yet).
+    """
+    cfg = cfg or LaminateConfig()
+    K = cycles_per_flight if cycles_per_flight is not None \
+        else cfg.cycles_per_flight
+    alpha_T = cfg.fatigue_alpha_T
+
+    Gc_map, Mxx, Myy, Mxy, _ = build_laminate_maps(cfg)
+    L_divM_virgin = build_var_coeff_divM(Mxx, Myy, Mxy, cfg.hx, cfg.hy)
+
+    if state is None:
+        state = FatigueState(d=d0.copy(), H=np.zeros_like(d0),
+                             alpha_bar=np.zeros_like(d0))
+    seed_mask = d0 >= 0.99
+    area0 = damage_area(d0, cfg)
+    u_peak = load * cfg.Ly
+
+    def _psi_at(u_app):
+        ux, uy = _solve_displacement_ytension(state.d, u_app, cfg)
+        psi = _compute_H_field(ux, uy, cfg, d=state.d)
+        psi[state.d >= 0.99] = 0.0      # fully damaged nodes are inert
+        return psi
+
+    def _damage_update():
+        f = fatigue_degradation(state.alpha_bar, alpha_T)
+        if np.all(f >= 1.0 - 1e-12):
+            L = L_divM_virgin
+        else:
+            L = build_var_coeff_divM(f * Mxx, f * Myy, f * Mxy,
+                                     cfg.hx, cfg.hy)
+        state.d = _solve_damage(state.H, state.d, L, f * Gc_map, cfg.ell)
+        state.d[seed_mask] = 1.0
+
+    rel_growth = np.full(n_flights, np.nan)
+    fail_flight = None
+
+    for fl in range(1, n_flights + 1):
+        if fl == 1 and ramp_steps_first_flight > 0:
+            # quasi-static first loading (cycle 1 of flight 1)
+            for u_app in np.linspace(0.0, u_peak,
+                                     ramp_steps_first_flight + 1)[1:]:
+                psi = _psi_at(u_app)
+                state.H = np.maximum(state.H, psi)
+                _damage_update()
+            # the ramp is the loading branch of one cycle: Δᾱ = α_peak
+            psi = _psi_at(u_peak)
+            state.alpha_bar += (1.0 - state.d) ** 2 * psi
+            state.cycles += 1.0
+            n_cyc_left = K - 1
+        else:
+            n_cyc_left = K
+
+        dN = n_cyc_left / blocks_per_flight
+        for _ in range(blocks_per_flight):
+            psi = _psi_at(u_peak)
+            state.H = np.maximum(state.H, psi)
+            # cycle-jump fatigue accumulation (Eq. 35/42, loading branches)
+            state.alpha_bar += dN * (1.0 - state.d) ** 2 * psi
+            state.cycles += dN
+            _damage_update()
+
+        rel = (damage_area(state.d, cfg) - area0) / max(area0, 1e-12)
+        rel_growth[fl - 1] = rel
+        if fail_flight is None and rel > cfg.growth_rel_threshold:
+            fail_flight = fl
+            if stop_on_growth:
+                break
+
+    return FatigueResult(grown=fail_flight is not None,
+                         fail_flight=fail_flight, area0=area0,
+                         rel_growth_per_flight=rel_growth, state=state)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 #  Stage-3 prognosis API
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -580,53 +757,130 @@ def growth_probability(posterior_samples: np.ndarray, load: float,
     return float(flags.mean())
 
 
+def calibrate_thresholds(c_loss: float = 100.0,
+                         c_repair: float = 1.0,
+                         c_retire_value: float = 25.0,
+                         repair_residual_risk: float = 0.5
+                         ) -> tuple[float, float]:
+    """Decision thresholds (alpha, beta) from expected-cost minimisation.
+
+    Single-flight decision model, p = P(crack growth on the next flight),
+    growth conservatively equated with loss of vehicle:
+
+      E[cost | FLY as-is] = p · c_loss
+      E[cost | REPAIR]    = c_repair + r · p · c_loss
+                            (r = repair_residual_risk: refurbishment removes
+                             the detected flaw but only a fraction (1-r) of
+                             the growth risk — access damage, undetected
+                             siblings, repair quality)
+      E[cost | RETIRE]    = c_retire_value
+                            (forfeited remaining value of the vehicle —
+                             NOT the loss-of-vehicle cost: retiring is the
+                             safe alternative, default 25:100 of c_loss)
+
+    Minimising expected cost gives threshold form:
+      FLY    optimal  iff  p ≤ alpha = c_repair / ((1-r) · c_loss)
+      REPAIR optimal  iff  alpha < p ≤ beta = (c_retire_value - c_repair)
+                                              / (r · c_loss)
+      RETIRE otherwise.
+
+    Defaults (vehicle-loss : repair = 100 : 1, retire forfeits 25 % of the
+    vehicle value, repair halves the risk): alpha = 0.02, beta = 0.48.
+    Thresholds are clipped to [0, 1]; beta >= alpha is enforced.
+    """
+    if not (0.0 < repair_residual_risk < 1.0):
+        raise ValueError("repair_residual_risk must be in (0, 1)")
+    if min(c_loss, c_repair, c_retire_value) <= 0:
+        raise ValueError("costs must be positive")
+    alpha = c_repair / ((1.0 - repair_residual_risk) * c_loss)
+    beta = (c_retire_value - c_repair) / (repair_residual_risk * c_loss)
+    alpha = float(np.clip(alpha, 0.0, 1.0))
+    beta = float(np.clip(max(beta, alpha), 0.0, 1.0))
+    return alpha, beta
+
+
 def flight_clearance(posterior_samples: np.ndarray,
                      load_profile: float | np.ndarray,
                      n_flights: int = 1,
-                     alpha: float = 0.05,
-                     beta: float = 0.3,
+                     alpha: float | None = None,
+                     beta: float | None = None,
+                     costs: dict | None = None,
+                     fatigue: bool = True,
+                     cycles_per_flight: int | None = None,
                      cfg: LaminateConfig | None = None,
                      n_draws: int = 20,
                      rng: np.random.Generator | None = None) -> dict:
     """Go/no-go decision for a reusable vehicle given the Stage-2 posterior.
 
-    One flight = a sequence of quasi-static load blocks (`load_profile`,
-    nominal strains).  The AT2 model is rate-independent with an
-    irreversible history field, so within a flight only the PEAK block
-    matters and identical repeated flights add no further growth; we
-    therefore simulate one ramp to max(load_profile) per posterior draw and
-    treat the n_flights extension statistically (per-flight growth events
-    i.i.d. across flights).  This is an honest simplification: true fatigue
-    phase-field (cyclic Gc degradation, Carrara et al. CMAME 2020) is future
-    work, as is load-scatter between flights.
+    Fatigue mode (default, `fatigue=True`): each flight is K load cycles
+    (K = cycles_per_flight, default cfg.cycles_per_flight) at the peak of
+    `load_profile`; damage d and the Carrara-2020 fatigue variable ᾱ persist
+    across flights (`simulate_fatigue_flights`), so repeated IDENTICAL
+    sub-critical flights eventually grow the crack and P(survive n) decays
+    even at constant load.  Per posterior draw we record the first flight
+    with growth; the survival curve is the across-draw fraction still intact.
 
-    Decision thresholds: alpha/beta are placeholders; in production they
-    should come from expected-cost minimisation over the decision
-    (cost(vehicle loss) >> cost(refurbishment) >> cost(inspection)), so the
-    OK-threshold alpha must be far smaller than the REPAIR-threshold beta.
+    Legacy mode (`fatigue=False`): rate-independent AT2 — one quasi-static
+    ramp to the peak per draw, per-flight growth i.i.d. across flights
+    (P(survive n) = (1-p)^n).  Kept for comparison/ablation only.
 
-      p_growth_next <= alpha → "OK"
+    Decision thresholds: if alpha/beta are None they come from
+    `calibrate_thresholds(**(costs or {}))` — expected-cost minimisation
+    with default vehicle-loss : repair = 100 : 1 (alpha = 0.02, beta = 0.48):
+
+      p_growth_next <= alpha → "OK"      (flying is cheapest in expectation)
       p_growth_next <= beta  → "REPAIR"
       otherwise              → "RETIRE"
 
     Returns dict with keys:
-      decision, p_growth_next, p_survive_n, expected_remaining_flights
-      (expected_remaining_flights uses Laplace-smoothed p to stay finite when
-       no draw grows: p~ = (k+1)/(n+2), E[N] = (1-p~)/p~ — a geometric-model
-       point estimate, i.e. a lower-confidence proxy, not a fatigue life.)
+      decision, p_growth_next, p_survive_n (= survival at n_flights),
+      p_survive_curve ((n_flights,) array, decays under fatigue),
+      expected_remaining_flights, alpha, beta, fatigue, cycles_per_flight.
+      In fatigue mode expected_remaining_flights = Σ_n S(n) over the horizon
+      (mean number of flights survived, censored at n_flights); in legacy
+      mode it is the Laplace-smoothed geometric estimate (1-p~)/p~.
     """
     cfg = cfg or LaminateConfig()
     rng = rng or np.random.default_rng(0)
     peak = float(np.max(np.atleast_1d(load_profile)))
+    if alpha is None or beta is None:
+        a_cal, b_cal = calibrate_thresholds(**(costs or {}))
+        alpha = a_cal if alpha is None else alpha
+        beta = b_cal if beta is None else beta
+    K = cycles_per_flight if cycles_per_flight is not None \
+        else cfg.cycles_per_flight
 
-    flags = _growth_flags(posterior_samples, peak, cfg, n_draws, rng)
-    n = len(flags)
-    k = int(flags.sum())
-    p = k / n
+    samples = np.atleast_2d(np.asarray(posterior_samples, dtype=float))
+    if samples.shape[1] != 4:
+        raise ValueError("posterior_samples must be (N, 4): "
+                         "(cx, cy, layer, log2size)")
+    if len(samples) > n_draws:
+        idx = rng.choice(len(samples), n_draws, replace=False)
+        samples = samples[idx]
+    n = len(samples)
+    flights = np.arange(1, n_flights + 1)
 
-    p_survive_n = (1.0 - p) ** n_flights
-    p_smooth = (k + 1.0) / (n + 2.0)                 # Laplace smoothing
-    expected_remaining = (1.0 - p_smooth) / p_smooth  # geometric model
+    if fatigue:
+        # first-failure flight per draw (n_flights+1 = survived the horizon)
+        fail = np.full(n, n_flights + 1, dtype=float)
+        for k_i, (cx, cy, layer, l2s) in enumerate(samples):
+            d0 = seed_defect(cx, cy, layer, l2s, cfg)
+            res = simulate_fatigue_flights(d0, peak, n_flights, cfg,
+                                           cycles_per_flight=K)
+            if res.fail_flight is not None:
+                fail[k_i] = res.fail_flight
+        surv_curve = np.array([(fail > fl).mean() for fl in flights])
+        p = float((fail == 1).mean())
+        p_survive_n = float(surv_curve[-1])
+        expected_remaining = float(surv_curve.sum())   # censored at horizon
+    else:
+        flags = _growth_flags(samples, peak, cfg, n_draws, rng)
+        k = int(flags.sum())
+        p = k / n
+        surv_curve = (1.0 - p) ** flights
+        p_survive_n = float(surv_curve[-1])
+        p_smooth = (k + 1.0) / (n + 2.0)                  # Laplace smoothing
+        expected_remaining = (1.0 - p_smooth) / p_smooth  # geometric model
 
     if p <= alpha:
         decision = "OK"
@@ -639,7 +893,12 @@ def flight_clearance(posterior_samples: np.ndarray,
         "decision": decision,
         "p_growth_next": p,
         "p_survive_n": p_survive_n,
+        "p_survive_curve": surv_curve,
         "expected_remaining_flights": expected_remaining,
+        "alpha": alpha,
+        "beta": beta,
+        "fatigue": fatigue,
+        "cycles_per_flight": K if fatigue else None,
     }
 
 
@@ -672,6 +931,15 @@ if __name__ == "__main__":
         dt = time.perf_counter() - t0
         print(f"load={load:.3f}  P(growth)={p:.2f}   [{dt:.1f}s]")
 
+    # fatigue: identical sub-critical flights eventually grow the crack
+    d0 = seed_defect(0.5, 0.5, 9.0, 1.0, cfg)
+    res = simulate_fatigue_flights(d0, 0.08, n_flights=18, cfg=cfg)
+    print(f"fatigue @0.08 (K={cfg.cycles_per_flight}/flight): "
+          f"fail_flight={res.fail_flight}, "
+          f"rel growth/flight={np.round(res.rel_growth_per_flight, 2)}")
+
     out = flight_clearance(post, load_profile=[0.5 * 0.10, 0.10],
                            n_flights=10, cfg=cfg, n_draws=8, rng=rng)
-    print("clearance:", out)
+    print("clearance (fatigue):", {k: v for k, v in out.items()
+                                   if k != "p_survive_curve"})
+    print("  survival curve:", np.round(out["p_survive_curve"], 2))
