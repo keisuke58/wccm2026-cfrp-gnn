@@ -275,29 +275,35 @@ def train(args):
 def load_labels_onehot(label_dir, filename):
     """Return binary defect mask (1 = any defect class, 0 = class-0) per node."""
     base = os.path.splitext(os.path.basename(filename))[0]
-    lf   = os.path.join(label_dir, f"{base}.npy")
-    if not os.path.exists(lf):
-        return None
-    lbl = np.load(lf)          # (13942, 19)
-    return (lbl[:, 0] == 0).astype(np.float32)   # 1 if defect (not class-0)
+    for cand in (f"{base}.npy", f"{base}_19label.npy"):   # Vancouver uses _19label suffix
+        lf = os.path.join(label_dir, cand)
+        if os.path.exists(lf):
+            lbl = np.load(lf)          # (13942, 19)
+            return (lbl[:, 0] == 0).astype(np.float32)   # 1 if defect (not class-0)
+    return None
 
 
-def eval_dataset(model, ddpm, raw_dir, label_dir, x_c, y_c, tag, n_samples=100):
-    """Evaluate AUROC on a raw (not z-scored) dataset against node-level labels."""
-    # Load no-defect for subtraction
-    nd_raw = np.load(NODEFECT).astype(np.float32)
-    mu     = nd_raw.mean(); sig = nd_raw.std() + 1e-8
+def normalise_sample(fpath, x_c, y_c):
+    """Load one sample, z-score (if raw), project to grid in [-1,1]."""
+    vals = np.load(fpath).astype(np.float32)[:13942]
+    if not _ON_VANCOUVER:                 # local dirs hold RAW DSPSS → subtract no-defect
+        nd  = np.load(NODEFECT).astype(np.float32)
+        vals = (vals - nd.mean()) / (nd.std() + 1e-8)
+    # Vancouver test dirs are already subtracted+z-scored
+    return np.clip(nodes_to_grid(vals, x_c, y_c), -5.0, 5.0) / 5.0
 
-    files = sorted(glob.glob(os.path.join(raw_dir, "*.npy")))[:n_samples]
+
+def eval_dataset(model, ddpm, raw_dir, label_dir, x_c, y_c, tag,
+                 n_samples=100, pattern="*.npy"):
+    """Evaluate node-level AUROC against 19-class labels."""
+    files = sorted(glob.glob(os.path.join(raw_dir, pattern)))[:n_samples]
     all_scores, all_labels = [], []
 
     for fpath in files:
         lbl = load_labels_onehot(label_dir, fpath)
         if lbl is None:
             continue
-        raw    = np.load(fpath).astype(np.float32)[:13942]
-        zscore = (raw - mu) / sig
-        grid   = np.clip(nodes_to_grid(zscore, x_c, y_c), -5.0, 5.0) / 5.0
+        grid   = normalise_sample(fpath, x_c, y_c)
         x0     = torch.from_numpy(grid).unsqueeze(0).unsqueeze(0).to(DEVICE)
 
         with torch.no_grad():
@@ -327,13 +333,8 @@ def eval_dataset(model, ddpm, raw_dir, label_dir, x_c, y_c, tag, n_samples=100):
 
 
 def visualise_anomaly(model, ddpm, fpath, label_dir, x_c, y_c, out_path):
-    nd_raw = np.load(NODEFECT).astype(np.float32)
-    mu = nd_raw.mean(); sig = nd_raw.std() + 1e-8
-
-    raw    = np.load(fpath).astype(np.float32)[:13942]
-    zscore = (raw - mu) / sig
-    grid   = np.clip(nodes_to_grid(zscore, x_c, y_c), -5.0, 5.0) / 5.0
-    x0     = torch.from_numpy(grid).unsqueeze(0).unsqueeze(0).to(DEVICE)
+    grid = normalise_sample(fpath, x_c, y_c)
+    x0   = torch.from_numpy(grid).unsqueeze(0).unsqueeze(0).to(DEVICE)
 
     with torch.no_grad():
         x_rec = ddpm.partial_denoise(model, x0, t_start=T_PARTIAL)
@@ -366,11 +367,17 @@ def evaluate(args):
     x_c, y_c = load_coords()
 
     print(f"[eval] checkpoint: {args.ckpt}  (epoch {ckpt['epoch']}, loss {ckpt['loss']:.4f})")
-    eval_dataset(model, ddpm, RAW_2X2, LABEL_2X2, x_c, y_c, "2x2", n_samples=200)
-    eval_dataset(model, ddpm, RAW_4X4, LABEL_4X4, x_c, y_c, "4x4", n_samples=100)
+    # Vancouver test dir mixes sizes → select via filename pattern
+    pat_2x2 = "*H2_W2.npy" if _ON_VANCOUVER else "*.npy"
+    pat_4x4 = "*H4_W4.npy" if _ON_VANCOUVER else "*.npy"
+    pat_8x8 = "*H8_W8.npy" if _ON_VANCOUVER else None
+    eval_dataset(model, ddpm, RAW_2X2, LABEL_2X2, x_c, y_c, "2x2", n_samples=200, pattern=pat_2x2)
+    eval_dataset(model, ddpm, RAW_4X4, LABEL_4X4, x_c, y_c, "4x4", n_samples=100, pattern=pat_4x4)
+    if pat_8x8:
+        eval_dataset(model, ddpm, RAW_4X4, LABEL_4X4, x_c, y_c, "8x8", n_samples=100, pattern=pat_8x8)
 
-    # Visualise one 4x4 sample
-    files_4x4 = sorted(glob.glob(os.path.join(RAW_4X4, "*.npy")))
+    # Visualise one large-defect sample
+    files_4x4 = sorted(glob.glob(os.path.join(RAW_4X4, pat_4x4)))
     if files_4x4:
         visualise_anomaly(model, ddpm, files_4x4[0], LABEL_4X4, x_c, y_c,
                           f"{RESULTS_DIR}/anomaly_4x4_example.png")
