@@ -66,8 +66,9 @@ def load_coords():
 
 
 def nodes_to_grid(dspss: np.ndarray, x: np.ndarray, y: np.ndarray,
-                  grid_size: int = GRID_SIZE) -> np.ndarray:
+                  grid_size: int = None) -> np.ndarray:
     """Scatter 13942 node values onto a (grid_size x grid_size) 2D image."""
+    grid_size = grid_size or GRID_SIZE   # resolve at call time (--grid may override)
     gx = np.linspace(0, 1, grid_size)
     gy = np.linspace(0, 1, grid_size)
     gx2d, gy2d = np.meshgrid(gx, gy)                  # (G,G)
@@ -237,38 +238,88 @@ class DDPM:
         return x   # denoised
 
 
+# ─── Flow Matching (rectified flow, 2D) ──────────────────────────────────────
+class FlowMatching:
+    """
+    Rectified flow on the same 2D UNet:
+      x_t = (1-t)·x0 + t·ε ,  velocity target v = ε − x0 ,  t ~ U[0,1]
+    t is scaled by T_MAX for the sinusoidal embedding. Reconstruction =
+    deterministic Euler ODE — ~10x fewer steps than DDPM ancestral sampling,
+    and the natural backbone for SDEdit-style sim-to-real bridging once
+    real (JAXA IR) interstage data arrives.
+    """
+    def __init__(self, device=DEVICE, n_steps=100):
+        self.device  = device
+        self.n_steps = n_steps
+
+    def training_loss(self, model, x0):
+        B   = x0.shape[0]
+        t   = torch.rand(B, device=self.device)
+        eps = torch.randn_like(x0)
+        xt  = (1 - t)[:, None, None, None] * x0 + t[:, None, None, None] * eps
+        pred = model(xt, t * T_MAX)
+        return F.mse_loss(pred, eps - x0)
+
+    @torch.no_grad()
+    def partial_denoise(self, model, x0, t_start=None):
+        """SDEdit-style: push to t=0.3 along the flow, integrate ODE back to 0."""
+        model.eval()
+        t_frac = 0.3 if t_start is None else min(float(t_start) / T_MAX, 1.0)
+        eps = torch.randn_like(x0)
+        x   = (1 - t_frac) * x0 + t_frac * eps
+        n   = max(2, int(self.n_steps * t_frac))
+        dt  = t_frac / n
+        for i in range(n):
+            t  = t_frac - i * dt
+            tb = torch.full((x.shape[0],), t * T_MAX, device=self.device)
+            x  = x - model(x, tb) * dt
+        return x
+
+
+def make_sampler(objective: str):
+    return FlowMatching(device=DEVICE) if objective == "fm" else DDPM(T=T_MAX, device=DEVICE)
+
+
+def ckpt_path(objective: str):
+    obj = "fm" if objective == "fm" else "ddpm"
+    g   = "" if GRID_SIZE == 64 else f"_g{GRID_SIZE}"
+    return f"{RESULTS_DIR}/{obj}{g}_best.pt"
+
+
 # ─── training ────────────────────────────────────────────────────────────────
 def train(args):
-    print(f"[train] device={DEVICE}, grid={GRID_SIZE}x{GRID_SIZE}, T={T_MAX}")
+    print(f"[train] device={DEVICE}, grid={GRID_SIZE}x{GRID_SIZE}, objective={args.objective}")
     x_c, y_c = load_coords()
 
     ds     = CFRPGridDataset(NORM_1X1, x_c, y_c, max_samples=args.max_train)
     loader = DataLoader(ds, batch_size=args.batch_size, shuffle=True, num_workers=4)
     print(f"  training samples: {len(ds)}")
 
-    model  = UNet(base_ch=args.base_ch).to(DEVICE)
-    ddpm   = DDPM(T=T_MAX, device=DEVICE)
-    optim  = torch.optim.AdamW(model.parameters(), lr=args.lr)
-    sched  = torch.optim.lr_scheduler.CosineAnnealingLR(optim, T_max=args.epochs)
+    model   = UNet(base_ch=args.base_ch).to(DEVICE)
+    sampler = make_sampler(args.objective)
+    optim   = torch.optim.AdamW(model.parameters(), lr=args.lr)
+    sched   = torch.optim.lr_scheduler.CosineAnnealingLR(optim, T_max=args.epochs)
 
+    cpath     = ckpt_path(args.objective)
     best_loss = float("inf")
     for epoch in range(1, args.epochs + 1):
         model.train(); total = 0
         for x0 in loader:
             x0   = x0.to(DEVICE)
-            loss = ddpm.training_loss(model, x0)
+            loss = sampler.training_loss(model, x0)
             optim.zero_grad(); loss.backward(); optim.step()
             total += loss.item()
         sched.step()
         avg = total / len(loader)
         if epoch % 10 == 0:
-            print(f"  epoch {epoch:4d}/{args.epochs}  loss={avg:.4f}")
+            print(f"  epoch {epoch:4d}/{args.epochs}  loss={avg:.4f}", flush=True)
         if avg < best_loss:
             best_loss = avg
-            torch.save({"model": model.state_dict(), "epoch": epoch, "loss": avg},
-                       f"{RESULTS_DIR}/ddpm_best.pt")
+            torch.save({"model": model.state_dict(), "epoch": epoch, "loss": avg,
+                        "objective": args.objective},
+                       cpath)
 
-    print(f"[train] done, best loss={best_loss:.4f}")
+    print(f"[train] done, best loss={best_loss:.4f} → {cpath}")
 
 
 # ─── evaluation ──────────────────────────────────────────────────────────────
@@ -297,8 +348,12 @@ def normalise_sample(fpath, x_c, y_c):
 
 
 def eval_dataset(model, ddpm, raw_dir, label_dir, x_c, y_c, tag,
-                 n_samples=100, pattern="*.npy"):
-    """Evaluate node-level AUROC against 19-class labels."""
+                 n_samples=100, pattern="*.npy", n_seeds=4):
+    """Evaluate node-level AUROC against 19-class labels.
+
+    Anomaly map is averaged over n_seeds independent noise draws — a single
+    stochastic reconstruction is too noisy to localise few-node defects.
+    """
     files = sorted(glob.glob(os.path.join(raw_dir, pattern)))[:n_samples]
     all_scores, all_labels = [], []
 
@@ -310,10 +365,9 @@ def eval_dataset(model, ddpm, raw_dir, label_dir, x_c, y_c, tag,
         x0     = torch.from_numpy(grid).unsqueeze(0).unsqueeze(0).to(DEVICE)
 
         with torch.no_grad():
-            x_rec = ddpm.partial_denoise(model, x0, t_start=T_PARTIAL)
-
-        # Per-pixel anomaly score
-        score_map = (x0 - x_rec).abs().squeeze().cpu().numpy()   # (G,G)
+            x0_rep = x0.repeat(n_seeds, 1, 1, 1)
+            x_rec  = ddpm.partial_denoise(model, x0_rep, t_start=T_PARTIAL)
+            score_map = (x0_rep - x_rec).abs().mean(dim=0).squeeze().cpu().numpy()  # (G,G)
 
         # Re-project grid score back to nodes using nearest neighbour
         gx  = np.linspace(0, 1, GRID_SIZE)
@@ -366,7 +420,7 @@ def evaluate(args):
     model = UNet(base_ch=args.base_ch).to(DEVICE)
     model.load_state_dict(ckpt["model"])
     model.eval()
-    ddpm  = DDPM(T=T_MAX, device=DEVICE)
+    ddpm  = make_sampler(ckpt.get("objective", args.objective))
     x_c, y_c = load_coords()
 
     print(f"[eval] checkpoint: {args.ckpt}  (epoch {ckpt['epoch']}, loss {ckpt['loss']:.4f})")
@@ -390,13 +444,20 @@ def evaluate(args):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--mode",       default="train", choices=["train", "eval"])
-    p.add_argument("--ckpt",       default=f"{RESULTS_DIR}/ddpm_best.pt")
+    p.add_argument("--objective",  default="ddpm",  choices=["ddpm", "fm"],
+                   help="ddpm = ancestral diffusion, fm = rectified flow matching")
+    p.add_argument("--ckpt",       default=None)
     p.add_argument("--epochs",     type=int, default=100)
     p.add_argument("--batch_size", type=int, default=16)
     p.add_argument("--lr",         type=float, default=1e-4)
     p.add_argument("--base_ch",    type=int, default=32, help="UNet base channels (32 or 64)")
     p.add_argument("--max_train",  type=int, default=500, help="max training samples (None=all)")
+    p.add_argument("--grid",       type=int, default=64, help="spatial grid resolution")
     args = p.parse_args()
+    global GRID_SIZE
+    GRID_SIZE = args.grid
+    if args.ckpt is None:
+        args.ckpt = ckpt_path(args.objective)
 
     if args.mode == "train":
         train(args)
