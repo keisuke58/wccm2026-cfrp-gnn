@@ -136,12 +136,16 @@ class CouplingLayer(nn.Module):
             nn.Linear(hidden, 2 * half))
         self.half = half
     def forward(self, x):
-        a, b = (x[:, self.half:], x[:, :self.half]) if self.flip else (x[:, :self.half], x[:, self.half:])
+        # conditioning part a has (dim - half) features, transformed part b has half
+        if self.flip:
+            a, b = x[:, self.half:], x[:, :self.half]
+        else:
+            a, b = x[:, :x.shape[1] - self.half], x[:, x.shape[1] - self.half:]
         st   = self.net(a)
         s, t = st.chunk(2, dim=1)
         s    = torch.tanh(s)
         b2   = b * torch.exp(s) + t
-        out  = torch.cat([a, b2] if not self.flip else [b2, a], dim=1)
+        out  = torch.cat([b2, a] if self.flip else [a, b2], dim=1)
         return out, s.sum(1)
 
 
