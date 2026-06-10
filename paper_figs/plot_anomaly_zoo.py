@@ -1,9 +1,13 @@
 """Publication figure: anomaly-detection zoo on fixed-geometry DSPSS fields.
 Left: clean AUROC by method (2x2/4x4). Right: noise robustness (4x4).
 Data: benchmark runs 2026-06-11 (anomaly_zoo.py, stfpm/gae/diffusion logs)."""
+import sys
+import os
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "slides", "figure_sources"))
+from thesis_style import use
 import matplotlib.pyplot as plt
 
 methods = ["Mahalanobis", "PCA resid.", "PaDiM", "PatchCore", "STFPM",
@@ -20,26 +24,26 @@ n4 = {  # 4x4 AUROC vs noise
     "GAE":         [0.6998, 0.5501, 0.5240, 0.5074],
 }
 
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4.4))
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=use(width_frac=1.0, aspect=0.42))
 
 x = np.arange(len(methods))
 ax1.barh(x + 0.2, clean_2x2, height=0.38, label="2x2 defect", color="#1f77b4")
 ax1.barh(x - 0.2, clean_4x4, height=0.38, label="4x4 defect", color="#ff7f0e")
-ax1.set_yticks(x); ax1.set_yticklabels(methods, fontsize=9)
+ax1.set_yticks(x); ax1.set_yticklabels(methods)
 ax1.axvline(0.5, color="gray", ls="--", lw=0.8)
 ax1.set_xlabel("node-level AUROC (clean)")
 ax1.set_xlim(0.3, 1.02); ax1.invert_yaxis()
-ax1.legend(loc="lower right", fontsize=9)
-ax1.set_title("(a) Simple node-space statistics beat deep methods", fontsize=10)
+ax1.legend(loc="lower right")
+ax1.set_title("(a) Node-space statistics beat deep methods")
 
 for name, v in n4.items():
     lw = 2.2 if name == "Mahalanobis" else 1.3
     ax2.plot(noise, v, "o-", label=name, lw=lw)
 ax2.axhline(0.5, color="gray", ls="--", lw=0.8)
 ax2.set_xlabel(r"additive noise $\sigma$ (units of field std)")
-ax2.set_ylabel("AUROC (4x4)")
-ax2.set_title("(b) All methods collapse by $\\sigma$=0.1:\ndefect amplitude < 0.1$\\sigma$ — per-measurement SNR limit", fontsize=10)
-ax2.legend(fontsize=8)
+ax2.set_ylabel(r"AUROC ($4\times4$)")
+ax2.set_title(r"(b) Collapse by $\sigma=0.1$: per-measurement SNR limit")
+ax2.legend()
 
 plt.tight_layout()
 out = "paper_figs/anomaly_zoo_benchmark.pdf"
