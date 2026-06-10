@@ -35,9 +35,9 @@ if _ON_VANCOUVER:
     NORM_1X1  = f"{DATA_BASE}/all_sub_hole_defect_zscore/train"
     RAW_2X2   = f"{DATA_BASE}/all_sub_hole_defect_zscore/test"   # mixed sizes → filtered by label
     RAW_4X4   = f"{DATA_BASE}/all_sub_hole_defect_zscore/test"
-    LABEL_1X1 = f"{DATA_BASE}/all_19class_label/train"
-    LABEL_2X2 = f"{DATA_BASE}/all_19class_label/test"
-    LABEL_4X4 = f"{DATA_BASE}/all_19class_label/test"
+    LABEL_1X1 = f"{DATA_BASE}/all_19class_label"   # flat dir, files end in _19label.npy
+    LABEL_2X2 = f"{DATA_BASE}/all_19class_label"
+    LABEL_4X4 = f"{DATA_BASE}/all_19class_label"
     NODEFECT  = f"{DATA_BASE}/all_sub_hole_defect_zscore/train/hole_no_defect_original.npy"
 else:
     DATA_BASE = "/home/nishioka/CFRP/CFRP_hole/hole_data_inp"
