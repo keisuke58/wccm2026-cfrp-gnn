@@ -368,12 +368,17 @@ def normalise_sample(fpath, x_c, y_c, plain=False):
 
 
 def eval_dataset(model, ddpm, raw_dir, label_dir, x_c, y_c, tag,
-                 n_samples=100, pattern="*.npy", n_seeds=4, plain=False):
+                 n_samples=100, pattern="*.npy", n_seeds=4, plain=False,
+                 t_partial=None, smooth=0.0):
     """Evaluate node-level AUROC against 19-class labels.
 
     Anomaly map is averaged over n_seeds independent noise draws — a single
     stochastic reconstruction is too noisy to localise few-node defects.
+    smooth > 0 applies a Gaussian blur (px) to the score map: a 2x2-element
+    defect spans ~2-3 grid cells at G=128, pixel noise does not.
     """
+    from scipy.ndimage import gaussian_filter
+    t_partial = t_partial or T_PARTIAL
     files = sorted(glob.glob(os.path.join(raw_dir, pattern)))[:n_samples]
     all_scores, all_labels = [], []
 
@@ -386,8 +391,10 @@ def eval_dataset(model, ddpm, raw_dir, label_dir, x_c, y_c, tag,
 
         with torch.no_grad():
             x0_rep = x0.repeat(n_seeds, 1, 1, 1)
-            x_rec  = ddpm.partial_denoise(model, x0_rep, t_start=T_PARTIAL)
+            x_rec  = ddpm.partial_denoise(model, x0_rep, t_start=t_partial)
             score_map = (x0_rep - x_rec).abs().mean(dim=0).squeeze().cpu().numpy()  # (G,G)
+        if smooth > 0:
+            score_map = gaussian_filter(score_map, sigma=smooth)
 
         # Re-project grid score back to nodes using nearest neighbour
         gx  = np.linspace(0, 1, GRID_SIZE)
@@ -456,12 +463,15 @@ def evaluate(args):
         pat_4x4 = "*H4_W4.npy" if _ON_VANCOUVER else "*.npy"
         pat_8x8 = "*H8_W8.npy" if _ON_VANCOUVER else None
     eval_dataset(model, ddpm, dir_2x2, LABEL_2X2, x_c, y_c, "2x2",
-                 n_samples=200, pattern=pat_2x2, plain=plain)
+                 n_samples=200, pattern=pat_2x2, plain=plain,
+                 t_partial=args.t_partial, smooth=args.smooth)
     eval_dataset(model, ddpm, dir_4x4, LABEL_4X4, x_c, y_c, "4x4",
-                 n_samples=100, pattern=pat_4x4, plain=plain)
+                 n_samples=100, pattern=pat_4x4, plain=plain,
+                 t_partial=args.t_partial, smooth=args.smooth)
     if pat_8x8:
         eval_dataset(model, ddpm, dir_4x4, LABEL_4X4, x_c, y_c, "8x8",
-                     n_samples=100, pattern=pat_8x8, plain=plain)
+                     n_samples=100, pattern=pat_8x8, plain=plain,
+                     t_partial=args.t_partial, smooth=args.smooth)
 
     # Visualise one large-defect sample
     files_4x4 = sorted(glob.glob(os.path.join(dir_4x4, pat_4x4)))
@@ -485,6 +495,9 @@ def main():
     p.add_argument("--base_ch",    type=int, default=32, help="UNet base channels (32 or 64)")
     p.add_argument("--max_train",  type=int, default=500, help="max training samples (None=all)")
     p.add_argument("--grid",       type=int, default=64, help="spatial grid resolution")
+    p.add_argument("--t_partial",  type=int, default=None,
+                   help="noise depth for anomaly scoring (default T_PARTIAL=300; FM treats /1000 as fraction)")
+    p.add_argument("--smooth",     type=float, default=0.0, help="Gaussian blur sigma (px) on score map")
     args = p.parse_args()
     global GRID_SIZE
     GRID_SIZE = args.grid
