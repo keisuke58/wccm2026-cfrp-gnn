@@ -5,6 +5,8 @@
 
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
+\usepackage{newtxtext, newtxmath}   % Times-family text + math
+\usepackage{microtype}
 \usepackage{booktabs}
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
@@ -22,6 +24,16 @@
 \setbeamercolor{alerted text}{fg=alertred}
 \setbeamercolor{example text}{fg=okgreen}
 \metroset{progressbar=frametitle, block=fill}
+
+% Footline: short title (left) + slide number (right).
+\setbeamertemplate{frame numbering}[fraction]
+\setbeamerfont{page number in head/foot}{size=\scriptsize}
+\setbeamertemplate{footline}{%
+  \hbox{\begin{beamercolorbox}[wd=\paperwidth, ht=2.6ex, dp=1.2ex, leftskip=2ex,
+    rightskip=2ex]{}%
+    \scriptsize Bayesian SHM stack for reusable launch vehicles \hfill
+    \insertframenumber\,/\,\inserttotalframenumber%
+  \end{beamercolorbox}}}
 
 % Institution logos top-right on every frame (graceful if files absent).
 % Drop the OFFICIAL files into slides/ to show them (request usage rights first):
@@ -51,19 +63,28 @@ a Bayesian SHM Stack for Reusable Launch Vehicles}
 \begin{frame}{Motivation: reusable rockets change the question}
 \begin{columns}[T]
 \column{0.55\textwidth}
-\textbf{Expendable:} ``will it survive one flight?''\\[2mm]
-\textbf{Reusable:} \alert{``is this vehicle OK to fly \emph{again} --- and how many flights remain?''}
+\textbf{Expendable:} ``will it survive \emph{one} flight?'' --- a single
+pass/fail margin check.\\[1.5mm]
+\textbf{Reusable:} \alert{``is this vehicle OK to fly \emph{again}, and how many
+flights remain?''} --- a recurring, history-dependent decision.
 \begin{itemize}
-  \item Same vehicle re-inspected after every flight\\
-        $\Rightarrow$ \emph{fixed geometry, fixed individual} is the norm
-  \item SpaceX (empirically): condition-based monitoring, staged certification
-        $20 \rightarrow 40$ flights, fleet-leader strategy (B1067: 35 flights, 06/2026)
+  \item Same vehicle re-inspected after every flight
+        $\Rightarrow$ \emph{fixed geometry, fixed individual} is the norm,
+        and its own past-flight scans form a growing healthy reference
+  \item SpaceX (empirically): preventive replacement $\to$
+        \emph{condition-based monitoring}; staged certification
+        $20\to40$ flights; fleet-leader B1067 at 35 flights (06/2026)
+  \item Cost asymmetry: vehicle + payload loss $\gg$ unnecessary refurbishment
 \end{itemize}
 \column{0.42\textwidth}
 \begin{block}{This work}
-Formalise that practice as a measurable, Bayesian, physics-based pipeline ---
-applicable from the \emph{first} article.
+Formalise that practice as a \emph{measurable, Bayesian, physics-based}
+pipeline --- detect $\to$ characterise (with uncertainty) $\to$ predict crack
+growth $\to$ clear --- applicable from the \emph{first} article, not after a
+decade of flights.
 \end{block}
+\footnotesize Data: CFRP interstage thermoelastic full-field (DSPSS, 13\,942
+nodes) + H3 fairing guided waves.
 \end{columns}
 \end{frame}
 
@@ -85,10 +106,18 @@ applicable from the \emph{first} article.
 \draw[arr] (s2) -- (s3);
 \draw[arr] (s3) -- (s4);
 \end{tikzpicture}\\[4mm]
-\begin{itemize}
-  \item \textcolor{okgreen}{\textbf{Green = implemented and tested}} (2026-06-11, two repos, all committed)
-  \item One data contract end-to-end: posterior $\theta=(c_x, c_y, \text{layer}, \text{size})$
-        flows from Stage 2 directly into Stage 3
+\begin{itemize}\small
+  \item \textcolor{okgreen}{\textbf{Green = implemented and tested}}
+        (2026-06; two git repos, all committed; 19/19 tests green)
+  \item Each stage answers one question:
+        \textbf{where?} (Stage 0) $\to$ \textbf{what?} (Stage 1) $\to$
+        \textbf{how bad, with what uncertainty?} (Stage 2) $\to$
+        \textbf{fly again?} (Stage 3)
+  \item One data contract end-to-end: posterior
+        $\theta=(c_x, c_y, \text{layer}, \log_2\text{size})$
+        flows from Stage 2 \emph{directly} into Stage 3's defect seeding
+  \item Stages 0--2 are model-light (statistics / amortised inference);
+        Stage 3 carries the mechanics (phase-field fracture)
 \end{itemize}
 \end{frame}
 
@@ -98,14 +127,17 @@ applicable from the \emph{first} article.
 \column{0.58\textwidth}
 \includegraphics[width=\textwidth]{../paper_figs/anomaly_zoo_benchmark.pdf}
 \column{0.40\textwidth}
-\textbf{Node-level AUROC (clean):}
-\begin{itemize}
-  \item per-node Mahalanobis: \textbf{0.999 / 0.995} (2x2/4x4)
-  \item deep methods: 0.50--0.75
+Score $s_i = |x_i - \mu_i|/\sigma_i$, with $(\mu_i,\sigma_i)$ per node from
+$N{=}2000$ healthy fields. \textbf{Node AUROC (clean):}
+\begin{itemize}\small
+  \item Mahalanobis / PCA: \textbf{0.999 / 0.995} (2x2 / 4x4)
+  \item PaDiM 0.96, PatchCore 0.93, STFPM 0.75, GAE 0.66,
+        diffusion 0.50--0.66
 \end{itemize}
-\begin{alertblock}{SNR limit}
-All methods collapse at noise $\sigma{=}0.1$:\\ defect amplitude ${<}0.1\sigma$.
-Lock-in IR averages $10^3$ cycles $\Rightarrow$ requirement, not blocker.
+\begin{alertblock}{SNR limit (right panel)}
+\small All methods collapse by $\sigma{=}0.1$: defect amplitude ${<}0.1\sigma$.
+Lock-in IR thermography averages $\sim\!10^3$ cycles ($\sigma\!\propto\!1/\sqrt{K}$)
+$\Rightarrow$ an SNR \emph{requirement}, not a blocker.
 \end{alertblock}
 \end{columns}
 \end{frame}
@@ -164,22 +196,30 @@ layer (depth)  & 2.98 & 0.63 & 0.870 \\
 
 % ─────────────────────────────────────────────
 \begin{frame}{Stage 3 --- phase-field prognosis with true fatigue}
+Energy $\;\Psi=\int \big[g(d)\,\psi^+_e
++ \tfrac{G_c}{c_w}(\tfrac{d^2}{\ell}+\ell\,\nabla d\!\cdot\!A\,\nabla d)\big]\,dV$,
+with structural tensor $A=I+\beta\,a\!\otimes\!a$ (fiber dir.\ $a$).
 \begin{columns}[T]
 \column{0.52\textwidth}
 \textbf{Model} (12/12 tests green):
-\begin{itemize}
-  \item multi-ply anisotropic AT2, $A=I+\beta\, a\!\otimes\!a$ per ply
-  \item interface bands ($G_c^{int}/G_c^{ply}{=}0.4$, DCB-anchored)
-  \item Carrara-2020 fatigue: history $\bar\alpha$ degrades $G_c$
-        $\Rightarrow$ W\"ohler-like growth under repeated sub-critical loads
+\begin{itemize}\small
+  \item multi-ply: per-ply $A(\theta_{\text{ply}})$, horizontal bands
+  \item interface bands $G_c^{int}/G_c^{ply}{=}0.4$ (DCB/ENF-anchored)
+        --- pure-PF surrogate of Paggi--Reinoso CZM
+  \item Carrara (2020) fatigue: history $\bar\alpha$ accumulates $\psi^+_e$
+        over cycles, $f(\bar\alpha)$ degrades $G_c$ $\Rightarrow$ W\"ohler-like
+        growth under \emph{repeated sub-critical} loads
 \end{itemize}
 \column{0.45\textwidth}
 \textbf{Verified physics:}
-\begin{itemize}
-  \item fiber at $30^\circ$ $\rightarrow$ crack deflects to $23.3^\circ$
-  \item low-$G_c$ interface captures crack (73 vs 0 cells)
-  \item $P(\text{growth})$ monotone in load: $0 \rightarrow \tfrac23 \rightarrow 1$
+\begin{itemize}\small
+  \item fiber at $30^\circ \to$ crack deflects to $23.3^\circ$
+  \item low-$G_c$ interface captures crack (73 vs 0 new cells)
+  \item $P(\text{growth})$ monotone in load: $0 \to \tfrac23 \to 1$
+  \item FD, plane-strain, $60\times48$ grid, $\sim$15\,s/run
 \end{itemize}
+\footnotesize\emph{Caveat:} load is a normalised Mode-I peel proxy;
+$\bar\alpha_T$ not yet S--N-anchored.
 \end{columns}
 \end{frame}
 
