@@ -279,7 +279,10 @@ def load_labels_onehot(label_dir, filename):
         lf = os.path.join(label_dir, cand)
         if os.path.exists(lf):
             lbl = np.load(lf)          # (13942, 19)
-            return (lbl[:, 0] == 0).astype(np.float32)   # 1 if defect (not class-0)
+            # local format: full one-hot incl. class-0 column for healthy nodes
+            # Vancouver format: healthy = all-zero row, defect = one-hot in cols 1..18
+            # → "any defect class set" works for both
+            return (lbl[:, 1:].sum(axis=1) > 0).astype(np.float32)
     return None
 
 
