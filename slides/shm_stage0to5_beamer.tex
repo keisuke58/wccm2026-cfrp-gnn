@@ -100,7 +100,7 @@ nodes) + H3 fairing guided waves.
 \node[done, right=3mm of s0] (s1) {\textbf{Stage 1}\\ Classification\\ GNN};
 \node[done, right=3mm of s1] (s2) {\textbf{Stage 2}\\ Characterisation\\ FMPE posterior};
 \node[done, right=3mm of s2] (s3) {\textbf{Stage 3}\\ Prognosis\\ phase-field + fatigue};
-\node[box, right=3mm of s3] (s4) {\textbf{Stage 4--5}\\ Fleet learning\\ design feedback};
+\node[done, right=3mm of s3] (s4) {\textbf{Stage 4--5}\\ Fleet learning\\ design feedback};
 \draw[arr] (s0) -- (s1);
 \draw[arr] (s1) -- (s2);
 \draw[arr] (s2) -- (s3);
@@ -370,6 +370,24 @@ $P(\text{survive }n)$ with fatigue $\cdot$ decision --- single held-out CFRP fie
         (b) low-data vehicles shrink toward the fleet mean (error ratio 0.84)
   \item (c) \alert{a new vehicle clears in 1.25 inspections with the fleet
         prior vs 2.75 in isolation} --- the fleet-leader effect, quantified
+\end{itemize}
+\end{frame}
+
+% ─────────────────────────────────────────────
+\begin{frame}{Stage 5 --- design feedback: the fleet reshapes the next vehicle}
+\centering
+\includegraphics[width=0.95\textwidth]{../paper_figs/design_feedback.pdf}\\[1mm]
+\begin{itemize}\small
+  \item fleet-robust BO over a manufacturable design (off-axis ply angle,
+        interface toughness, local reinforcement); objective = expected
+        log-growth $+$ \alert{CVaR of the worst-$20\%$ defect} (reusable safety
+        is governed by the worst flaw)
+  \item forward = \emph{exact FD}, not the FNO surrogate: layup is not a
+        surrogate input $\Rightarrow$ every design change is OOD
+        (a layup-conditioned operator = Keio Phase-3 future work)
+  \item $(0/{\pm}30)_s \to$ steeper $74^\circ$ plies $+$ tougher interface
+        ($G_c^{\text{int}}$ $0.40\!\to\!0.87$): \alert{E[remaining flights]
+        $1.9 \to 6.0$} ($+216\%$), mean growth $-10\%$
 \end{itemize}
 \end{frame}
 
