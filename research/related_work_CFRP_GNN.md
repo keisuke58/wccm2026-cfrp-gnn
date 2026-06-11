@@ -166,6 +166,14 @@ on measured DSPSS (extending Kojima 2025, with co-authorship).
 | AE-transfer (2023) | acoustic emission | CNN + fine-tune | laminate | – | partial | – |
 | **Ours (planned CPB)** | **full-field surface stress (DSPSS)** | **mesh-physics GNN (MGN-class)** | **perforated interstage 3-D** | **FE-mesh topology + DSPSS** | **✅ measured DSPSS (22 spec.)** | **✅ size/position; detect vs localize split** |
 
+**Program-level note (vs PIGMID's modality).** Guided-wave / dynamic SHM is NOT a
+gap for our broader program: the Payload2026 line (H3 fairing GNN-SHM, SAGE best
+F1 0.788) covers vibration/wave-based monitoring, and already grapples with its
+own domain shift (cross-month transfer collapse). So vs PIGMID's guided-wave
+input, our group spans BOTH full-field surface stress (this CPB paper) and
+wave/dynamic SHM (payload) — the differentiation table column is for THIS paper,
+not the program. A shared domain-adaptation toolkit can serve both.
+
 **Single-sentence positioning**: *"Whereas prior CFRP GNNs operate on guided-wave
 sensor signals (PIGMID) or simple-coupon surface stress with transfer-learning
 CNNs (Kojima 2025), we learn directly on the structural FE mesh from full-field
