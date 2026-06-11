@@ -322,9 +322,13 @@ partially cancel to a $15\%$ total (Fig.~\ref{fig:decuq}b) --- a slightly
 conservative surrogate offsetting a slightly under-calling posterior. Finally,
 bootstrapping the posterior$\times$load draws gives a per-decision confidence
 (``this OK call is $87\%$ reliable''); validated against the oracle it is
-\emph{overconfident} (ECE $0.18$, Fig.~\ref{fig:decuq}d), since sampling spread
-alone misses the surrogate's systematic bias --- an honest pointer to
-decision-level conformal recalibration.
+\emph{overconfident} (ECE $0.18$), since sampling spread alone misses the
+surrogate's systematic bias. A 1-D Platt rescaling of the confidence against
+decision-correctness, reported under leave-one-out cross-validation, removes
+most of it --- ECE $0.18\!\to\!0.06$ and mean claimed reliability
+$96.5\%\!\to\!84.5\%$ against an empirical $85\%$ (Fig.~\ref{fig:decuq}d); the
+rescaling is monotone, so the decision is unchanged and only its reliability
+estimate is corrected.
 \begin{figure}[t]\centering
   \includegraphics[width=\linewidth]{decision_uq.pdf}
   \caption{End-to-end decision UQ. (a) pipeline-vs-oracle decision confusion

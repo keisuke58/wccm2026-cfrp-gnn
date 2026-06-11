@@ -269,7 +269,7 @@ class Study:
 def run_study(n_keep: int = 40, n_load: int = 5, n_draws_fd: int = 6,
               n_draws_surr: int = 64, n_boot: int = 400,
               n_workers: int | None = None, seed: int = 0,
-              verbose: bool = True) -> Study:
+              verbose: bool = True, save_cache: bool = True) -> Study:
     """Full end-to-end decision-UQ study over `n_keep` scenarios.
 
     All FD jobs (oracle + fd-posterior, across every scenario and load) are
@@ -346,10 +346,30 @@ def run_study(n_keep: int = 40, n_load: int = 5, n_draws_fd: int = 6,
     if verbose:
         print(f"[study] FD done in {dt:.1f}s "
               f"({dt/max(len(jobs),1)*1e3:.0f} ms/solve eff.)")
-    return Study(nominal=nominal, p_oracle=p_oracle,
-                 p_surr_oracle=p_surr_oracle, p_fd_post=p_fd_post,
-                 p_pipeline=p_pipeline, conf=conf, alpha=alpha, beta=beta,
-                 source=ts["source"])
+    study = Study(nominal=nominal, p_oracle=p_oracle,
+                  p_surr_oracle=p_surr_oracle, p_fd_post=p_fd_post,
+                  p_pipeline=p_pipeline, conf=conf, alpha=alpha, beta=beta,
+                  source=ts["source"])
+    if save_cache:
+        save_study(study)
+    return study
+
+
+def save_study(study: Study) -> None:
+    os.makedirs(CACHE_DIR, exist_ok=True)
+    np.savez(STUDY_CACHE, nominal=study.nominal, p_oracle=study.p_oracle,
+             p_surr_oracle=study.p_surr_oracle, p_fd_post=study.p_fd_post,
+             p_pipeline=study.p_pipeline, conf=study.conf,
+             alpha=study.alpha, beta=study.beta, source=study.source)
+
+
+def load_study() -> Study:
+    z = np.load(STUDY_CACHE, allow_pickle=True)
+    return Study(nominal=z["nominal"], p_oracle=z["p_oracle"],
+                 p_surr_oracle=z["p_surr_oracle"], p_fd_post=z["p_fd_post"],
+                 p_pipeline=z["p_pipeline"], conf=z["conf"],
+                 alpha=float(z["alpha"]), beta=float(z["beta"]),
+                 source=str(z["source"]))
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -425,11 +445,73 @@ def reliability(study: Study, n_bins: int = 5) -> dict:
             "own_conf": own_conf, "correct": correct}
 
 
+def _ece(conf: np.ndarray, correct: np.ndarray, n_bins: int = 5,
+         lo_edge: float = 1.0 / 3.0) -> tuple:
+    """Expected calibration error of a confidence vs binary correctness, plus
+    the per-bin (mid, empirical) for plotting."""
+    edges = np.linspace(lo_edge, 1.0, n_bins + 1)
+    mids, emp, cnt = [], [], []
+    for b in range(n_bins):
+        lo, hi = edges[b], edges[b + 1]
+        m = (conf >= lo) & (conf <= hi if b == n_bins - 1 else conf < hi)
+        if m.sum() == 0:
+            continue
+        mids.append(float(conf[m].mean()))
+        emp.append(float(correct[m].mean()))
+        cnt.append(int(m.sum()))
+    ece = (float(np.sum(np.array(cnt) / len(conf)
+                        * np.abs(np.array(mids) - np.array(emp)))) if cnt
+           else float("nan"))
+    return ece, mids, emp, cnt
+
+
+def recalibrate_confidence(study: Study, n_bins: int = 5) -> dict:
+    """Decision-level recalibration of the per-sample confidence.
+
+    The bootstrap confidence is overconfident: it captures posterior×load
+    SAMPLING spread but not the surrogate's systematic bias, so a "100 %"
+    decision is empirically right only ~84 % of the time.  We fix this with a
+    1-D Platt rescaling — logistic regression of decision-correctness on the
+    logit of the raw own-decision confidence — and report it under LEAVE-ONE-OUT
+    cross-validation, so the quoted post-calibration ECE is honest (never fit
+    and evaluated on the same scenario).  Temperature/Platt is monotone, so the
+    DECISION is unchanged; only its reliability estimate is corrected.
+    """
+    from sklearn.linear_model import LogisticRegression
+
+    pl = study.dec("pipeline")
+    o = study.dec("oracle")
+    M = len(pl)
+    raw = np.array([study.conf[s, SEVERITY[pl[s]]] for s in range(M)])
+    y = (pl == o).astype(int)
+    x = np.log(np.clip(raw, 1e-3, 1 - 1e-3) /
+               (1 - np.clip(raw, 1e-3, 1 - 1e-3)))[:, None]   # logit feature
+
+    cal = np.empty(M)
+    for i in range(M):
+        tr = np.ones(M, bool); tr[i] = False
+        if len(np.unique(y[tr])) < 2:            # degenerate fold → identity
+            cal[i] = raw[i]; continue
+        lr = LogisticRegression(C=1.0).fit(x[tr], y[tr])
+        cal[i] = lr.predict_proba(x[i:i + 1])[0, 1]
+
+    # full-data fit (for deployment) + its parameters
+    full = (LogisticRegression(C=1.0).fit(x, y)
+            if len(np.unique(y)) == 2 else None)
+    ece_raw, mr, er, cr = _ece(raw, y, n_bins)
+    ece_cal, mc, ec, cc = _ece(cal, y, n_bins, lo_edge=float(cal.min()))
+    return {"raw": raw, "cal": cal, "correct": y,
+            "ece_raw": ece_raw, "ece_cal": ece_cal,
+            "rel_raw": (mr, er, cr), "rel_cal": (mc, ec, cc),
+            "platt": (None if full is None else
+                      (float(full.coef_[0, 0]), float(full.intercept_[0])))}
+
+
 # ═════════════════════════════════════════════════════════════════════════════
 #  Report + figure
 # ═════════════════════════════════════════════════════════════════════════════
 
-def print_report(study: Study, m: dict, rel: dict):
+def print_report(study: Study, m: dict, rel: dict, recal: dict | None = None):
     bar = "=" * 72
     print(bar)
     print("  END-TO-END DECISION-LEVEL UQ  —  is the final OK/REPAIR/RETIRE right?")
@@ -469,10 +551,18 @@ def print_report(study: Study, m: dict, rel: dict):
     print(f"     ECE(own-decision confidence) = {rel['ece']:.3f}")
     for cm, ea, ct in zip(rel["conf_mid"], rel["emp_acc"], rel["count"]):
         print(f"     conf≈{cm:.2f}:  empirical agree {ea*100:5.1f}%  (n={ct})")
+    if recal is not None:
+        print(f"     ── Platt recalibration (leave-one-out) ──")
+        print(f"        ECE  {recal['ece_raw']:.3f} (raw)  →  "
+              f"{recal['ece_cal']:.3f} (recalibrated)")
+        print(f"        mean claimed reliability  {recal['raw'].mean()*100:.1f}%"
+              f" → {recal['cal'].mean()*100:.1f}%   "
+              f"(empirical {recal['correct'].mean()*100:.1f}%)")
     print(bar)
 
 
-def make_figure(study: Study, m: dict, rel: dict, out_path: str) -> str:
+def make_figure(study: Study, m: dict, rel: dict, out_path: str,
+                recal: dict | None = None) -> str:
     import matplotlib
     matplotlib.use("Agg")
     import sys
@@ -528,15 +618,20 @@ def make_figure(study: Study, m: dict, rel: dict, out_path: str) -> str:
     ax[2].legend(fontsize=6, loc="upper left")
     ax[2].tick_params(labelsize=6)
 
-    # (d) confidence reliability
-    ax[3].plot([1/3, 1], [1/3, 1], color="0.7", lw=0.7, ls="--")
+    # (d) confidence reliability — raw vs recalibrated
+    ax[3].plot([0, 1], [0, 1], color="0.7", lw=0.7, ls="--")
     if rel["conf_mid"]:
-        ax[3].plot(rel["conf_mid"], rel["emp_acc"], "-o", ms=4, c="#1565C0")
+        ax[3].plot(rel["conf_mid"], rel["emp_acc"], "-o", ms=4, c="#b71c1c",
+                   label=f"raw (ECE {rel['ece']:.2f})")
+    if recal is not None and recal["rel_cal"][0]:
+        mc, ec, _ = recal["rel_cal"]
+        ax[3].plot(mc, ec, "-s", ms=4, c="#1565C0",
+                   label=f"recal. (ECE {recal['ece_cal']:.2f})")
     ax[3].set_xlim(0.3, 1.02); ax[3].set_ylim(0.3, 1.02)
-    ax[3].set_xlabel("assigned decision confidence", fontsize=7)
+    ax[3].set_xlabel("claimed decision reliability", fontsize=7)
     ax[3].set_ylabel("empirical oracle agreement", fontsize=7)
-    ax[3].set_title(f"(d) confidence calibration\nECE={rel['ece']:.2f}",
-                    fontsize=8)
+    ax[3].set_title("(d) confidence calibration", fontsize=8)
+    ax[3].legend(fontsize=6, loc="upper left")
     ax[3].tick_params(labelsize=6)
 
     plt.tight_layout()
@@ -581,7 +676,8 @@ def run_tests() -> int:
 
     # emulated tiny study end-to-end (serial FD, no cache needed)
     st = run_study(n_keep=4, n_load=2, n_draws_fd=2, n_draws_surr=6,
-                   n_boot=50, n_workers=1, seed=1, verbose=False)
+                   n_boot=50, n_workers=1, seed=1, verbose=False,
+                   save_cache=False)
     ok(st.p_oracle.shape == (4,), "oracle shape")
     ok(np.all((st.conf >= 0) & (st.conf <= 1)), "confidence in [0,1]")
     ok(np.allclose(st.conf.sum(1), 1.0), "confidence rows sum to 1")
@@ -592,6 +688,23 @@ def run_tests() -> int:
     ok(0.0 <= m["unsafe_miss_rate"] <= 1.0, "miss rate range")
     r = reliability(st, n_bins=3)
     ok(r["ece"] == r["ece"], "ece is finite-or-nan but computed")
+
+    # ECE helper + Platt recalibration on a synthetic overconfident set
+    rng = np.random.default_rng(0)
+    correct = rng.random(200) < 0.7          # truly 70% correct
+    over = np.full(200, 0.99)                 # but claims 99%
+    e0, _, _, _ = _ece(over, correct, n_bins=5)
+    ok(e0 > 0.2, "overconfident ECE large before recal")
+
+    class _Fake:                              # minimal Study-like for recal
+        def dec(self, w):                      # pipeline always OK (conf 0.99);
+            if w == "pipeline":                # oracle OK iff truly correct
+                return np.array(["OK"] * 200)
+            return np.where(correct, "OK", "RETIRE")
+        conf = np.tile([0.99, 0.005, 0.005], (200, 1))
+    rc = recalibrate_confidence(_Fake(), n_bins=5)
+    ok(rc["ece_cal"] <= rc["ece_raw"] + 1e-6, "recalibration does not worsen ECE")
+    ok(abs(rc["cal"].mean() - correct.mean()) < 0.1, "recal mean ≈ empirical acc")
 
     print(f"decision_uq: {n}/{n} unit tests passed")
     return n
@@ -622,6 +735,9 @@ def main():
                     help="tiny fast run (works without the FMPE cache)")
     ap.add_argument("--fig", action="store_true",
                     help="save paper_figs/decision_uq.pdf")
+    ap.add_argument("--use-cache", action="store_true",
+                    help="reuse the cached study (results/decision_uq/study.npz)"
+                         " instead of re-running the FD oracle")
     ap.add_argument("--test", action="store_true", help="unit tests only")
     args = ap.parse_args()
 
@@ -630,20 +746,30 @@ def main():
     if args.build:
         build_fmpe_testset(n_keep=max(args.n_keep, 48)); return
 
-    if args.smoke:
-        kw = dict(n_keep=6, n_load=3, n_draws_fd=3, n_draws_surr=16,
-                  n_boot=100)
+    if args.use_cache and os.path.exists(STUDY_CACHE):
+        print(f"[study] reusing cache {STUDY_CACHE}")
+        study = load_study()
     else:
-        kw = dict(n_keep=args.n_keep, n_load=args.n_load,
-                  n_draws_fd=args.n_draws_fd, n_draws_surr=args.n_draws_surr,
-                  n_boot=args.n_boot)
-    study = run_study(n_workers=args.workers, seed=args.seed, **kw)
+        if args.smoke:
+            kw = dict(n_keep=6, n_load=3, n_draws_fd=3, n_draws_surr=16,
+                      n_boot=100)
+        else:
+            kw = dict(n_keep=args.n_keep, n_load=args.n_load,
+                      n_draws_fd=args.n_draws_fd, n_draws_surr=args.n_draws_surr,
+                      n_boot=args.n_boot)
+        study = run_study(n_workers=args.workers, seed=args.seed, **kw)
     m = metrics(study)
     rel = reliability(study)
-    print_report(study, m, rel)
+    try:
+        recal = recalibrate_confidence(study)
+    except Exception as e:
+        print(f"[warn] recalibration skipped: {e}")
+        recal = None
+    print_report(study, m, rel, recal)
     if args.fig:
         p = make_figure(study, m, rel,
-                        os.path.join(HERE, "paper_figs", "decision_uq.pdf"))
+                        os.path.join(HERE, "paper_figs", "decision_uq.pdf"),
+                        recal=recal)
         print(f"\nfigure → {p}")
 
 
