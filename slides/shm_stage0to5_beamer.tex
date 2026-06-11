@@ -392,6 +392,24 @@ $P(\text{survive }n)$ with fatigue $\cdot$ decision --- single held-out CFRP fie
 \end{frame}
 
 % ─────────────────────────────────────────────
+\begin{frame}{Is the final call right? End-to-end decision UQ}
+\centering
+\includegraphics[width=0.95\textwidth]{../paper_figs/decision_uq.pdf}\\[1mm]
+\begin{itemize}\small
+  \item every stage is calibrated alone --- but the operator only sees the
+        \alert{final OK/REPAIR/RETIRE}. Score it against an \emph{oracle}: exact
+        FD over operational load scatter $\Rightarrow$ true $P_{\text{grow}}$
+        $\Rightarrow$ oracle decision (no new data)
+  \item $40$ scenarios, real FMPE posteriors: \alert{$85\%$ end-to-end accuracy;
+        dangerous-miss $P(\text{OK}\mid\text{oracle}{=}\text{RETIRE})=\mathbf{0\%}$}
+        --- all errors stay in the low-consequence OK$\leftrightarrow$REPAIR band
+  \item decomposition: \alert{posterior $25\%$ $>$ surrogate $17.5\%$}, partially
+        cancelling to $15\%$ total; per-decision confidence overconfident
+        (ECE $0.18$) $\to$ decision-level conformal recalibration
+\end{itemize}
+\end{frame}
+
+% ─────────────────────────────────────────────
 \begin{frame}{Closing the loop: differentiable physics vs amortised inference}
 \centering
 \includegraphics[width=0.86\textwidth]{../paper_figs/diff_inversion.pdf}\\[1mm]
