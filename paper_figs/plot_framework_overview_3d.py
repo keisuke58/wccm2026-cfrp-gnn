@@ -34,9 +34,9 @@ try:
     from thesis_style import use  # noqa: E402
 
     figsize = use(width_frac=1.0, aspect=0.40)
-    # widen for a 12 x ~6.6 full-width schematic regardless of thesis textwidth
-    # (taller than the base figure to give the 3D thumbnails breathing room)
-    figsize = (12.0, 6.6)
+    # widen for a 12.5 x ~8.8 full-width schematic regardless of thesis textwidth
+    # (tall enough to host THREE 3D structure thumbnails up the left band)
+    figsize = (12.5, 8.8)
     USETEX = matplotlib.rcParams.get("text.usetex", False)
     # sanity: if latex is unavailable, usetex will crash at draw -> verify here
     if USETEX:
@@ -48,7 +48,7 @@ try:
             matplotlib.rcParams["text.usetex"] = False
             USETEX = False
 except Exception:
-    figsize = (12.0, 6.6)
+    figsize = (12.5, 8.8)
 
 if not USETEX:
     matplotlib.rcParams.update({
@@ -80,6 +80,8 @@ BLUE        = "#1565C0"   # interstage branch / shared core spine
 BLUE_FILL   = "#E3F0FB"
 AMBER       = "#E08A00"   # fairing branch
 AMBER_FILL  = "#FCEFD6"
+TEAL        = "#0E8C8C"   # SRB motor-case branch (new-structure extension)
+TEAL_FILL   = "#DCF1F1"
 CORE_EDGE   = "#1565C0"
 CORE_FILL   = "#EDF4FC"
 GREY_EDGE   = "#9AA4AD"
@@ -115,13 +117,13 @@ def arrow(ax, p0, p1, color=INK, lw=1.6, ms=14, z=5,
 
 fig, ax = plt.subplots(figsize=figsize)
 ax.set_xlim(0, 18.6)
-ax.set_ylim(-0.4, 12.5)
+ax.set_ylim(-0.4, 16.2)
 ax.axis("off")
 
 # ── background bands ─────────────────────────────────────────────────────────
 # left band: structure-specific ; right band: shared decision core
-# (taller than the base figure to host the 3D structure thumbnails up top)
-BAND_TOP = 11.5
+# (taller than the base figure to host THREE 3D structure thumbnails up top)
+BAND_TOP = 15.2
 band = FancyBboxPatch((0.3, 0.7), 8.7, BAND_TOP - 0.7,
                       boxstyle="round,pad=0.02,rounding_size=0.25",
                       linewidth=0, facecolor=BAND_GREY, zorder=0)
@@ -145,40 +147,52 @@ DW, DH = 3.7, 1.55           # detector boxes
 struct_x = 0.9
 det_x = 5.05
 
-# interstage (blue, upper) ; fairing (amber, lower)
+# interstage (blue, top) ; fairing (amber, mid) ; SRB motor case (teal, bottom)
 # rows spread apart vertically so each box has a clear strip of empty space
 # directly above it to host its own 3D thumbnail (no thumbnail/box overlap)
-sy_top, sy_bot = 6.55, 1.45
+sy_top, sy_mid, sy_bot = 10.35, 5.70, 1.05
 box(ax, struct_x, sy_top, SW, SH, BLUE, "#FFFFFF")
-box(ax, struct_x, sy_bot, SW, SH, AMBER, "#FFFFFF")
+box(ax, struct_x, sy_mid, SW, SH, AMBER, "#FFFFFF")
+box(ax, struct_x, sy_bot, SW, SH, TEAL, "#FFFFFF")
 
 ax.text(struct_x + SW / 2, sy_top + SH - 0.42, B("Interstage"),
         ha="center", va="center", fontsize=11.5, color=BLUE)
 ax.text(struct_x + SW / 2, sy_top + 0.45, "perforated CFRP",
         ha="center", va="center", fontsize=9.5, color=INK, style="italic")
-ax.text(struct_x + SW / 2, sy_bot + SH - 0.42, B("Fairing"),
+ax.text(struct_x + SW / 2, sy_mid + SH - 0.42, B("Fairing"),
         ha="center", va="center", fontsize=11.5, color=AMBER)
-ax.text(struct_x + SW / 2, sy_bot + 0.45, "honeycomb skin-core",
+ax.text(struct_x + SW / 2, sy_mid + 0.45, "honeycomb skin-core",
+        ha="center", va="center", fontsize=9.5, color=INK, style="italic")
+ax.text(struct_x + SW / 2, sy_bot + SH - 0.42, B("SRB motor case"),
+        ha="center", va="center", fontsize=11.5, color=TEAL)
+ax.text(struct_x + SW / 2, sy_bot + 0.45, "filament-wound CFRP",
         ha="center", va="center", fontsize=9.5, color=INK, style="italic")
 
-# detectors
+# detectors / structure-specific front-ends
 box(ax, det_x, sy_top, DW, DH, BLUE, BLUE_FILL)
-box(ax, det_x, sy_bot, DW, DH, AMBER, AMBER_FILL)
+box(ax, det_x, sy_mid, DW, DH, AMBER, AMBER_FILL)
+box(ax, det_x, sy_bot, DW, DH, TEAL, TEAL_FILL)
 
 ax.text(det_x + DW / 2, sy_top + SH - 0.40, B("surface-stress GNN"),
         ha="center", va="center", fontsize=10.5, color=BLUE)
 ax.text(det_x + DW / 2, sy_top + 0.45, "DSPSS  ·  F1 0.79",
         ha="center", va="center", fontsize=9.5, color=GREEN)
-ax.text(det_x + DW / 2, sy_bot + SH - 0.40, B("guided-wave GNN"),
+ax.text(det_x + DW / 2, sy_mid + SH - 0.40, B("guided-wave GNN"),
         ha="center", va="center", fontsize=10.5, color=AMBER)
-ax.text(det_x + DW / 2, sy_bot + 0.45, "Lamb  ·  F1 0.86",
+ax.text(det_x + DW / 2, sy_mid + 0.45, "Lamb  ·  F1 0.86",
         ha="center", va="center", fontsize=9.5, color=GREEN)
+ax.text(det_x + DW / 2, sy_bot + SH - 0.40, B("hoop-stress screen"),
+        ha="center", va="center", fontsize=10.5, color=TEAL)
+ax.text(det_x + DW / 2, sy_bot + 0.45, r"$\sigma_\theta$  ·  burst / debond",
+        ha="center", va="center", fontsize=9.5, color=INK, style="italic")
 
 # structure -> detector arrows
 arrow(ax, (struct_x + SW, sy_top + SH / 2), (det_x, sy_top + SH / 2),
       color=BLUE)
-arrow(ax, (struct_x + SW, sy_bot + SH / 2), (det_x, sy_bot + SH / 2),
+arrow(ax, (struct_x + SW, sy_mid + SH / 2), (det_x, sy_mid + SH / 2),
       color=AMBER)
+arrow(ax, (struct_x + SW, sy_bot + SH / 2), (det_x, sy_bot + SH / 2),
+      color=TEAL)
 ax.text(det_x + DW / 2, sy_top + SH + 0.30, "Stage 1  detection",
         ha="center", va="bottom", fontsize=9, color="#6B7178", style="italic")
 
@@ -187,8 +201,8 @@ CW = 5.9
 core_x = 10.2
 cx = core_x + CW / 2
 # vertical positions (top -> bottom); lifted to centre the spine in the
-# taller band used by this 3D variant
-CORE_DY = 1.55
+# taller band used by this 3-structure 3D variant
+CORE_DY = 3.30
 ys = [7.05 + CORE_DY, 5.55 + CORE_DY, 4.05 + CORE_DY, 2.55 + CORE_DY,
       1.05 + CORE_DY]
 CHs = [1.15, 1.15, 1.30, 1.15, 1.15]
@@ -204,7 +218,7 @@ ax.text(cx, ys[0] + 0.36, "anomaly screen + characterisation",
 box(ax, core_x, ys[1], CW, CHs[1], CORE_EDGE, CORE_FILL)
 ax.text(cx, ys[1] + CHs[1] - 0.40, B("Stage 3  prognosis"), ha="center",
         va="center", fontsize=10.5, color=BLUE)
-ax.text(cx, ys[1] + 0.36, "pluggable: phase-field / debond",
+ax.text(cx, ys[1] + 0.36, "pluggable: phase-field / debond / burst",
         ha="center", va="center", fontsize=9.5, color=INK, style="italic")
 
 # Clearance (the eye-catcher: three coloured verdicts)
@@ -241,13 +255,16 @@ for i in range(len(ys) - 1):
     arrow(ax, (cx, y_from), (cx, y_to), color="#5A6B82", lw=1.7, ms=13)
 
 # ── MERGE: two detector front-ends converge into Stage 0/2 ───────────────────
-merge_target_top = (core_x, ys[0] + CHs[0] * 0.66)
-merge_target_bot = (core_x, ys[0] + CHs[0] * 0.34)
+merge_target_top = (core_x, ys[0] + CHs[0] * 0.74)
+merge_target_mid = (core_x, ys[0] + CHs[0] * 0.50)
+merge_target_bot = (core_x, ys[0] + CHs[0] * 0.26)
 arrow(ax, (det_x + DW, sy_top + SH / 2), merge_target_top, color=BLUE,
-      lw=1.8, ms=14, cs="arc3,rad=-0.18")
-arrow(ax, (det_x + DW, sy_bot + SH / 2), merge_target_bot, color=AMBER,
-      lw=1.8, ms=14, cs="arc3,rad=0.22")
-ax.text((det_x + DW + core_x) / 2 - 0.35, (sy_top + sy_bot) / 2 + 1.30,
+      lw=1.8, ms=14, cs="arc3,rad=-0.16")
+arrow(ax, (det_x + DW, sy_mid + SH / 2), merge_target_mid, color=AMBER,
+      lw=1.8, ms=14, cs="arc3,rad=0.14")
+arrow(ax, (det_x + DW, sy_bot + SH / 2), merge_target_bot, color=TEAL,
+      lw=1.8, ms=14, cs="arc3,rad=0.26")
+ax.text((det_x + DW + core_x) / 2 - 0.10, sy_mid + SH + 0.95,
         "merge", ha="center", va="center", fontsize=9, color="#6B7178",
         style="italic", rotation=0)
 
@@ -300,6 +317,9 @@ _inter_crop = _inter[60:490, 55:430]
 # fairing: rightmost "view 3" nose cone (exclude colourbar at far right)
 _fair = mpimg.imread(os.path.join(_HERE, "fairing_3d.png"))
 _fair_crop = _fair[40:600, 1130:1555]
+# SRB: rightmost "view 3" tilted motor-case cylinder (exclude colourbar)
+_srb = mpimg.imread(os.path.join(_HERE, "srb3_3d.png"))
+_srb_crop = _srb[55:565, 1140:1640]
 
 thumb_cx = struct_x + SW / 2
 # Each thumbnail sits centred directly ABOVE its OWN structure box, with a
@@ -312,11 +332,14 @@ THUMB_DY = 0.62      # thumbnail bottom sits this far above its box top
 
 ax.text(thumb_cx, sy_top + SH + CAP_DY, "DSPSS field",
         ha="center", va="center", fontsize=8, color=BLUE, style="italic")
-ax.text(thumb_cx, sy_bot + SH + CAP_DY, "guided-wave field",
+ax.text(thumb_cx, sy_mid + SH + CAP_DY, "guided-wave field",
         ha="center", va="center", fontsize=8, color=AMBER, style="italic")
+ax.text(thumb_cx, sy_bot + SH + CAP_DY, r"hoop-stress field ($\sigma_\theta$)",
+        ha="center", va="center", fontsize=8, color=TEAL, style="italic")
 
-_add_thumb(_inter_crop, thumb_cx, sy_top + SH + THUMB_DY, zoom=0.17, border=BLUE)
-_add_thumb(_fair_crop, thumb_cx, sy_bot + SH + THUMB_DY, zoom=0.15, border=AMBER)
+_add_thumb(_inter_crop, thumb_cx, sy_top + SH + THUMB_DY, zoom=0.14, border=BLUE)
+_add_thumb(_fair_crop, thumb_cx, sy_mid + SH + THUMB_DY, zoom=0.13, border=AMBER)
+_add_thumb(_srb_crop, thumb_cx, sy_bot + SH + THUMB_DY, zoom=0.13, border=TEAL)
 
 plt.tight_layout(pad=0.4)
 
