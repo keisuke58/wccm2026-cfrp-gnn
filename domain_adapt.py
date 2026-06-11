@@ -200,6 +200,54 @@ def transfer_eval(Xs, ys, Xt, yt, method: str = "none", seed: int = 0,
     return TransferResult(method, auroc, acc, mmd_b, mmd_a, pad_a)
 
 
+@dataclass
+class GapResult:
+    method: str
+    mmd2_before: float
+    mmd2_after: float
+    pad_before: float
+    pad_after: float
+
+
+def domain_gap_report(Xs, Xt, methods=None, prescale: bool = True,
+                      seed: int = 0, verbose: bool = True) -> list:
+    """LABEL-FREE sim2real quantification: for each alignment, the domain gap
+    (RBF-MMD² and proxy-A-distance) BEFORE vs AFTER.  No labels needed — use this
+    when you only have source/target feature matrices (e.g. FEM vs measured DSPSS
+    distribution features).  prescale z-scores feature columns by SOURCE stats
+    first so no single feature (raw MPa scale vs histogram density) dominates.
+    """
+    methods = methods or list(ALIGNERS.keys())
+    if prescale:
+        mu, sd = Xs.mean(0), Xs.std(0) + 1e-8
+        Xs, Xt = (Xs - mu) / sd, (Xt - mu) / sd
+    mmd_b, pad_b = mmd2(Xs, Xt), proxy_a_distance(Xs, Xt, seed)
+    res = []
+    for m in methods:
+        Xs_a = ALIGNERS[m](Xs, Xt)
+        Xt_a = _apply_target(m, Xs, Xt)
+        res.append(GapResult(m, mmd_b, mmd2(Xs_a, Xt_a),
+                             pad_b, proxy_a_distance(Xs_a, Xt_a, seed)))
+    if verbose:
+        bar = "=" * 72
+        print(bar)
+        print("  SIM2REAL DOMAIN GAP (label-free)  —  source→target alignment")
+        print(bar)
+        print(f"  source n={len(Xs)}, target n={len(Xt)}, d={Xs.shape[1]}")
+        print(f"  raw gap: MMD²={mmd_b:.4f}, proxy-A-dist={pad_b:.2f}\n")
+        print(f"  {'method':>12}{'MMD² after':>13}{'PAD after':>11}"
+              f"{'gap ↓':>9}")
+        for r in res:
+            drop = (1 - r.mmd2_after / r.mmd2_before) * 100 if r.mmd2_before else 0
+            print(f"  {r.method:>12}{r.mmd2_after:>13.4f}{r.pad_after:>11.2f}"
+                  f"{drop:>8.0f}%")
+        best = min(res[1:], key=lambda r: r.mmd2_after) if len(res) > 1 else res[0]
+        print(f"\n  best alignment: {best.method} "
+              f"(MMD² {best.mmd2_before:.4f}→{best.mmd2_after:.4f})")
+        print(bar)
+    return res
+
+
 def compare_adaptations(Xs, ys, Xt, yt, methods=None, seed: int = 0,
                         verbose: bool = True) -> list:
     """Run baseline + each adaptation; return a list of TransferResult."""

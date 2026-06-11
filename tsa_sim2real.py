@@ -390,6 +390,45 @@ def make_figure_dspss(r: DSPSSResult, out_path: str) -> str:
 
 
 # ═════════════════════════════════════════════════════════════════════════════
+#  (b) FEM↔measured DOMAIN ADAPTATION on DSPSS distribution features
+# ═════════════════════════════════════════════════════════════════════════════
+
+def field_features(field: np.ndarray, n_bins: int = 12) -> np.ndarray:
+    """Fixed-d per-field descriptor of the DSPSS distribution: scale (mean, std,
+    5/25/50/75/95 percentiles) + shape (skew, kurtosis, standardised histogram).
+
+    Common representation across the measured grids (245×56, 185×58) and the FEM
+    graph (9852 nodes), so FEM-source and measured-target live in the same space.
+    """
+    v = np.asarray(field, dtype=float).ravel()
+    v = v[v > 0]                                   # drop zero-padding / background
+    z = (v - v.mean()) / (v.std() + 1e-8)
+    pcts = np.percentile(v, [5, 25, 50, 75, 95])
+    hist, _ = np.histogram(np.clip(z, -2, 4), bins=n_bins, range=(-2, 4),
+                           density=True)
+    return np.concatenate([[v.mean(), v.std(),
+                            float((z ** 3).mean()), float((z ** 4).mean() - 3)],
+                           pcts, hist])
+
+
+def run_da(verbose: bool = True) -> list:
+    """(b) Quantify and reduce the FEM→measured DSPSS sim2real gap with the
+    reusable toolkit (domain_adapt): per-field distribution features, then
+    label-free domain-gap before/after each alignment (standardize / CORAL /
+    quantile).  No defect labels needed."""
+    import domain_adapt as da
+
+    fem = np.load(FEM_GRAPHSTRESS)                 # (n_fem, 9852) FEM DSPSS graphs
+    Xs = np.stack([field_features(f) for f in fem])
+    specs = load_rect_dspss()                      # 22 measured DSPSS grids
+    Xt = np.stack([field_features(f) for _, f in specs])
+    if verbose:
+        print(f"[da] FEM source {Xs.shape}  vs  measured target {Xt.shape} "
+              f"(per-field DSPSS distribution features)\n")
+    return da.domain_gap_report(Xs, Xt, verbose=verbose)
+
+
+# ═════════════════════════════════════════════════════════════════════════════
 #  Unit tests
 # ═════════════════════════════════════════════════════════════════════════════
 
@@ -449,6 +488,15 @@ def run_tests() -> int:
     ok(len(dr.stage0) == 3 and dr.stage0[0]["score"].shape == (12, 10),
        "DSPSSResult stage0 shapes")
 
+    # field_features: fixed length, zero-padding ignored, shape-sensitive
+    f1 = field_features(rng.normal(40, 10, (20, 20)))
+    f2 = field_features(rng.exponential(8, (20, 20)))
+    ok(f1.shape == f2.shape and f1.ndim == 1, "field_features fixed length")
+    ok(np.isfinite(f1).all(), "field_features finite")
+    padded = np.zeros((10, 10)); padded[2:5, 2:5] = rng.normal(30, 5, (3, 3))
+    ok(np.allclose(field_features(padded), field_features(padded[2:5, 2:5])),
+       "zero-padding ignored (>0 mask)")
+
     print(f"tsa_sim2real: {n}/{n} unit tests passed")
     return n
 
@@ -460,9 +508,10 @@ def run_tests() -> int:
 def main():
     ap = argparse.ArgumentParser(
         description="Sim-to-real: measured TSA full-field stress vs FEM DSPSS.")
-    ap.add_argument("--source", choices=["dspss", "tsa"], default="dspss",
-                    help="dspss = measured DSPSS vs FEM DSPSS (22 specimens, "
-                         "apples-to-apples); tsa = raw TSA stress (3 specimens)")
+    ap.add_argument("--source", choices=["dspss", "tsa", "da"], default="dspss",
+                    help="dspss = measured DSPSS vs FEM DSPSS (22 specimens); "
+                         "tsa = raw TSA stress (3 specimens); da = FEM→measured "
+                         "domain-adaptation gap on distribution features")
     ap.add_argument("--flag-q", type=float, default=0.99,
                     help="Stage-0 hot-spot flag quantile on the real field")
     ap.add_argument("--fig", action="store_true",
@@ -472,6 +521,8 @@ def main():
 
     if args.test:
         run_tests(); return
+    if args.source == "da":
+        run_da(); return
     if args.source == "dspss":
         r = run_dspss(flag_q=args.flag_q)
         if args.fig:
