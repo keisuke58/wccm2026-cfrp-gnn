@@ -258,6 +258,31 @@ $\bar\alpha_T$ not yet S--N-anchored.
 \end{frame}
 
 % ─────────────────────────────────────────────
+\begin{frame}{Stage 3, made fast: an FNO surrogate for fleet-scale use}
+\centering
+\includegraphics[width=0.97\textwidth]{../paper_figs/crack_surrogate.pdf}\\[1.5mm]
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\begin{itemize}\small
+  \item FD growth solve is the \alert{only} bottleneck for fleet-scale
+        Monte-Carlo over the posterior
+  \item Fourier neural operator
+        $G:(d_0,\text{load})\!\mapsto\!(d_{\text{final}},P(\text{grow}))$,
+        trained on 800 FD runs
+\end{itemize}
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{itemize}\small
+  \item field rel-$L_2$ \textbf{3.5\%}, grow-flag acc \textbf{0.988}
+        (Brier 0.010, calibrated)
+  \item \alert{$142\times$ faster} (12.4\,ms vs 1763\,ms) $\Rightarrow$
+        Stage 4 draws + Concept B forward map at interactive speed
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ─────────────────────────────────────────────
 \begin{frame}{Flight clearance --- end-to-end on a real test sample}
 Stage 0$\rightarrow$3 run: held-out 4x4 field $\rightarrow$ Mahalanobis map
 $\rightarrow$ \emph{trained} FMPE posterior $\rightarrow$ fatigue-aware clearance

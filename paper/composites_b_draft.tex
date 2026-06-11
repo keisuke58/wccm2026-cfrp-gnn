@@ -159,6 +159,27 @@ the majority baseline, was an artefact of that restricted setting.)
 % accumulates across flights => survival decays even at constant sub-critical
 % load (no i.i.d. shortcut). Demo numbers: nominal OK E[~20], max-Q RETIRE.
 
+\paragraph{Fast forward surrogate.} The FD growth solve ($\approx1.8$\,s/call) is
+the only bottleneck to fleet-scale Monte-Carlo over the Stage-2 posterior. We
+train a Fourier neural operator
+$G:(d_0,\text{load})\!\mapsto\!(d_{\text{final}},P(\text{grow}))$
+(dual-head: a per-pixel field head and a global-pooled scalar head; $1.2$M
+parameters; $800$ FD samples spanning sub- to super-critical loads). On held-out
+defects it reaches field relative-$L_2$ $3.5\%$, grow-flag accuracy $0.988$
+(Brier $0.010$, well calibrated), and $\log$-$\text{rel\_growth}$ correlation
+$0.996$, at \textbf{$142\times$} the speed ($12.4$\,ms vs.\ $1763$\,ms/call,
+Fig.~\ref{fig:surrogate}). The decision-relevant $P(\text{grow})$ is the robust
+target: the smooth operator regresses the sharp super-critical
+$\text{rel\_growth}$ jump in log-space and softens it only at the transition
+load. This makes the Stage-4 fleet draws and the Concept-B forward map (next
+section) tractable at interactive speed.
+\begin{figure}[t]\centering
+  \includegraphics[width=\linewidth]{crack_surrogate.pdf}
+  \caption{Stage~3 FNO surrogate. FD vs.\ surrogate damage field, $\text{rel\_growth}$
+  agreement, $P(\text{grow})$ vs.\ load, and the $142\times$ wall-clock speedup.}
+  \label{fig:surrogate}
+\end{figure}
+
 \section{Stage 4 --- hierarchical fleet learning}
 A reusable fleet generates a stream of per-inspection posteriors across many
 vehicles and flights. We close the loop with a hierarchical Bayesian model:
