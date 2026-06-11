@@ -76,8 +76,27 @@ flight_load_spectrum, baselines_comparison, kojima_real_case, payload_da_gw
 - Honest negatives kept brief: cross-frequency FFT demo (no defect signal → why
   proper features), structure-mismatch sim-to-real (FEM↔OGW).
 
-## ✅ Pre-writing improvement done (2026-06-12, commit d878163)
-The framework is now END-TO-END on BOTH structures via a PLUGGABLE prognosis
+## ✅ Pre-writing gap closure — ALL addressed (2026-06-12)
+Before writing, the honest gaps were worked through:
+- **#1 fairing end-to-end** ✅ `fairing_pipeline.py` (26/26): decision-UQ 92.5% /
+  dangerous-miss 0% / ECE 0.075, fleet sharpening ×2.73, design lever P(grow)
+  0.69→0 — the whole framework runs on structure 2, not just clearance.
+- **#2 prognosis validation** ✅ `fairing_prognosis_validation.py` (14/14):
+  rank-validated vs the Payload guided-wave FEM (Spearman 0.87, monotone in
+  radius, position-sensitive); honest limit = static-detection FEM, not growth.
+- **#3 interstage measured detection** ⏳ `interstage_measured_detection.py` (6/6):
+  harness ready (coupon AUROC 0.851 proven), measured AUROC BLOCKED on Kojima
+  masks — `detection_auroc(field,mask)` one call from closing.
+- **#4 fairing Stage-2** ✅ `Payload2026/src/fairing_stage2.py`: debond severity
+  posterior (mean+sd) from GW features → bridges to Stage-3 (rank corr 0.95).
+- **#5 unification analysis** ✅ `composites_b_unification_analysis.md`: the
+  three-layer honest spine (sensing NOT unified; decision core IS).
+- **#6 system baseline** ✅ `system_baseline.py` (51/51): framework lowest expected
+  cost (15.15 vs 16.45–21.25, oracle floor 13.45), tied 0% dangerous-miss.
+Only blocker left = #3's measured masks (data, from Kojima). Otherwise ready.
+
+## Pluggable prognosis interface (the layer-2 seam)
+The framework is END-TO-END on BOTH structures via a PLUGGABLE prognosis
 interface (`fairing_debond_prognosis.py`):
 - interstage Stage-3 = FD phase-field delamination (InterstagePrognosis);
 - fairing Stage-3 = honeycomb skin-core DEBOND growth (FairingPrognosis:
