@@ -196,6 +196,29 @@ class $0=$ defect-free; classes $1\text{–}18=$ (in-plane region $\times$ inser
 \end{frame}
 
 % ---------------------------------------------------------------------
+\begin{frame}{Related work: where this work sits}
+\note{Two anchors, both in Composites B. Kojima 2025 is the direct surface-stress lineage we build on (and a co-author). PIGMID 2026 is an adjacent physics-informed GNN, but on guided-wave sensor signals --- a different modality. We differentiate on input, structure, the physics prior, and the OOD generalization study.}
+\footnotesize
+\begin{tabular}{@{}lp{2.05cm}p{2.05cm}p{2.5cm}@{}}
+\toprule
+ & Kojima '25 (Compos.\ B) & PIGMID '26 (Compos.\ B) & \textbf{This work} \\
+\midrule
+Input    & surface stress (FEM$\to$IR) & guided waves (PZT$\times$8) & \textbf{full-field stress (DSPSS)} \\
+Model    & transfer CNN & physics GNN (wave energy) & \textbf{mesh-physics GNN} \\
+Geometry & simple coupons & instrumented plate & \textbf{perforated interstage, 3-D} \\
+Physics  & noise-aug.\ sim pretrain & wave-energy adjacency & \textbf{FE-mesh topology $+$ DSPSS} \\
+Novelty  & sim-to-real transfer & path heterogeneity & \textbf{OOD gen.\ $+$ detect/localize split} \\
+\bottomrule
+\end{tabular}
+\vspace{0.6em}
+
+{\small Unlike guided-wave GNNs (PIGMID) or simple-coupon transfer CNNs (Kojima~'25),
+we learn on the structural FE mesh from full-field DSPSS, and are the first to
+quantify OOD size/position generalization --- \textbf{detection transfers,
+precise localization collapses}.}
+\end{frame}
+
+% ---------------------------------------------------------------------
 \begin{frame}{FEM analysis conditions}
 \note{We build the dataset by finite-element analysis: a one-eightieth-scale curved interstage panel, about 2 metres radius, with two rectangular holes. Delaminations are modeled explicitly by inserting thin Teflon sheets between selected plies, under tensile loading. This gives DSPSS fields with exactly known ground-truth defects.}
 \begin{columns}[T]
