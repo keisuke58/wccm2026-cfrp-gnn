@@ -264,7 +264,7 @@ ax.text(core_x + CW + 0.20, ys[2] + CHs[2] / 2 - 0.20,
         pct("0% dangerous-miss"), ha="left", va="center", fontsize=8.5,
         color=GREEN)
 # bottom-of-core calibration / sim-to-real tag
-ax.text(cx, 0.32, pct("ECE 0.18→0.06   ·   sim-to-real FPR 14→5%"),
+ax.text(cx, 0.32, pct("ECE 0.13→0.03   ·   sim-to-real FPR 14→5%"),
         ha="center", va="center", fontsize=8.5, color="#3C5A86")
 
 plt.tight_layout(pad=0.4)

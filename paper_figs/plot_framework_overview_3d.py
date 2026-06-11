@@ -34,8 +34,9 @@ try:
     from thesis_style import use  # noqa: E402
 
     figsize = use(width_frac=1.0, aspect=0.40)
-    # widen for a 12 x ~4.7 full-width schematic regardless of thesis textwidth
-    figsize = (12.0, 5.9)
+    # widen for a 12 x ~6.6 full-width schematic regardless of thesis textwidth
+    # (taller than the base figure to give the 3D thumbnails breathing room)
+    figsize = (12.0, 6.6)
     USETEX = matplotlib.rcParams.get("text.usetex", False)
     # sanity: if latex is unavailable, usetex will crash at draw -> verify here
     if USETEX:
@@ -47,7 +48,7 @@ try:
             matplotlib.rcParams["text.usetex"] = False
             USETEX = False
 except Exception:
-    figsize = (12.0, 5.9)
+    figsize = (12.0, 6.6)
 
 if not USETEX:
     matplotlib.rcParams.update({
@@ -114,13 +115,13 @@ def arrow(ax, p0, p1, color=INK, lw=1.6, ms=14, z=5,
 
 fig, ax = plt.subplots(figsize=figsize)
 ax.set_xlim(0, 18.6)
-ax.set_ylim(-0.4, 11.4)
+ax.set_ylim(-0.4, 12.5)
 ax.axis("off")
 
 # ── background bands ─────────────────────────────────────────────────────────
 # left band: structure-specific ; right band: shared decision core
 # (taller than the base figure to host the 3D structure thumbnails up top)
-BAND_TOP = 10.4
+BAND_TOP = 11.5
 band = FancyBboxPatch((0.3, 0.7), 8.7, BAND_TOP - 0.7,
                       boxstyle="round,pad=0.02,rounding_size=0.25",
                       linewidth=0, facecolor=BAND_GREY, zorder=0)
@@ -145,8 +146,9 @@ struct_x = 0.9
 det_x = 5.05
 
 # interstage (blue, upper) ; fairing (amber, lower)
-# rows pushed a touch lower so a 3D thumbnail strip sits above each box
-sy_top, sy_bot = 5.35, 1.45
+# rows spread apart vertically so each box has a clear strip of empty space
+# directly above it to host its own 3D thumbnail (no thumbnail/box overlap)
+sy_top, sy_bot = 6.55, 1.45
 box(ax, struct_x, sy_top, SW, SH, BLUE, "#FFFFFF")
 box(ax, struct_x, sy_bot, SW, SH, AMBER, "#FFFFFF")
 
@@ -271,7 +273,7 @@ ax.text(core_x + CW + 0.20, ys[2] + CHs[2] / 2 - 0.20,
         pct("0% dangerous-miss"), ha="left", va="center", fontsize=8.5,
         color=GREEN)
 # bottom-of-core calibration / sim-to-real tag (just under Stage 5 box)
-ax.text(cx, ys[4] - 0.42, pct("ECE 0.18→0.06   ·   sim-to-real FPR 14→5%"),
+ax.text(cx, ys[4] - 0.42, pct("ECE 0.13→0.03   ·   sim-to-real FPR 14→5%"),
         ha="center", va="center", fontsize=8.5, color="#3C5A86")
 
 # ── 3D STRUCTURE THUMBNAILS ──────────────────────────────────────────────────
@@ -300,14 +302,21 @@ _fair = mpimg.imread(os.path.join(_HERE, "fairing_3d.png"))
 _fair_crop = _fair[40:600, 1130:1555]
 
 thumb_cx = struct_x + SW / 2
-_add_thumb(_inter_crop, thumb_cx, sy_top + SH + 0.18, zoom=0.20, border=BLUE)
-_add_thumb(_fair_crop, thumb_cx, sy_bot + SH + 0.18, zoom=0.16, border=AMBER)
+# Each thumbnail sits centred directly ABOVE its OWN structure box, with a
+# small caption tucked in the gap between the box top and the thumbnail.
+# A clear vertical strip separates each (box top → caption → thumbnail) and the
+# spread-apart rows guarantee the Fairing thumbnail never reaches the Interstage
+# box above it.
+CAP_DY = 0.30        # caption sits this far above its box top
+THUMB_DY = 0.62      # thumbnail bottom sits this far above its box top
 
-# tiny captions tying each thumbnail to its structure
-ax.text(thumb_cx + SW / 2 + 0.35, sy_top + SH + 1.05, "DSPSS field",
-        ha="left", va="center", fontsize=8, color=BLUE, style="italic")
-ax.text(thumb_cx + SW / 2 + 0.35, sy_bot + SH + 1.05, "guided-wave field",
-        ha="left", va="center", fontsize=8, color=AMBER, style="italic")
+ax.text(thumb_cx, sy_top + SH + CAP_DY, "DSPSS field",
+        ha="center", va="center", fontsize=8, color=BLUE, style="italic")
+ax.text(thumb_cx, sy_bot + SH + CAP_DY, "guided-wave field",
+        ha="center", va="center", fontsize=8, color=AMBER, style="italic")
+
+_add_thumb(_inter_crop, thumb_cx, sy_top + SH + THUMB_DY, zoom=0.17, border=BLUE)
+_add_thumb(_fair_crop, thumb_cx, sy_bot + SH + THUMB_DY, zoom=0.15, border=AMBER)
 
 plt.tight_layout(pad=0.4)
 
