@@ -244,13 +244,29 @@ raising expected remaining flights from $\mathbf{1.9}$ to $\mathbf{6.0}$
 (Fig.~\ref{fig:design}). Both levers are physically aligned --- steeper plies
 rotate the cheap matrix-crack direction away from the seeded delamination path,
 and a tougher interface blunts the dominant interlaminar channel; interface
-toughening is the dominant lever, and the off-axis angle is rail-bound at the
-manufacturable cap, an honest signal that the baseline is not interior-optimal.
+toughening is the dominant lever. A single growth objective rails the off-axis
+angle to the manufacturable cap; adding competing classical-laminate-theory
+structural objectives --- areal mass, axial stiffness $A_{11}$, and
+bending/buckling $D_{11}$ --- restores an \emph{interior} optimum: on the
+growth--stiffness Pareto front the knee sits at $\sim$$40^\circ$, and the optimal
+angle moves $75^\circ\!\to\!15^\circ$ as the stiffness weight grows
+(Fig.~\ref{fig:pareto}). The fleet defect distribution Stage~5 optimises against
+is drawn from the Stage-4 hierarchical posterior through a monotone
+growth-rate$\to$severity link, rather than a synthetic prior --- tightening the
+$4\!\to\!5$ handoff.
 \begin{figure}[t]\centering
   \includegraphics[width=\linewidth]{design_feedback.pdf}
   \caption{Stage~5. (a) BO convergence; (b) worst-case damage, baseline vs.\
   optimised layup; (c) mean/CVaR growth; (d) objective vs.\ off-axis angle.}
   \label{fig:design}
+\end{figure}
+\begin{figure}[t]\centering
+  \includegraphics[width=\linewidth]{design_feedback_pareto.pdf}
+  \caption{Stage~5, multi-objective. Growth vs.\ (a) mass and (b) axial-stiffness
+  Pareto fronts with the utopia-distance knee; (c) the optimal off-axis angle
+  moves off the manufacturable cap into the interior as the stiffness weight
+  grows.}
+  \label{fig:pareto}
 \end{figure}
 
 \section{Towards differentiable inversion: closing the loop}
@@ -328,7 +344,13 @@ decision-correctness, reported under leave-one-out cross-validation, removes
 most of it --- ECE $0.18\!\to\!0.06$ and mean claimed reliability
 $96.5\%\!\to\!84.5\%$ against an empirical $85\%$ (Fig.~\ref{fig:decuq}d); the
 rescaling is monotone, so the decision is unchanged and only its reliability
-estimate is corrected.
+estimate is corrected. The $\alpha,\beta$ thresholds, assumed at a $100{:}1$
+loss-to-repair ratio, we anchor to representative reusable-launch economics
+(refurb/loss $1/100$--$1/30$, retire/loss $0.1$--$0.4$): a Monte-Carlo over this
+range gives $\alpha=0.035\,[0.021,0.055]$ and $\beta=0.53\,[0.28,0.93]$, and shows
+that while an OK/REPAIR call near $P_{\text{grow}}{=}0.1$ is economically robust,
+the REPAIR-vs-RETIRE verdict at $P_{\text{grow}}{\approx}0.3$--$0.5$ flips across
+plausible economics --- a fragility invisible to a single assumed cost point.
 \begin{figure}[t]\centering
   \includegraphics[width=\linewidth]{decision_uq.pdf}
   \caption{End-to-end decision UQ. (a) pipeline-vs-oracle decision confusion
@@ -337,6 +359,37 @@ estimate is corrected.
   $\alpha,\beta$ thresholds, flips at the boundaries; (d) per-decision
   confidence calibration.}
   \label{fig:decuq}
+\end{figure}
+
+\section{Solver verification and detector robustness}
+\paragraph{Verification.} The FD phase-field operator passes a
+method-of-manufactured-solutions test at second order in 2-D (interior order
+$2.04$) and 3-D (order $2.05$, a small-grid proof the scheme extends to
+volumetric delamination); a mesh-convergence study places the production
+$n_x{=}60$ grid at $\sim$$0.4\%$ error in peak reaction force
+(Fig.~\ref{fig:physval}). Replacing the constant-peak load proxy with a
+variable-amplitude flight spectrum (liftoff / max-Q / buffet / MECO / re-entry /
+landing) run through the Carrara fatigue shows the proxy \emph{under}-predicts
+mean life $\sim$$3.4\times$ by applying the rare max-Q amplitude to every cycle;
+anchoring the fatigue threshold $\bar\alpha_T$ to a representative CFRP S--N slope
+restores a well-defined W\"ohler curve where the library default gives none.
+\paragraph{Detector robustness and baselines.} Stage-0 detection holds to AUROC
+$0.84$ at sensor noise $\sigma{=}0.1$ of the field std --- refuting a folklore
+``collapse at $0.1$'' --- and only reaches chance near $\sigma{\approx}0.7$--$1.0$,
+with lock-in frame averaging ($\sigma/\sqrt N$) recovering AUROC $\ge0.8$ in $32$
+frames; the reference-free $|z|$ detector needs no healthy twin (the new-build
+first-flight case). Benchmarked against standard anomaly detectors
+(PCA-reconstruction, isolation forest, one-class SVM, LOF) on labelled coupons,
+the physics $|z|$ ties the best on AUROC and leads on AUPRC for the rare
+($<$$1\%$) defect class --- the defect is a stress concentration, so its magnitude
+\emph{is} the signal, and a trivial physics score matches tuned outlier detectors.
+\begin{figure}[t]\centering
+  \includegraphics[width=0.82\linewidth]{physics_validation.pdf}
+  \caption{Solver verification. (a) MMS log--log error vs.\ mesh size with fitted
+  slopes (interior 2nd-order; the zero-flux Neumann closure is 1st-order, shown
+  honestly); (b) peak reaction force converging to the Richardson asymptote, the
+  production $n_x{=}60$ grid starred.}
+  \label{fig:physval}
 \end{figure}
 
 \section{Discussion}
@@ -349,12 +402,20 @@ estimate is corrected.
 \section{Conclusion}
 % one-paragraph wrap; outlook to Stage 4-5 (hierarchical fleet learning,
 % design feedback) and sim-to-real with measured full-field data.
+\paragraph{Towards measured data.} The sim-to-real bridge is under way: the stack
+ingests measured TSA-derived full-field DSPSS from a 22-specimen CFRP campaign,
+and an unsupervised domain-adaptation step (per-feature quantile matching) closes
+$\sim$$97\%$ of the FEM$\to$measured distribution gap (proxy-$\mathcal{A}$
+distance $2.0\!\to\!0.3$); a labelled measured-data detection benchmark awaits
+per-specimen defect masks.
 
 \paragraph{Reproducibility.} All stages are implemented and tested
-($\sim$100 unit tests) in two public-on-request repositories, including a
-one-command end-to-end run (detect$\to$characterise$\to$prognose$\to$clear
-$\to$fleet-update in $<$4\,s) and a decision-level UQ harness that scores the
-final clearance call against the exact FD oracle; figures are generated by the
+($\sim$250 unit tests) in two public-on-request repositories, including a
+one-command end-to-end run (detect$\to$classify$\to$characterise$\to$prognose
+$\to$clear$\to$fleet-update in $<$4\,s), a decision-level UQ harness that scores
+the final clearance call against the exact FD oracle, and verification
+(MMS / mesh-convergence, 2-D and 3-D), robustness (SNR sweep, baseline
+benchmark) and economic-sensitivity studies; figures are generated by the
 scripts under \texttt{paper\_figs/}.
 
 \bibliographystyle{elsarticle-num}
