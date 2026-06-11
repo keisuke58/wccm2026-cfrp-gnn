@@ -112,6 +112,13 @@ BASELINE_DESIGN = np.array([30.0, 0.40, 1.00])
 W_GCINT = 0.06      # per unit of (Gc_int - GCINT_LO)/(GCINT_HI-GCINT_LO)
 W_REINF = 0.04      # per unit of (reinf  - REINF_LO )/(REINF_HI -REINF_LO )
 
+# Areal-mass proxy coefficients (Section 1b): fraction of areal mass ADDED by
+# the fully-toughened / fully-reinforced corner over the bare structural plies
+# (interleaf + stitching mass).  ~10 % total — the right order for interleaf
+# toughening.  Used only by laminate_mass_proxy / the multi-objective layer.
+M_GCINT = 0.06
+M_REINF = 0.04
+
 CVAR_Q = 0.20       # CVaR tail fraction (worst 20 % of defects)
 
 CACHE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -184,6 +191,144 @@ def manufacturability_penalty(design) -> float:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+#  1b.  Cheap analytical STRUCTURAL proxies  (competing objectives for Stage-5)
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# WHY these exist.  The single-objective Stage-5 (mean log-growth + CVaR +
+# manufacturability) has NO competing structural cost: making the laminate
+# heavier (more interface toughening / reinforcement) and turning the off-axis
+# plies steeper only ever HELPS deflect the matrix crack, so the optimum rails
+# to the manufacturable cap (off-axis 74–75°, max reinforcement).  That is an
+# honest sign the design model is incomplete: a real laminate trades
+# crack-resistance against MASS and STIFFNESS.  Below are cheap, closed-form
+# (NO new FEM) analytical proxies for those competing objectives, derived from
+# classical laminate theory (CLT) on the (0/±θ)_s layup, so an INTERIOR optimum
+# can exist once they are weighted in.
+#
+# All proxies are NORMALISED to the baseline design (BASELINE_DESIGN) so they
+# read as dimensionless ratios ≈1 at baseline; only RATIOS/TRENDS are claimed
+# (cf. honest accounting (c)), never absolute MPa / kg.  They are deterministic
+# and microsecond-cheap, so the Pareto sweep is essentially free.
+
+# Reduced-stiffness anchors for a unidirectional CFRP ply (normalised, typical
+# carbon/epoxy ratios — memo §5 notes the FD growth model itself ignores E1/E2,
+# so these constants live ONLY in the CLT proxies, not in the FD forward):
+_PLY_E1   = 130.0    # axial (fiber) modulus  [normalised]
+_PLY_E2   = 9.0      # transverse modulus
+_PLY_G12  = 5.0      # in-plane shear modulus
+_PLY_NU12 = 0.30     # major Poisson ratio
+
+
+def _ply_Qbar(theta_deg: float):
+    """Transformed reduced-stiffness matrix Q̄(θ) for one UD ply (CLT).
+
+    Standard plane-stress CLT (e.g. Jones, *Mechanics of Composite Materials*):
+    build the on-axis reduced stiffness Q from (E1,E2,G12,ν12), then rotate by
+    the ply angle θ to get Q̄.  Returns (Qb11, Qb22, Qb66) — the entries the
+    membrane (axial) and we need for the laminate A- and D-matrix proxies.
+    """
+    nu21 = _PLY_NU12 * _PLY_E2 / _PLY_E1
+    denom = 1.0 - _PLY_NU12 * nu21
+    Q11 = _PLY_E1 / denom
+    Q22 = _PLY_E2 / denom
+    Q12 = _PLY_NU12 * _PLY_E2 / denom
+    Q66 = _PLY_G12
+    c = np.cos(np.radians(theta_deg)); s = np.sin(np.radians(theta_deg))
+    c2, s2 = c * c, s * s
+    c4, s4 = c2 * c2, s2 * s2
+    cs2 = c2 * s2
+    Qb11 = Q11 * c4 + 2.0 * (Q12 + 2.0 * Q66) * cs2 + Q22 * s4
+    Qb22 = Q11 * s4 + 2.0 * (Q12 + 2.0 * Q66) * cs2 + Q22 * c4
+    Qb66 = (Q11 + Q22 - 2.0 * Q12 - 2.0 * Q66) * cs2 + Q66 * (c4 + s4)
+    return Qb11, Qb22, Qb66
+
+
+def axial_stiffness_proxy(design, normalised: bool = True) -> float:
+    """In-plane AXIAL modulus proxy E_x of the (0/±θ)_s laminate (CLT).
+
+    Assumptions / construction:
+      * Classical laminate theory, all plies equal thickness; the laminate
+        membrane stiffness in the loading (x / 0°) direction is the
+        thickness-average of Q̄11(θ_k) over the stack.
+      * We report the A11-density A11/h = mean_k Q̄11(θ_k) as the axial-modulus
+        proxy (a faithful monotone surrogate for E_x = (A11·A22−A12²)/(h·A22);
+        the simpler A11/h keeps the trend and is cheaper).
+      * The 0° plies are fixed; the ±θ plies LOSE axial stiffness as θ steepens
+        (Q̄11(θ) decreases monotonically from 0°→90°).  So steeper off-axis →
+        LOWER axial stiffness — the competing cost that pulls θ off the cap.
+    Interface toughening / reinforcement do not enter (they are interleaf
+    resin, ~0 axial load path).  normalised → ratio to BASELINE_DESIGN.
+    """
+    design = np.asarray(design, float).ravel()
+    offaxis = float(np.clip(design[0], OFFAXIS_LO, OFFAXIS_HI))
+    angles = balanced_symmetric_layup(offaxis)
+    A11 = float(np.mean([_ply_Qbar(a)[0] for a in angles]))
+    if not normalised:
+        return A11
+    A11_base = axial_stiffness_proxy(BASELINE_DESIGN, normalised=False)
+    return A11 / A11_base
+
+
+def bending_stiffness_proxy(design, normalised: bool = True) -> float:
+    """BUCKLING / bending-stiffness proxy D11 of the (0/±θ)_s laminate (CLT).
+
+    Assumptions / construction:
+      * Classical laminate theory D-matrix: D11 = Σ_k Q̄11(θ_k)·(z_k³−z_{k-1}³)/3
+        with z the ply through-thickness coordinates (mid-plane = 0, unit total
+        thickness).  D11 governs panel bending / buckling resistance, so this is
+        a (panel-)buckling proxy.
+      * Because z³ weights the OUTER plies most, and the (0/±θ)_s stack here
+        keeps 0° plies on the faces, D11 stays high; but the ±θ plies that sit
+        off the faces still erode D11 as θ steepens — a second, weaker
+        competing structural cost (its trend with θ is monotone-decreasing).
+    Interface toughening / reinforcement do not enter.  normalised → ratio to
+    BASELINE_DESIGN.
+    """
+    design = np.asarray(design, float).ravel()
+    offaxis = float(np.clip(design[0], OFFAXIS_LO, OFFAXIS_HI))
+    angles = balanced_symmetric_layup(offaxis)
+    n = len(angles)
+    # equal-thickness plies, total thickness 1, mid-plane at 0 → z from -1/2..1/2
+    z = np.linspace(-0.5, 0.5, n + 1)
+    D11 = 0.0
+    for k, a in enumerate(angles):
+        D11 += _ply_Qbar(a)[0] * (z[k + 1] ** 3 - z[k] ** 3) / 3.0
+    if not normalised:
+        return float(D11)
+    D11_base = bending_stiffness_proxy(BASELINE_DESIGN, normalised=False)
+    return float(D11 / D11_base)
+
+
+def laminate_mass_proxy(design, normalised: bool = True) -> float:
+    """Areal-density / MASS proxy for the design (heavier toughening = more mass).
+
+    Assumptions / construction:
+      * The base laminate (the 8 structural plies) has a fixed areal mass m0=1.
+      * Interface toughening (interleaf veils / tougher resin, Gc_int/Gc_ply)
+        and local reinforcement (reinf_mult) ADD areal mass: interleaving and
+        stitching deposit extra resin/fibre.  We charge their mass LINEARLY in
+        the fraction of each band used, with coefficients M_GCINT / M_REINF
+        chosen so a fully-toughened, fully-reinforced laminate is ~10 % heavier
+        — the right order for interleaf toughening (a few % per interface).
+      * Ply ANGLE does not change mass (same plies, re-oriented).
+    So mass competes with growth-resistance ONLY through the toughening /
+    reinforcement axes; the off-axis angle is traded by stiffness, not mass.
+    normalised=True (default) returns the ratio to BASELINE_DESIGN (≈1).
+    """
+    design = np.asarray(design, float).ravel()
+    gcint = float(np.clip(design[1], GCINT_LO, GCINT_HI)) if design.shape[0] >= 2 \
+        else GCINT_LO
+    reinf = float(np.clip(design[2], REINF_LO, REINF_HI)) if design.shape[0] >= 3 \
+        else 1.0
+    f_gc = (gcint - GCINT_LO) / (GCINT_HI - GCINT_LO)
+    f_re = (reinf - REINF_LO) / (REINF_HI - REINF_LO)
+    m = 1.0 + M_GCINT * f_gc + M_REINF * f_re
+    if not normalised:
+        return float(m)
+    return float(m / laminate_mass_proxy(BASELINE_DESIGN, normalised=False))
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 #  2.  Fleet defect distribution  (Stage-4 → robust-design prior)
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -247,6 +392,126 @@ def fleet_defect_prior(fleet_posterior=None,
     prior.load = float(np.clip(0.11 * (0.85 + 0.15 * scale), 0.10, 0.13))
     prior.source = "fleet_posterior"
     return prior
+
+
+# ── Stage-4 → Stage-5 handoff: REAL fleet posterior → fleet defect-θ samples ──
+#
+# WHY a separate sampler (Task #4).  `fleet_defect_prior` above only re-scales
+# the SCALAR design load from the fleet — the θ-GEOMETRY envelope (cx, layer,
+# size) stays a synthetic uniform box.  That box is the last synthetic stand-in
+# in the Stage-4→5 chain.  Stage-4's per-vehicle latent is a scalar growth rate
+# s_v = log r_v (NOT a θ-field), so we cannot read a full θ posterior off it.
+# But we CAN, in a principled and DOCUMENTED way, turn the fleet's growth-rate
+# DISTRIBUTION into a defect-SEVERITY distribution, because a faster-growing
+# vehicle is — to first order — one carrying more severe (larger / deeper)
+# defects.  We make that link explicit and MONOTONE below; everything else of
+# the θ-vector that the scalar latent genuinely cannot constrain (the in-plane
+# centroid cx, cy) stays the documented in-distribution envelope.
+
+# Link calibration: how the per-vehicle growth-rate z-score maps onto the
+# log2size defect-severity axis.  log2size ∈ [L2S_LO, L2S_HI] (DefectPrior
+# band); the fleet MEDIAN growth rate maps to the band MIDPOINT and ±2σ of the
+# fleet log-rate spans (most of) the band.  Strictly increasing in r_v.
+LINK_L2S_LO, LINK_L2S_HI = 0.6, 2.0      # defect log2size band (matches DefectPrior)
+LINK_LAYER_LO, LINK_LAYER_HI = 4.0, 14.0  # interior-ply band (synthetic, kept)
+
+
+@dataclass
+class FleetDefectSamples:
+    """Stage-4-derived fleet defect-θ sample bank for Stage-5 optimisation.
+
+    theta : (n, 4) draws (cx, cy, layer, log2size) — the per-defect θ Stage-5
+            optimises against, with log2size (defect SEVERITY) derived from the
+            REAL Stage-4 fleet growth-rate posterior via a monotone link (below).
+    load  : scalar design peel strain (scaled from the fleet posterior).
+    source: provenance tag ("fleet_posterior_theta").
+    link  : human-readable description of the growth-rate → severity link.
+    """
+    theta: np.ndarray
+    load: float
+    source: str = "fleet_posterior_theta"
+    link: str = ""
+
+    def sample(self, n: int, rng: np.random.Generator) -> np.ndarray:
+        """Return n θ draws (with replacement) from the fleet-derived bank."""
+        idx = rng.integers(0, len(self.theta), size=n)
+        return self.theta[idx]
+
+
+def fleet_growthrate_to_log2size(r_v: np.ndarray, r_med: float,
+                                 r_spread: float) -> np.ndarray:
+    """MONOTONE link: per-vehicle growth rate r_v → defect severity log2size.
+
+    Documented link assumption (Task #4).  Stage-4 only gives a scalar growth
+    rate per vehicle; we posit that a vehicle's growth rate is a monotone,
+    saturating function of the severity of the defect it carries — bigger /
+    deeper defects (larger log2size) drive faster effective growth.  We invert
+    that qualitatively: map the LOG growth-rate z-score
+        ζ_v = (log r_v − log r_med) / (√2 · r_spread)
+    through the smooth, bounded, STRICTLY-INCREASING logistic-like squash
+        f(ζ) = ½(1 + erf(ζ))          ∈ (0,1)
+    onto the log2size band [L2S_LO, L2S_HI].  Properties: r_v = r_med → band
+    midpoint; r_v ↑ → log2size ↑ (monotone); bounded to the calibrated band so
+    the FD config never leaves the in-distribution box (honest accounting (b)).
+    `r_spread` is the SD of log r_v over the fleet (the φ-spread σ_φ).
+    """
+    r_v = np.maximum(np.asarray(r_v, float), 1e-12)
+    z = (np.log(r_v) - np.log(max(r_med, 1e-12))) / (np.sqrt(2.0) * max(r_spread, 1e-6))
+    f = 0.5 * (1.0 + np.array([_erf(zi) for zi in np.atleast_1d(z)]))
+    return LINK_L2S_LO + f * (LINK_L2S_HI - LINK_L2S_LO)
+
+
+def fleet_defect_prior_from_posterior(fleet_posterior, fleet_cfg=None,
+                                      n: int = 400,
+                                      seed: int = 0) -> FleetDefectSamples:
+    """Stage-4 → Stage-5 handoff: REAL fleet posterior → fleet defect-θ samples.
+
+    Replaces the synthetic θ-box with a sample bank whose defect SEVERITY axis
+    (log2size) is derived from the Stage-4 hierarchical posterior:
+
+      1. Draw growth rates from the fleet: for each posterior draw of the global
+         prior φ=(μ_φ, σ_φ) we draw a per-vehicle s = log r ~ Normal(μ_φ, σ_φ²)
+         and set r = exp(s).  This propagates BOTH the fleet-level spread σ_φ
+         AND the posterior uncertainty in φ into the defect population (the full
+         posterior-predictive over a NEW vehicle's growth rate).
+      2. Map each r through `fleet_growthrate_to_log2size` (monotone link, with
+         r_med = posterior-median fleet rate and r_spread = E[σ_φ]).
+      3. The centroid cx ~ U and interior layer ~ U remain the documented
+         synthetic in-distribution envelope (the scalar latent cannot constrain
+         them — honest accounting (b)); only the SEVERITY axis is now real.
+      4. The scalar design load is scaled from the fleet exactly as
+         `fleet_defect_prior` does (reuse).
+
+    Returns a FleetDefectSamples bank.  `n` draws keeps the Pareto/BO sweep
+    tractable.  This is the principled Stage-4→5 coupling: the fleet defect
+    distribution Stage-5 optimises against now comes from the observed fleet,
+    not a hand-set box.
+    """
+    rng = np.random.default_rng(seed)
+    # posterior-predictive growth rates for a NEW vehicle: integrate over φ draws
+    mu = np.asarray(fleet_posterior.mu_phi, float)
+    sig = np.asarray(fleet_posterior.sigma_phi, float)
+    m = min(len(mu), len(sig))
+    idx = rng.integers(0, m, size=n)
+    s_pred = mu[idx] + sig[idx] * rng.standard_normal(n)
+    r_pred = np.exp(np.clip(s_pred, -50.0, 10.0))
+
+    r_med = float(np.median(r_pred))
+    r_spread = float(np.mean(sig)) if np.mean(sig) > 0 else float(np.std(s_pred) + 1e-6)
+    l2s = fleet_growthrate_to_log2size(r_pred, r_med, r_spread)
+
+    cx = rng.uniform(0.25, 0.75, n)
+    cy = np.full(n, 0.5)
+    layer = rng.uniform(LINK_LAYER_LO, LINK_LAYER_HI, n)
+    theta = np.column_stack([cx, cy, layer, l2s])
+
+    # reuse the documented load-scaling link from fleet_defect_prior
+    load = fleet_defect_prior(fleet_posterior, fleet_cfg).load
+    link = ("log2size = link(r_v): monotone erf-squash of the fleet log-growth-"
+            "rate z-score onto [%.2f, %.2f]; r_med→midpoint, r_v↑→severity↑"
+            % (LINK_L2S_LO, LINK_L2S_HI))
+    return FleetDefectSamples(theta=theta, load=float(load),
+                              source="fleet_posterior_theta", link=link)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -522,6 +787,206 @@ def optimise_design(defects: np.ndarray, load: float,
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+#  4b.  MULTI-OBJECTIVE design  (growth ⟷ mass / stiffness trade-off; Pareto)
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# Task #6.  The single objective above rails the off-axis angle to the cap
+# because nothing competes with crack-resistance.  Here we (a) expose a
+# SCALARISED weighted objective that adds the structural costs (mass, lost
+# stiffness) with tunable weights, and (b) compute a PARETO FRONT over the
+# design space so the growth-vs-mass / growth-vs-stiffness trade-off — and the
+# resulting INTERIOR optimum — is explicit.
+#
+# Growth term.  For the Pareto SWEEP (a dense grid) we use a CHEAP analytical
+# growth PROXY (no FD) so the sweep is free; the proxy is monotone in the same
+# direction as the FD growth (steeper off-axis & tougher interface → less
+# growth) and is documented below.  The scalarised objective can ALSO be run
+# with the exact FD growth (use_fd=True) for the final knee design — explicit
+# per honest accounting.
+
+# Growth-proxy weights (chosen so the proxy decreases with off-axis angle and
+# interface toughening, matching the FD trend the single-objective study finds).
+GP_W_OFFAXIS = 0.9    # growth ↓ as off-axis steepens (crack deflection)
+GP_W_GCINT   = 0.6    # growth ↓ as interface toughens
+GP_W_REINF   = 0.3    # growth ↓ with local reinforcement
+
+
+def growth_proxy(design) -> float:
+    """Cheap analytical surrogate for the design's expected log-growth (LOWER=better).
+
+    NO FD.  A monotone, dimensionless stand-in for evaluate_design().mean_log_
+    growth used ONLY for the dense Pareto sweep.  Construction (documented
+    assumptions):
+      * Steeper off-axis plies deflect the dominant matrix crack → growth ↓ with
+        the off-axis fraction f_off ∈[0,1] of the band.
+      * Tougher interface (gcint) and local reinforcement (reinf) raise the
+        crack-arrest energy → growth ↓ with their band fractions f_gc, f_re.
+      * Mapped through a smooth saturating exp so the proxy is positive and
+        bounded, mirroring the near-binary-but-smoothed FD growth signal.
+    Calibrated to be ~1 at baseline and to fall toward ~0.3 at the toughest /
+    steepest corner — the SAME ORDERING the single-objective FD study shows.
+    Trends only (honest accounting (c)); not a quantitative growth prediction.
+    """
+    design = np.asarray(design, float).ravel()
+    offaxis = float(np.clip(design[0], OFFAXIS_LO, OFFAXIS_HI))
+    gcint = float(np.clip(design[1], GCINT_LO, GCINT_HI)) if design.shape[0] >= 2 else GCINT_LO
+    reinf = float(np.clip(design[2], REINF_LO, REINF_HI)) if design.shape[0] >= 3 else 1.0
+    f_off = (offaxis - OFFAXIS_LO) / (OFFAXIS_HI - OFFAXIS_LO)
+    f_gc = (gcint - GCINT_LO) / (GCINT_HI - GCINT_LO)
+    f_re = (reinf - REINF_LO) / (REINF_HI - REINF_LO)
+    z = GP_W_OFFAXIS * f_off + GP_W_GCINT * f_gc + GP_W_REINF * f_re
+    return float(np.exp(-z))
+
+
+def scalarised_objective(design, w_mass: float = 0.0, w_stiff: float = 0.0,
+                         w_buckle: float = 0.0, growth=None,
+                         use_fd: bool = False, defects=None, load=None,
+                         nx: int = GRID_NX, ny: int = GRID_NY,
+                         n_workers: int | None = None) -> dict:
+    """Weighted multi-objective scalarisation (LOWER = better).
+
+        J(design) = growth + w_mass·(mass−1) + w_stiff·(1/stiff − 1)
+                            + w_buckle·(1/buckle − 1) + manufacturability_penalty
+
+    where mass, stiff, buckle are the normalised proxies (≈1 at baseline).  The
+    stiffness/buckling terms penalise LOST stiffness (1/ratio − 1 grows as
+    stiffness drops), so steep off-axis plies — which shed axial/bending
+    stiffness — are charged, giving an INTERIOR optimum off-axis angle once
+    w_stiff > 0.  Weights are exposed so the trade-off can be swept.
+
+    growth term: by default the cheap `growth_proxy`; if use_fd=True the EXACT
+    FD mean-log-growth (needs `defects` and `load`).  Returns a dict with the
+    scalar `J` and all components for inspection.
+    """
+    design = np.asarray(design, float).ravel()
+    if use_fd:
+        assert defects is not None and load is not None, \
+            "use_fd requires defects and load"
+        g = evaluate_design(design, defects, load, nx=nx, ny=ny,
+                            n_workers=n_workers).mean_log_growth
+    elif growth is not None:
+        g = float(growth)
+    else:
+        g = growth_proxy(design)
+
+    mass = laminate_mass_proxy(design)
+    stiff = axial_stiffness_proxy(design)
+    buckle = bending_stiffness_proxy(design)
+    pen = manufacturability_penalty(design)
+    J = (g + w_mass * (mass - 1.0) + w_stiff * (1.0 / stiff - 1.0)
+         + w_buckle * (1.0 / buckle - 1.0) + pen)
+    return {"J": float(J), "growth": float(g), "mass": float(mass),
+            "stiffness": float(stiff), "buckling": float(buckle),
+            "penalty": float(pen)}
+
+
+def _pareto_mask(costs: np.ndarray) -> np.ndarray:
+    """Boolean mask of non-dominated rows (minimisation in every column).
+
+    Point i is non-dominated if no other point is ≤ it in every objective and
+    strictly < in at least one.
+    """
+    costs = np.atleast_2d(np.asarray(costs, float))
+    n = costs.shape[0]
+    mask = np.ones(n, dtype=bool)
+    for i in range(n):
+        if not mask[i]:
+            continue
+        # flag every point STRICTLY DOMINATED by i (≥ in all, > in at least one)
+        worse = np.all(costs >= costs[i], axis=1) & np.any(costs > costs[i], axis=1)
+        mask[worse] = False
+    return mask
+
+
+@dataclass
+class ParetoResult:
+    designs: np.ndarray            # (n_grid, d) all swept designs
+    growth: np.ndarray             # (n_grid,) growth objective
+    mass: np.ndarray               # (n_grid,) mass proxy
+    stiffness: np.ndarray          # (n_grid,) axial-stiffness proxy
+    buckling: np.ndarray           # (n_grid,) bending-stiffness proxy
+    pareto_mask: np.ndarray        # (n_grid,) bool, growth-vs-objective front
+    objective_name: str            # "mass" or "stiffness"
+
+
+def pareto_front(n_off: int = 13, n_gc: int = 5, n_re: int = 3,
+                 objective: str = "mass") -> ParetoResult:
+    """Pareto front growth-vs-{mass|stiffness} over a tractable design grid.
+
+    Sweeps the 3-D design box on a small grid (default 13×5×3 = 195 designs,
+    all CHEAP proxies → microseconds) and returns the non-dominated set for
+    minimising BOTH the growth proxy AND the chosen structural cost:
+      * objective="mass"      → minimise (growth, mass)
+      * objective="stiffness" → minimise (growth, 1/stiffness)  [lost stiffness]
+    The front is non-empty and non-dominated by construction.  Use the knee
+    (max-curvature point) of the front as the balanced design.
+    """
+    offs = np.linspace(OFFAXIS_LO, OFFAXIS_HI, n_off)
+    gcs = np.linspace(GCINT_LO, GCINT_HI, n_gc)
+    res = np.linspace(REINF_LO, REINF_HI, n_re)
+    designs = np.array([[o, g, r] for o in offs for g in gcs for r in res])
+
+    growth = np.array([growth_proxy(d) for d in designs])
+    mass = np.array([laminate_mass_proxy(d) for d in designs])
+    stiff = np.array([axial_stiffness_proxy(d) for d in designs])
+    buckle = np.array([bending_stiffness_proxy(d) for d in designs])
+
+    if objective == "mass":
+        costs = np.column_stack([growth, mass])
+    elif objective == "stiffness":
+        costs = np.column_stack([growth, 1.0 / stiff])
+    else:
+        raise ValueError("objective must be 'mass' or 'stiffness'")
+    mask = _pareto_mask(costs)
+    return ParetoResult(designs=designs, growth=growth, mass=mass,
+                        stiffness=stiff, buckling=buckle, pareto_mask=mask,
+                        objective_name=objective)
+
+
+def pareto_knee(pr: ParetoResult) -> np.ndarray:
+    """Knee design of a Pareto front: the front point closest to the utopia
+    (per-objective minimum) corner after min-max normalising both objectives.
+
+    A standard, weight-free knee selector — the balanced design where giving up
+    a little growth-resistance no longer buys much mass/stiffness (or vice
+    versa).  Returns the design vector.
+    """
+    g = pr.growth[pr.pareto_mask]
+    second = (pr.mass if pr.objective_name == "mass"
+              else 1.0 / pr.stiffness)[pr.pareto_mask]
+    D = pr.designs[pr.pareto_mask]
+
+    def _nrm(x):
+        rng = x.max() - x.min()
+        return (x - x.min()) / rng if rng > 1e-12 else np.zeros_like(x)
+    gn, sn = _nrm(g), _nrm(second)
+    dist = np.sqrt(gn ** 2 + sn ** 2)        # distance to utopia (0,0)
+    return D[int(np.argmin(dist))]
+
+
+def scalarised_optimum(w_stiff: float = 0.0, w_mass: float = 0.0,
+                       w_buckle: float = 0.0, n_off: int = 25,
+                       n_gc: int = 7, n_re: int = 4) -> np.ndarray:
+    """Grid-minimise the scalarised (cheap-growth) objective; return best design.
+
+    Dense off-axis grid so the interior optimum's off-axis angle is resolved.
+    Used to SHOW that the optimum moves interior as w_stiff increases.
+    """
+    offs = np.linspace(OFFAXIS_LO, OFFAXIS_HI, n_off)
+    gcs = np.linspace(GCINT_LO, GCINT_HI, n_gc)
+    res = np.linspace(REINF_LO, REINF_HI, n_re)
+    best, best_J = None, np.inf
+    for o in offs:
+        for g in gcs:
+            for r in res:
+                J = scalarised_objective([o, g, r], w_mass=w_mass,
+                                         w_stiff=w_stiff, w_buckle=w_buckle)["J"]
+                if J < best_J:
+                    best_J, best = J, np.array([o, g, r])
+    return best
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 #  5.  E[remaining flights]  (Stage-3 fatigue API, before vs after)
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -591,6 +1056,86 @@ def save_result(bo: BOResult, prior: DefectPrior, extra: dict | None = None,
     with open(path, "w") as f:
         json.dump(out, f, indent=2)
     return path
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  6b.  Pareto / trade-off figure  (optional; robust Agg + thesis_style fallback)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def make_pareto_figure(out_path: str | None = None,
+                       w_stiff_sweep=(0.0, 0.3, 0.8, 1.5)) -> str:
+    """Figure: growth-vs-mass & growth-vs-stiffness Pareto fronts + the interior
+    move of the scalarised optimum's off-axis angle as the stiffness weight grows.
+
+    Robust: matplotlib Agg backend, thesis_style import guarded by try/except,
+    saves both .pdf and .png.
+    """
+    import matplotlib
+    matplotlib.use("Agg")
+    import sys
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                    "slides", "figure_sources"))
+    try:
+        from thesis_style import use
+        figsize = use(width_frac=1.0, aspect=0.34)
+    except Exception:
+        figsize = (12.0, 4.0)
+    import matplotlib.pyplot as plt
+
+    out_path = out_path or os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "paper_figs", "design_feedback_pareto.pdf")
+
+    pr_m = pareto_front(objective="mass")
+    pr_s = pareto_front(objective="stiffness")
+
+    fig, ax = plt.subplots(1, 3, figsize=figsize)
+
+    # (a) growth vs mass
+    ax[0].scatter(pr_m.mass, pr_m.growth, s=10, c="0.7", label="all designs")
+    om = np.argsort(pr_m.mass[pr_m.pareto_mask])
+    ax[0].plot(pr_m.mass[pr_m.pareto_mask][om], pr_m.growth[pr_m.pareto_mask][om],
+               "-o", ms=4, c="#b71c1c", label="Pareto front")
+    knee_m = pareto_knee(pr_m)
+    ax[0].scatter([laminate_mass_proxy(knee_m)], [growth_proxy(knee_m)],
+                  marker="*", s=120, c="#1565C0", zorder=5, label="knee")
+    ax[0].set_xlabel("mass proxy (norm.)", fontsize=7)
+    ax[0].set_ylabel("growth proxy", fontsize=7)
+    ax[0].set_title("(a) growth vs mass", fontsize=8)
+    ax[0].legend(fontsize=6); ax[0].tick_params(labelsize=6)
+
+    # (b) growth vs (lost) stiffness
+    inv = 1.0 / pr_s.stiffness
+    ax[1].scatter(inv, pr_s.growth, s=10, c="0.7", label="all designs")
+    os_ = np.argsort(inv[pr_s.pareto_mask])
+    ax[1].plot(inv[pr_s.pareto_mask][os_], pr_s.growth[pr_s.pareto_mask][os_],
+               "-o", ms=4, c="#b71c1c", label="Pareto front")
+    knee_s = pareto_knee(pr_s)
+    ax[1].scatter([1.0 / axial_stiffness_proxy(knee_s)], [growth_proxy(knee_s)],
+                  marker="*", s=120, c="#1565C0", zorder=5,
+                  label=f"knee (off={knee_s[0]:.0f}°)")
+    ax[1].set_xlabel("lost axial stiffness  1/$E_x$ (norm.)", fontsize=7)
+    ax[1].set_ylabel("growth proxy", fontsize=7)
+    ax[1].set_title("(b) growth vs stiffness", fontsize=8)
+    ax[1].legend(fontsize=6); ax[1].tick_params(labelsize=6)
+
+    # (c) optimum off-axis angle vs stiffness weight (interior move)
+    ws = np.linspace(0.0, max(w_stiff_sweep) if w_stiff_sweep else 1.5, 16)
+    offs = [scalarised_optimum(w_stiff=float(w))[0] for w in ws]
+    ax[2].plot(ws, offs, "-o", ms=3, c="#2e7d32")
+    ax[2].axhline(OFFAXIS_HI, color="0.6", lw=0.7, ls="--", label="manuf. cap")
+    ax[2].set_xlabel("stiffness weight $w_{stiff}$", fontsize=7)
+    ax[2].set_ylabel("optimum off-axis angle [°]", fontsize=7)
+    ax[2].set_title("(c) optimum moves interior", fontsize=8)
+    ax[2].legend(fontsize=6); ax[2].tick_params(labelsize=6)
+
+    plt.tight_layout()
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    fig.savefig(out_path, bbox_inches="tight", dpi=200)
+    fig.savefig(os.path.splitext(out_path)[0] + ".png", bbox_inches="tight",
+                dpi=150)
+    plt.close(fig)
+    return out_path
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -680,6 +1225,131 @@ def run(n_defects: int = 10, n_init: int = 8, n_iter: int = 24,
             "defects": defects}
 
 
+# ═════════════════════════════════════════════════════════════════════════════
+#  Unit tests
+# ═════════════════════════════════════════════════════════════════════════════
+
+def run_tests() -> int:
+    n = 0
+
+    def ok(cond, msg):
+        nonlocal n
+        assert cond, msg
+        n += 1
+
+    # ── design → config mapping ───────────────────────────────────────────────
+    cfg = make_config([45.0, 0.5, 1.1], nx=20, ny=18)
+    ok(abs(cfg.ply_angles_deg[1]) == 45.0, "off-axis angle threaded into layup")
+    ok(cfg.ply_angles_deg[0] == 0.0, "0° plies kept on faces")
+    ok(GCINT_LO <= cfg.Gc_interface_ratio <= GCINT_HI, "gcint_eff in band")
+    lay = balanced_symmetric_layup(40.0)
+    ok(abs(sum(lay)) < 1e-9 and lay == lay[::-1], "layup balanced & symmetric")
+
+    # ── manufacturability penalty monotone ────────────────────────────────────
+    ok(manufacturability_penalty([30, 0.30, 1.0]) <
+       manufacturability_penalty([30, 0.90, 1.4]), "penalty ↑ with toughening")
+
+    # ── NEW structural proxies (Task #6) ──────────────────────────────────────
+    ok(abs(laminate_mass_proxy(BASELINE_DESIGN) - 1.0) < 1e-9,
+       "mass proxy =1 at baseline")
+    ok(abs(axial_stiffness_proxy(BASELINE_DESIGN) - 1.0) < 1e-9,
+       "stiffness proxy =1 at baseline")
+    ok(abs(bending_stiffness_proxy(BASELINE_DESIGN) - 1.0) < 1e-9,
+       "buckling proxy =1 at baseline")
+    # more reinforcement / toughening → more mass
+    ok(laminate_mass_proxy([30, 0.90, 1.40]) > laminate_mass_proxy([30, 0.30, 1.0]),
+       "more reinforcement → more mass")
+    ok(laminate_mass_proxy([30, 0.30, 1.40]) > laminate_mass_proxy([30, 0.30, 1.0]),
+       "more local reinforcement alone → more mass")
+    # mass independent of off-axis angle
+    ok(abs(laminate_mass_proxy([15, 0.5, 1.1]) -
+           laminate_mass_proxy([75, 0.5, 1.1])) < 1e-9, "mass ⟂ off-axis angle")
+    # steeper off-axis → lower axial & bending stiffness (monotone)
+    sa = [axial_stiffness_proxy([o, 0.4, 1.0]) for o in (15, 35, 55, 75)]
+    ok(all(np.diff(sa) < 0), "axial stiffness ↓ monotone as off-axis steepens")
+    sb = [bending_stiffness_proxy([o, 0.4, 1.0]) for o in (15, 35, 55, 75)]
+    ok(all(np.diff(sb) < 0), "bending/buckling stiffness ↓ as off-axis steepens")
+    # toughening/reinforcement do not change stiffness proxies
+    ok(abs(axial_stiffness_proxy([40, 0.3, 1.0]) -
+           axial_stiffness_proxy([40, 0.9, 1.4])) < 1e-9, "stiffness ⟂ toughening")
+
+    # ── growth proxy sanity ───────────────────────────────────────────────────
+    ok(growth_proxy([75, 0.9, 1.4]) < growth_proxy([15, 0.3, 1.0]),
+       "growth proxy ↓ at tough/steep corner")
+    ok(growth_proxy([30, 0.9, 1.0]) < growth_proxy([30, 0.3, 1.0]),
+       "growth proxy ↓ with interface toughening")
+
+    # ── scalarised objective components ───────────────────────────────────────
+    s0 = scalarised_objective(BASELINE_DESIGN)
+    ok(set(["J", "growth", "mass", "stiffness", "buckling"]) <= set(s0),
+       "scalarised objective returns components")
+    # stiffness weight raises J of a steep design (it sheds stiffness)
+    steep = [75, 0.9, 1.4]
+    ok(scalarised_objective(steep, w_stiff=2.0)["J"] >
+       scalarised_objective(steep, w_stiff=0.0)["J"],
+       "stiffness weight penalises steep design")
+
+    # ── Pareto front non-empty & non-dominated (Task #6) ──────────────────────
+    pr = pareto_front(n_off=9, n_gc=4, n_re=3, objective="mass")
+    ok(pr.pareto_mask.sum() >= 1, "mass Pareto front non-empty")
+    front = np.column_stack([pr.growth, pr.mass])[pr.pareto_mask]
+    nd = True
+    for i in range(len(front)):
+        for j in range(len(front)):
+            if i != j and np.all(front[j] <= front[i]) and np.any(front[j] < front[i]):
+                nd = False
+    ok(nd, "mass Pareto front is non-dominated")
+    prs = pareto_front(n_off=9, n_gc=4, n_re=3, objective="stiffness")
+    ok(prs.pareto_mask.sum() >= 1, "stiffness Pareto front non-empty")
+    knee = pareto_knee(prs)
+    ok(OFFAXIS_LO <= knee[0] <= OFFAXIS_HI, "stiffness knee design in bounds")
+
+    # ── scalarised optimum moves INTERIOR under stiffness weighting (Task #6) ──
+    off_w0 = scalarised_optimum(w_stiff=0.0)[0]
+    off_w1 = scalarised_optimum(w_stiff=1.5)[0]
+    ok(off_w0 >= OFFAXIS_HI - 1e-6, "no stiffness weight → off-axis rails to cap")
+    ok(off_w1 < off_w0 - 1.0, "stiffness weight → optimum off-axis moves interior")
+    ok(off_w1 < OFFAXIS_HI - 1.0, "weighted optimum is interior (off cap)")
+
+    # ── Stage-4 → Stage-5 fleet-derived θ distribution (Task #4) ──────────────
+    import fleet_learning as fl
+    fcfg = fl.FleetConfig(n_vehicles=8, n_flights=10)
+    fleet = fl.simulate_fleet(fcfg, np.random.default_rng(0))
+    post = fl.fit_fleet(fleet, fcfg, n_samples=400, burn=150,
+                        rng=np.random.default_rng(1))
+    fds = fleet_defect_prior_from_posterior(post, fcfg, n=200, seed=2)
+    ok(fds.theta.shape == (200, 4), "fleet-derived θ has shape (n,4)")
+    l2s = fds.theta[:, 3]
+    ok(np.all(l2s >= LINK_L2S_LO - 1e-6) and np.all(l2s <= LINK_L2S_HI + 1e-6),
+       "fleet-derived log2size within calibrated band")
+    ok(l2s.std() > 0, "fleet-derived severity has spread")
+    ok(0.10 <= fds.load <= 0.13, "fleet-derived design load in band")
+    ok(fds.source == "fleet_posterior_theta" and len(fds.link) > 0,
+       "fleet θ samples tagged + documented link")
+    # monotone link: higher growth rate → larger log2size
+    r = np.array([0.02, 0.05, 0.20])
+    ll = fleet_growthrate_to_log2size(r, r_med=0.05, r_spread=0.45)
+    ok(ll[0] < ll[1] < ll[2], "growth-rate→severity link strictly increasing")
+    ok(abs(ll[1] - 0.5 * (LINK_L2S_LO + LINK_L2S_HI)) < 1e-6,
+       "median growth rate → band midpoint")
+    # samples are usable as a θ source for evaluate_design (shape contract)
+    samp = fds.sample(5, np.random.default_rng(3))
+    ok(samp.shape == (5, 4), "FleetDefectSamples.sample returns (n,4)")
+
+    # ── CVaR + cheap FD objective smoke (serial, tiny grid) ───────────────────
+    ok(cvar(np.array([1.0, 2.0, 3.0, 4.0]), q=0.25) == 4.0, "CVaR picks worst tail")
+    ok(cvar(np.array([1.0, 1.0])) >= np.mean([1.0, 1.0]) - 1e-9, "CVaR ≥ mean")
+    dprior = DefectPrior()
+    dd = dprior.sample(2, np.random.default_rng(0))
+    rr = evaluate_design(BASELINE_DESIGN, dd, dprior.load, nx=18, ny=16,
+                         n_workers=1)
+    ok(rr.mean_log_growth >= 0.0, "FD mean-log-growth non-negative")
+    ok(rr.per_defect_log.shape == (2,), "per-defect log array shape")
+
+    print(f"design_feedback: {n}/{n} unit tests passed")
+    return n
+
+
 if __name__ == "__main__":
     import argparse
     ap = argparse.ArgumentParser()
@@ -690,6 +1360,15 @@ if __name__ == "__main__":
     ap.add_argument("--ny", type=int, default=GRID_NY)
     ap.add_argument("--workers", type=int, default=None)
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--test", action="store_true", help="unit tests only")
+    ap.add_argument("--fig", action="store_true",
+                    help="save paper_figs/design_feedback_pareto.pdf")
     args = ap.parse_args()
-    run(n_defects=args.n_defects, n_init=args.n_init, n_iter=args.n_iter,
-        nx=args.nx, ny=args.ny, seed=args.seed, n_workers=args.workers)
+    if args.test:
+        run_tests()
+    elif args.fig:
+        p = make_pareto_figure()
+        print(f"[fig] wrote {p}")
+    else:
+        run(n_defects=args.n_defects, n_init=args.n_init, n_iter=args.n_iter,
+            nx=args.nx, ny=args.ny, seed=args.seed, n_workers=args.workers)
