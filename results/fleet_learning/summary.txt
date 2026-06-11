@@ -1,0 +1,6 @@
+Stage-4 fleet learning — summary
+φ_true: mu=-3.0, sigma=0.45
+φ recovered @N=20: E[mu_phi]=-3.096 (sd 0.100), E[sigma_phi]=0.436 (sd 0.067)
+mu_phi posterior SD: 0.390 (N=2) -> 0.100 (N=20)
+shrinkage (low-data, 3 insp/vehicle): mean |r_post-r_true| / |r_raw-r_true| = 0.843 (<1 = hierarchy beats isolated)
+fleet-leader: isolated needs 2.75 inspections, full fleet prior needs 1.25 -> saved 1.50
