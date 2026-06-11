@@ -101,12 +101,27 @@ a per-measurement SNR limit, addressable by frame averaging
   \end{tabular}
 \end{table}
 
-\section{Stage 1 --- classification (complementarity)}
+\section{Stage 1 --- classification and type identifiability}
 % GNN gives the semantic label (layer/region/type) that anomaly scoring cannot.
 % Table of complementary failure modes: Mahalanobis open to unknown size but
 % noise-fragile and geometry-bound; GNN noise-robust (12%) and transferable but
 % collapses on unseen sizes. -> statistics dominate as flight history
 % accumulates; learned models bootstrap new airframes and repairs.
+
+\paragraph{Is the type signal real, or a temporal/temperature confound?}
+On the long-term guided-wave set, damage states were introduced in different
+years, so a naive type classifier can alias damage type with
+season/temperature. We test this directly. Restricting to seven damage tags
+whose temperature supports overlap (pairwise overlap $0.93$), we compare four
+conditions: temperature-only ($\text{acc}=0.16$, near chance), waveform-only
+($0.91$), waveform${+}$temperature ($0.92$), and waveform with temperature
+\emph{partialled out} of every feature ($0.91$). The net type discrimination
+beyond temperature is $\Delta\text{acc}=0.758$ (95\% CI $[0.735,0.781]$) under a
+random split, and---critically---survives a \emph{forward-in-time} split
+($\Delta\text{acc}=0.184$, 95\% CI $[0.166,0.203]$). Both lower bounds exceed
+zero: the type posterior reflects a genuine damage signal, not the environmental
+confound. (An earlier single-month binary probe, where temperature-only matched
+the majority baseline, was an artefact of that restricted setting.)
 
 \section{Stage 2 --- calibrated defect characterisation (FMPE)}
 % Conditional flow matching learns q(theta|x); PCA(64) field embedding; trained
