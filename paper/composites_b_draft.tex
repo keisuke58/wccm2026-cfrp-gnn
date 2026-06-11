@@ -159,6 +159,37 @@ the majority baseline, was an artefact of that restricted setting.)
 % accumulates across flights => survival decays even at constant sub-critical
 % load (no i.i.d. shortcut). Demo numbers: nominal OK E[~20], max-Q RETIRE.
 
+\section{Stage 4 --- hierarchical fleet learning}
+A reusable fleet generates a stream of per-inspection posteriors across many
+vehicles and flights. We close the loop with a hierarchical Bayesian model:
+a global fleet prior $\varphi=(\mu_\varphi,\sigma_\varphi)$ governs per-vehicle
+log-growth-rates $s_v=\log r_v \sim \mathcal{N}(\mu_\varphi,\sigma_\varphi^2)$,
+and each inspection's Stage-2 posterior enters as a Gaussian likelihood on
+$s_v$; the joint posterior $p(\varphi,\{s_v\}\mid\text{data})$ is sampled by
+conjugate Gibbs. On a synthetic fleet ($N{=}20$ vehicles, $F{=}30$ flights,
+fast Carrara-shaped growth surrogate) the model recovers
+$\varphi$ ($\mathbb{E}[\mu_\varphi]{=}{-}3.10$ vs.\ true $-3.0$;
+$\mathbb{E}[\sigma_\varphi]{=}0.44$ vs.\ $0.45$), and the fleet prior sharpens
+as flights accumulate (posterior SD of $\mu_\varphi$: $0.39$ at $N{=}2 \to 0.10$
+at $N{=}20$, Fig.~\ref{fig:fleet}a).
+
+\paragraph{Fleet-leader effect, quantified.} Processing flights in temporal
+order, a newly introduced vehicle reaches a stable clearance decision in
+\textbf{1.25} inspections using the accumulated fleet prior, versus
+\textbf{2.75} in isolation (Fig.~\ref{fig:fleet}c) --- a direct, quantitative
+formalisation of the empirical ``fleet-leader'' certification used in practice:
+high-information inspections of lead vehicles tighten the prior that certifies
+the rest. Hierarchical shrinkage also improves low-data vehicles (error ratio
+$0.84<1$ vs.\ isolated estimates, Fig.~\ref{fig:fleet}b).
+\begin{figure}[t]\centering
+  \includegraphics[width=\linewidth]{fleet_learning.pdf}
+  \caption{Stage~4. (a) Fleet prior $\varphi$ sharpens with cumulative flights;
+  (b) per-vehicle growth-rate shrinkage toward the fleet mean in the low-data
+  regime; (c) inspections to a stable clearance decision: the fleet prior
+  roughly halves them.}
+  \label{fig:fleet}
+\end{figure}
+
 \section{Discussion}
 % - why simple beats deep on fixed geometry; when learning is still needed.
 % - reusable-vehicle framing: this formalises SpaceX-style condition-based,
@@ -171,7 +202,7 @@ the majority baseline, was an artefact of that restricted setting.)
 % design feedback) and sim-to-real with measured full-field data.
 
 \paragraph{Reproducibility.} All stages are implemented and tested
-(19/19 unit tests) in two public-on-request repositories; figures are generated
+(30 unit tests) in two public-on-request repositories; figures are generated
 by the scripts under \texttt{paper\_figs/}.
 
 \bibliographystyle{elsarticle-num}
