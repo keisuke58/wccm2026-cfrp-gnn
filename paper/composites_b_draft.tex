@@ -190,6 +190,36 @@ $0.84<1$ vs.\ isolated estimates, Fig.~\ref{fig:fleet}b).
   \label{fig:fleet}
 \end{figure}
 
+\section{Towards differentiable inversion: closing the loop}
+The amortised Stage-2 posterior never sees the forward physics. We prototype
+the converse: a JAX-differentiable anisotropic AT2 forward $F(\theta)$
+(gradient finite-difference-verified to relative $3\times10^{-7}$) whose
+Jacobian supplies a physics-grounded Laplace posterior
+$\Sigma=\sigma^2(J^\top J + \Lambda_{\text{prior}})^{-1}$ --- no labelled
+$(\theta,x)$ pairs.
+\begin{table}[h]\centering\small
+  \caption{Amortised (FMPE) vs.\ differentiable-physics posterior, in- and
+  out-of-distribution.}
+  \label{tab:diffinv}
+  \begin{tabular}{llccc}
+    \toprule
+    set & method & $c_x$ RMSE & size RMSE & 90\% coverage \\ \midrule
+    in-dist & FMPE       & 0.006 & 0.002 & 0.958 \\
+    in-dist & diff-phys  & 0.001 & 0.003 & 1.000 \\
+    OOD     & FMPE       & \textbf{0.144} & \textbf{0.096} & \textbf{0.000} \\
+    OOD     & diff-phys  & 0.002 & 0.001 & 0.958 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+Out of the training distribution the amortised posterior degrades
+$\sim$25-fold and its credible intervals collapse to zero coverage, while the
+differentiable-physics posterior is essentially invariant
+(Table~\ref{tab:diffinv}): \emph{forward physics generalises; amortised
+inference extrapolates poorly}. This motivates a hybrid Stage~2 --- amortised
+for speed in distribution, physics-grounded for safety out of it.
+% honest: minimal AT2 forward (scalar peel-proxy elasticity), synthetic-only;
+% Laplace primary (ULA/SVGD run but hard to tune in the stiff narrow basin).
+
 \section{Discussion}
 % - why simple beats deep on fixed geometry; when learning is still needed.
 % - reusable-vehicle framing: this formalises SpaceX-style condition-based,

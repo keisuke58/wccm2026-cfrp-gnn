@@ -305,6 +305,21 @@ $P(\text{survive }n)$ with fatigue $\cdot$ decision --- single held-out CFRP fie
 \end{frame}
 
 % ─────────────────────────────────────────────
+\begin{frame}{Closing the loop: differentiable physics vs amortised inference}
+\centering
+\includegraphics[width=0.86\textwidth]{../paper_figs/diff_inversion.pdf}\\[1mm]
+\begin{itemize}\small
+  \item JAX-differentiable AT2 forward $F(\theta)$; gradient verified to
+        rel.\ $3{\times}10^{-7}$; Laplace posterior from $J=\partial F/\partial\theta$,
+        \emph{no labelled pairs}
+  \item \alert{OOD: FMPE degrades $25\times$, coverage $0.96\!\to\!0.00$;
+        the physics-grounded posterior is invariant} ($c_x$ RMSE 0.002, cov.\ 0.96)
+  \item $\Rightarrow$ hybrid Stage 2: amortised for speed in-distribution,
+        differentiable physics for safety out of it
+\end{itemize}
+\end{frame}
+
+% ─────────────────────────────────────────────
 \begin{frame}{Outlook: Stage 4--5 and deployment}
 \begin{itemize}
   \item \textbf{Stage 4 --- fleet learning:} hierarchical Bayes over tail numbers;
