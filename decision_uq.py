@@ -401,9 +401,16 @@ def metrics(study: Study) -> dict:
     n_retire = int((o == "RETIRE").sum())
     dmiss = (float(np.mean(pl[o == "RETIRE"] == "OK")) if n_retire else
              float("nan"))                      # OK while oracle says RETIRE
+    # bootstrap 95% CI on the headline accuracy (rigour for the reported number)
+    correct = (pl == o).astype(float)
+    rng = np.random.default_rng(0)
+    boot = [correct[rng.integers(0, M, M)].mean() for _ in range(2000)]
+    acc_lo, acc_hi = (float(np.percentile(boot, 2.5)),
+                      float(np.percentile(boot, 97.5)))
     return {
         "M": M,
         "acc_pipeline": float(np.mean(pl == o)),
+        "acc_pipeline_ci": (acc_lo, acc_hi),
         "acc_surr_oracle": float(np.mean(so == o)),
         "acc_fd_post": float(np.mean(fp == o)),
         "flip_surrogate_only": float(np.mean(so != o)),
@@ -523,7 +530,9 @@ def print_report(study: Study, m: dict, rel: dict, recal: dict | None = None):
           "  ".join(f"{d}={m['oracle_class_counts'][d]}" for d in DECISIONS))
     print()
     print(f"  END-TO-END decision accuracy (pipeline = oracle): "
-          f"{m['acc_pipeline']*100:5.1f}%")
+          f"{m['acc_pipeline']*100:5.1f}%  "
+          f"[95% CI {m['acc_pipeline_ci'][0]*100:.1f}–"
+          f"{m['acc_pipeline_ci'][1]*100:.1f}]")
     print(f"  ── unsafe under-call  (less severe than oracle) : "
           f"{m['unsafe_miss_rate']*100:5.1f}%")
     print(f"  ── conservative alarm (more severe than oracle) : "
