@@ -108,6 +108,22 @@ interface (`fairing_debond_prognosis.py`):
 - **Future CFRP parts** (shaft, panel, tank, prosthetic ...) plug in by adding ONE
   prognosis model and reusing detect/characterise/decide/fleet/design — the
   framework's extensibility is now structural, not just aspirational.
+- ✅ **DEMONSTRATED — 3rd structure SRB-3 motor case** (`srb3_motorcase.py`, 23/23,
+  2026-06-12): a filament-wound CFRP pressure vessel added with a NEW sensing
+  modality (acoustic emission) AND new physics (internal-pressure burst), proving
+  extensibility concretely. Stage-1 detection on REAL experimental AE data (4TU
+  CC0 "AE monitoring in CFRP compression tests", .pridb Vallen, ~48k hits):
+  group-aware pristine-vs-damaged RF → per-hit AUROC 0.888 / per-specimen 1.000
+  (linear baseline ~0.52); + amplitude–duration damage-mode clustering (matrix /
+  delam / fibre-break), reported honestly (compression pristine coupons also emit
+  high-energy AE → the multivariate detector, not one cluster fraction, is the
+  read-out). Stage-3 `SRB3Prognosis` (hoop σ=pR/t, residual burst
+  p_burst0(1−(a/a_crit)^n), Paris growth, unsafe when p_burst/p_op<SF=2) clears
+  small OK / medium REPAIR / large RETIRE through the SAME flight_clearance_generic.
+  Honest: compression AE = real-data PROXY for the motor-case AE front-end (same
+  hit-feature physics, not a burst test); lumped representative constants. fig
+  srb3_motorcase.pdf. → optional 3rd column in the paper's structure schematic,
+  or the headline "extensible to a new modality+physics" Discussion result.
 
 ## Honesty lines (reviewer-critical — do NOT overclaim)
 - Stage 0/2/4/5 + decision UQ + the clearance rule are structure-agnostic (both).
