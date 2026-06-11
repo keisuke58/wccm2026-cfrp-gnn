@@ -43,6 +43,16 @@ import kojima_real_case as kr   # reuse field_anomaly / ks_statistic / _moments
 HERE = os.path.dirname(os.path.abspath(__file__))
 TSA_DIR = "/home/nishioka/from_kojima/02_TSA_fullfield_stress_2401"
 FEM_DSPSS_VTK = "/home/nishioka/CFRP/CFRP_kojima/graph_with_values_DSPSS_1.vtk"
+# Kojima's processed measured DSPSS (the SAME quantity as the FEM DSPSS) — the
+# clean apples-to-apples sim2real set: 22 specimens (12 convex + 10 concave).
+DERIVED = "/home/nishioka/from_kojima/copaam_derived"
+RECT_DSPSS = {  # measured DSPSS full-field grids, per defect geometry
+    "totsu(convex)": f"{DERIVED}/exp_to_FEM_CNN/rect_dspss_exp_totsu.npy",
+    "ou(concave)": f"{DERIVED}/exp_to_FEM_CNN/rect_dspss_exp_ou.npy",
+}
+# FEM DSPSS reference pool (the GNN's FEM training graphs on the 9852-node mesh;
+# "original" = pre-augmentation real NODES, not measured — it is FEM).
+FEM_GRAPHSTRESS = f"{DERIVED}/Pros_dte_graphstress/graphstress_original_train.npy"
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -94,6 +104,28 @@ def load_all_tsa(tsa_dir: str = TSA_DIR) -> list:
 def fem_dspss_values(path: str = FEM_DSPSS_VTK) -> np.ndarray:
     """The FEM DSPSS nodal field of the prosthetic (sim side of sim2real)."""
     return kr.load_vtk_graph(path).values
+
+
+def load_rect_dspss(paths: dict = RECT_DSPSS) -> list:
+    """Measured DSPSS full-field grids → list of (name, (H,W) field).
+
+    Each file is (n_specimens, H, W); a specimen's field carries zero-padding
+    outside the specimen mask, which we drop (>0) before the distribution stats.
+    """
+    out = []
+    for tag, p in paths.items():
+        arr = np.load(p)
+        for i, fld in enumerate(arr):
+            out.append((f"{tag}#{i:02d}", np.asarray(fld, dtype=float)))
+    return out
+
+
+def fem_dspss_pool(path: str = FEM_GRAPHSTRESS) -> np.ndarray:
+    """FEM DSPSS reference distribution: all nodal values over the FEM training
+    graphs (richer than a single field).  Falls back to the single VTK field."""
+    if os.path.exists(path):
+        return np.load(path).ravel()
+    return fem_dspss_values()
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -243,6 +275,121 @@ def make_figure(r: TSAResult, out_path: str) -> str:
 
 
 # ═════════════════════════════════════════════════════════════════════════════
+#  Apples-to-apples: measured DSPSS vs FEM DSPSS (same quantity, 22 specimens)
+# ═════════════════════════════════════════════════════════════════════════════
+
+@dataclass
+class DSPSSResult:
+    specimens: list              # list[(name, (H,W) field)]
+    ks: list                     # per-specimen sim2real KS vs FEM pool
+    stage0: list                 # per-specimen stage0 dict
+    fem_pool: np.ndarray
+
+
+def run_dspss(flag_q: float = 0.99, verbose: bool = True) -> DSPSSResult:
+    """Clean sim2real: Kojima's MEASURED DSPSS (rect_dspss_exp, 22 specimens) vs
+    the FEM DSPSS pool — identical physical quantity, so the standardised-field
+    KS is a like-for-like sim-to-real domain gap over a real specimen set."""
+    specs = load_rect_dspss()
+    fem = fem_dspss_pool()
+    ks, s0 = [], []
+    for _, fld in specs:
+        v = fld[fld > 0]                         # drop zero-padding outside mask
+        ks.append(kr.ks_statistic(v, fem))
+        s0.append(stage0_on_field(fld, flag_q))
+    res = DSPSSResult(specimens=specs, ks=ks, stage0=s0, fem_pool=fem)
+    if verbose:
+        _report_dspss(res, flag_q)
+    return res
+
+
+def _report_dspss(r: DSPSSResult, flag_q: float):
+    bar = "=" * 72
+    print(bar)
+    print("  SIM-TO-REAL (apples-to-apples)  —  measured DSPSS vs FEM DSPSS")
+    print(bar)
+    print(f"  measured: rect_dspss_exp, {len(r.specimens)} CFRP prosthetic "
+          f"specimens (convex+concave)")
+    print(f"  FEM ref : DSPSS pool, {r.fem_pool.size} nodal values "
+          f"(mean {r.fem_pool.mean():.1f} MPa)\n")
+    by = {}
+    for (name, _), ks in zip(r.specimens, r.ks):
+        by.setdefault(name.split("#")[0], []).append(ks)
+    for tag, v in by.items():
+        print(f"  {tag:>16}: n={len(v):2d}  sim2real KS = "
+              f"{np.mean(v):.3f} ± {np.std(v):.3f}")
+    print(f"\n  mean sim2real domain gap KS = {np.mean(r.ks):.3f} ± "
+          f"{np.std(r.ks):.3f}  (over {len(r.ks)} measured specimens)")
+    print(f"  → the apples-to-apples measured sim-to-real gap (gap #1, "
+          f"same quantity)")
+    mx = max(s["max_sigma"] for s in r.stage0)
+    print(f"  Stage-0 |z| on the real fields: hot-spots up to {mx:.0f}σ "
+          f"(q={flag_q:.2f} flag)")
+    print(bar)
+
+
+def make_figure_dspss(r: DSPSSResult, out_path: str) -> str:
+    import matplotlib
+    matplotlib.use("Agg")
+    import sys
+    sys.path.insert(0, os.path.join(HERE, "slides", "figure_sources"))
+    try:
+        from thesis_style import use
+        figsize = use(width_frac=1.0, aspect=0.5)
+    except Exception:
+        figsize = (12.0, 6.0)
+    import matplotlib.pyplot as plt
+
+    fig, ax = plt.subplots(2, 3, figsize=figsize)
+    # two example measured fields (one convex, one concave)
+    pick = [0, len(r.specimens) - 1]
+    for col, idx in enumerate(pick):
+        name, fld = r.specimens[idx]
+        disp = name.replace("#", " no.")            # '#' breaks LaTeX titles
+        vmax = np.percentile(fld[fld > 0], 99)
+        im = ax[0, col].imshow(fld, cmap="viridis", vmin=0, vmax=vmax,
+                               aspect="auto")
+        ax[0, col].set_title(f"{disp} measured DSPSS", fontsize=8)
+        ax[0, col].set_xticks([]); ax[0, col].set_yticks([])
+        fig.colorbar(im, ax=ax[0, col], fraction=0.046, pad=0.02)
+        im2 = ax[1, col].imshow(r.stage0[idx]["score"], cmap="inferno",
+                                vmin=0, vmax=6, aspect="auto")
+        ax[1, col].set_title(f"Stage-0 |z| (max {r.stage0[idx]['max_sigma']:.0f}σ)",
+                             fontsize=8)
+        ax[1, col].set_xticks([]); ax[1, col].set_yticks([])
+        fig.colorbar(im2, ax=ax[1, col], fraction=0.046, pad=0.02)
+
+    # standardised distributions: FEM pool vs all measured
+    zf = (r.fem_pool - r.fem_pool.mean()) / (r.fem_pool.std() + 1e-12)
+    allm = np.concatenate([f[f > 0].ravel() for _, f in r.specimens])
+    zm = (allm - allm.mean()) / (allm.std() + 1e-12)
+    ax[0, 2].hist(zf, bins=60, density=True, alpha=0.5, color="#1565C0",
+                  label="FEM DSPSS")
+    ax[0, 2].hist(np.clip(zm, -3, 6), bins=60, density=True, alpha=0.5,
+                  color="#d7301f", label="measured DSPSS")
+    ax[0, 2].set_title(f"sim2real gap  KS={np.mean(r.ks):.2f}", fontsize=8)
+    ax[0, 2].set_xlabel("standardised DSPSS", fontsize=7)
+    ax[0, 2].legend(fontsize=6); ax[0, 2].tick_params(labelsize=6)
+
+    # per-specimen KS, grouped by defect type
+    names = [n.split("#")[0] for n, _ in r.specimens]
+    colors = ["#2e7d32" if "totsu" in n else "#8e24aa" for n in names]
+    ax[1, 2].bar(range(len(r.ks)), r.ks, color=colors)
+    ax[1, 2].axhline(np.mean(r.ks), color="k", lw=0.8, ls="--")
+    ax[1, 2].set_title("per-specimen sim2real KS", fontsize=8)
+    ax[1, 2].set_xlabel("specimen (green=convex, purple=concave)", fontsize=6)
+    ax[1, 2].set_ylim(0, 1); ax[1, 2].tick_params(labelsize=6)
+
+    plt.tight_layout()
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    fig.savefig(out_path, bbox_inches="tight", dpi=200)
+    fig.savefig(os.path.splitext(out_path)[0] + ".png", bbox_inches="tight",
+                dpi=150)
+    plt.close(fig)
+    return out_path
+
+
+# ═════════════════════════════════════════════════════════════════════════════
 #  Unit tests
 # ═════════════════════════════════════════════════════════════════════════════
 
@@ -286,6 +433,22 @@ def run_tests() -> int:
     rs = robust_stats(np.array([0.0, 1, 2, 3, 100]))
     ok(rs["median"] == 2.0, "median robust to the 100 outlier")
 
+    # DSPSS path on a synthetic specimen set (no disk dependency).
+    # NB ks_statistic standardises, so it measures the SHAPE gap: a measured
+    # field with a different distribution shape (exponential) vs a Gaussian FEM
+    # pool yields KS>0, while a pure mean/scale shift would not.
+    rng = np.random.default_rng(0)
+    specs = [(f"totsu(convex)#{i:02d}",
+              rng.exponential(8, (12, 10)) + 1.0) for i in range(3)]
+    fem = rng.normal(40, 12, 5000)
+    ks = [kr.ks_statistic(f[f > 0], fem) for _, f in specs]
+    ok(all(0 <= k <= 1 for k in ks), "DSPSS KS in range")
+    ok(np.mean(ks) > 0.15, "shape-different measured vs FEM → sim2real gap")
+    dr = DSPSSResult(specimens=specs, ks=ks,
+                     stage0=[stage0_on_field(f) for _, f in specs], fem_pool=fem)
+    ok(len(dr.stage0) == 3 and dr.stage0[0]["score"].shape == (12, 10),
+       "DSPSSResult stage0 shapes")
+
     print(f"tsa_sim2real: {n}/{n} unit tests passed")
     return n
 
@@ -297,19 +460,30 @@ def run_tests() -> int:
 def main():
     ap = argparse.ArgumentParser(
         description="Sim-to-real: measured TSA full-field stress vs FEM DSPSS.")
+    ap.add_argument("--source", choices=["dspss", "tsa"], default="dspss",
+                    help="dspss = measured DSPSS vs FEM DSPSS (22 specimens, "
+                         "apples-to-apples); tsa = raw TSA stress (3 specimens)")
     ap.add_argument("--flag-q", type=float, default=0.99,
                     help="Stage-0 hot-spot flag quantile on the real field")
     ap.add_argument("--fig", action="store_true",
-                    help="save paper_figs/tsa_sim2real.pdf")
+                    help="save the figure under paper_figs/")
     ap.add_argument("--test", action="store_true", help="unit tests only")
     args = ap.parse_args()
 
     if args.test:
         run_tests(); return
-    r = run(flag_q=args.flag_q)
-    if args.fig:
-        p = make_figure(r, os.path.join(HERE, "paper_figs", "tsa_sim2real.pdf"))
-        print(f"\nfigure → {p}")
+    if args.source == "dspss":
+        r = run_dspss(flag_q=args.flag_q)
+        if args.fig:
+            p = make_figure_dspss(r, os.path.join(HERE, "paper_figs",
+                                                  "tsa_sim2real.pdf"))
+            print(f"\nfigure → {p}")
+    else:
+        r = run(flag_q=args.flag_q)
+        if args.fig:
+            p = make_figure(r, os.path.join(HERE, "paper_figs",
+                                            "tsa_sim2real_raw.pdf"))
+            print(f"\nfigure → {p}")
 
 
 if __name__ == "__main__":
