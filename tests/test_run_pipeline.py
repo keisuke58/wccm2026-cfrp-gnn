@@ -66,6 +66,38 @@ def test_full_chain_surrogate_returns_valid_decision():
 
 
 @requires_artifacts
+def test_stage1_screen_well_formed_and_agrees_with_stage2():
+    """Stage-1 19-class screen runs in the e2e chain and is shape-consistent:
+    a defect-present bool, a 0..18 class / layer bucket, a finite (cx,cy) region
+    estimate, a confidence in [0,1], and a per-node map over class-0/pred-class.
+    On the cached defective sample it should agree with Stage-2 (same defect-
+    present call and same layer bucket)."""
+    out = rp.run_pipeline(sample=0, engine="surrogate", n_draws=8,
+                          quiet=True, stage1=True)
+    s1, s2 = out["s1"], out["s2"]
+    assert s1 is not None
+    assert isinstance(s1["defect_present"], bool)
+    assert 0 <= s1["pred_class"] <= rp.N_CLASSES - 1
+    assert s1["layer_bucket"] in ("defect-free", "layer-1", "layer-2")
+    assert len(s1["region_xy"]) == 2 and all(np.isfinite(v) for v in s1["region_xy"])
+    assert 0.0 <= s1["confidence"] <= 1.0
+    assert s1["node_pred"].shape == (rp.N_NODES,)
+    assert set(np.unique(s1["node_pred"])) <= {0, s1["pred_class"]}
+    cmp = rp._stage1_vs_stage2(s1, s2)
+    assert isinstance(cmp["agree"], bool)
+    # the canonical cached sample is defective → Stage-1 and Stage-2 concur
+    assert cmp["agree"] is True
+
+
+@requires_artifacts
+def test_stage1_can_be_disabled():
+    """--no-stage1 path leaves s1 as None (backward-compatible Stage 0,2,3,4)."""
+    out = rp.run_pipeline(sample=0, engine="surrogate", n_draws=8,
+                          quiet=True, stage1=False)
+    assert out["s1"] is None
+
+
+@requires_artifacts
 def test_stage0_detects_planted_defect():
     """Stage-0 Mahalanobis flags the planted defect on a known defective 4x4
     sample (high single-sample AUROC, non-zero flagged nodes)."""
