@@ -122,6 +122,15 @@ nodes) + H3 fairing guided waves.
 \end{frame}
 
 % ─────────────────────────────────────────────
+\begin{frame}{What the system sees: detection at a glance}
+\centering
+\includegraphics[width=0.84\textwidth]{../paper_figs/stage0_visual.pdf}\\[1mm]
+{\small The measured field (a) looks unremarkable; the per-node score (b)
+lights up \alert{exactly} where the 25 defect nodes sit (c) --- a curved
+interstage section, 13\,942 nodes, defect $=0.18\%$ of them.}
+\end{frame}
+
+% ─────────────────────────────────────────────
 \begin{frame}{Stage 0 --- a 30-line statistic beats eight learned methods}
 \begin{columns}[T]
 \column{0.58\textwidth}
@@ -192,6 +201,16 @@ layer (depth)  & 2.98 & 0.63 & 0.870 \\
   \item Depth weakly identifiable --- a physics limit of surface thermoelastic
         measurement, reported honestly
 \end{itemize}
+\end{frame}
+
+% ─────────────────────────────────────────────
+\begin{frame}{Stage 2 in pictures: the posterior, not a point estimate}
+\centering
+\includegraphics[width=0.95\textwidth]{../paper_figs/fmpe_posterior_visual.pdf}\\[1mm]
+{\small One measured field $\to$ 256 posterior draws. Position (a) concentrates
+at the true defect (star); depth (b) is honestly broad --- the physics limit of
+a surface measurement; size (c) shows why we propagate the \emph{whole}
+posterior into Stage 3 instead of trusting one number.}
 \end{frame}
 
 % ─────────────────────────────────────────────
@@ -269,6 +288,20 @@ max-Q gust     & 0.10 & off & 0.50 & 1.0  & \textcolor{alertred}{RETIRE} \\
 \includegraphics[width=0.92\textwidth]{../results/e2e_stage0to3.png}\\[1mm]
 {\scriptsize Stage 0 anomaly map $\cdot$ Stage 2 posterior $\cdot$
 $P(\text{survive }n)$ with fatigue $\cdot$ decision --- single held-out CFRP field.}
+\end{frame}
+
+% ─────────────────────────────────────────────
+\begin{frame}{Stage 4 --- fleet learning: the SpaceX loop, formalised}
+\centering
+\includegraphics[width=0.97\textwidth]{../paper_figs/fleet_learning.pdf}\\[1mm]
+\begin{itemize}\small
+  \item hierarchical Bayes: fleet prior $\varphi \to$ per-vehicle growth rate
+        $s_v \to$ inspection posteriors; conjugate Gibbs
+  \item (a) $\varphi$ sharpens with flights (SD $0.39\!\to\!0.10$);
+        (b) low-data vehicles shrink toward the fleet mean (error ratio 0.84)
+  \item (c) \alert{a new vehicle clears in 1.25 inspections with the fleet
+        prior vs 2.75 in isolation} --- the fleet-leader effect, quantified
+\end{itemize}
 \end{frame}
 
 % ─────────────────────────────────────────────
