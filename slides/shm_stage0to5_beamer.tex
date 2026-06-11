@@ -283,6 +283,22 @@ $\bar\alpha_T$ not yet S--N-anchored.
 \end{frame}
 
 % ─────────────────────────────────────────────
+\begin{frame}{Knowing when to trust it: conformal OOD trust-gate}
+\centering
+\includegraphics[width=0.95\textwidth]{../paper_figs/conformal_surrogate.pdf}\\[1mm]
+\begin{itemize}\small
+  \item split-conformal in $\log$-$\text{rel\_growth}$ space: in-distribution the
+        $90\%$ guarantee holds; \alert{out of distribution coverage falls
+        $80\%\!\to\!0\%$} as the point error grows ${\sim}14\times$ --- the
+        marginal guarantee breaks under covariate shift, exactly as predicted
+  \item \textbf{trust gate} --- defer to exact FD when outside the envelope or
+        the interval is too wide: flags $33\%$ of an OOD stream, restoring
+        coverage \alert{$61\%\!\to\!88\%$}
+  \item deployable rule: \emph{cheap surrogate where trustworthy, exact physics where not}
+\end{itemize}
+\end{frame}
+
+% ─────────────────────────────────────────────
 \begin{frame}{Flight clearance --- end-to-end on a real test sample}
 Stage 0$\rightarrow$3 run: held-out 4x4 field $\rightarrow$ Mahalanobis map
 $\rightarrow$ \emph{trained} FMPE posterior $\rightarrow$ fatigue-aware clearance
@@ -316,6 +332,34 @@ $P(\text{survive }n)$ with fatigue $\cdot$ decision --- single held-out CFRP fie
 \end{frame}
 
 % ─────────────────────────────────────────────
+\begin{frame}[fragile]{One command, four stages, under four seconds}
+\begin{columns}[T]
+\begin{column}{0.52\textwidth}
+\includegraphics[width=\textwidth]{../paper_figs/pipeline_e2e_full.pdf}
+\end{column}
+\begin{column}{0.48\textwidth}
+{\scriptsize
+\begin{semiverbatim}
+\$ python run_pipeline.py --sample 3
+
+[0 DETECT]  AUROC 0.998  → \alert{DEFECT}
+[2 CHARAC]  FMPE  cx 0.50±0.27 ...
+[3 PROGNO]  P(grow)=0.42
+            E[remain]=1.4   (FNO 37ms/draw)
+[DECISION]  → \alert{REPAIR}
+[4 FLEET ]  prior SD 0.20→0.07
+\end{semiverbatim}
+}
+\begin{itemize}\scriptsize
+  \item every stage \emph{imported unchanged}; surrogate engine $\Rightarrow$
+        whole run \alert{$<$4\,s} (FD engine: Stage 3 alone ${\sim}10$\,s)
+  \item one reproducible artifact = paper $+$ live demo $+$ Keio proposal
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ─────────────────────────────────────────────
 \begin{frame}{Stage 4 --- fleet learning: the SpaceX loop, formalised}
 \centering
 \includegraphics[width=0.97\textwidth]{../paper_figs/fleet_learning.pdf}\\[1mm]
@@ -341,6 +385,10 @@ $P(\text{survive }n)$ with fatigue $\cdot$ decision --- single held-out CFRP fie
         the physics-grounded posterior is invariant} ($c_x$ RMSE 0.002, cov.\ 0.96)
   \item $\Rightarrow$ hybrid Stage 2: amortised for speed in-distribution,
         differentiable physics for safety out of it
+  \item \alert{swap the FNO surrogate in as the differentiable forward}
+        (autograd vs FD rel.\ $7{\times}10^{-4}$): MAP$+$Laplace inversion
+        $530\,\text{s}\!\to\!12\,\text{s}$ ($43\times$) --- the cheap
+        differentiable forward for the Keio Phase-3 TMCMC plan
 \end{itemize}
 \end{frame}
 
