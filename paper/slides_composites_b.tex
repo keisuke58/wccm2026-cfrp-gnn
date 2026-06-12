@@ -1,0 +1,267 @@
+\documentclass[aspectratio=169,10pt]{beamer}
+
+\usetheme{metropolis}
+\usecolortheme{default}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{booktabs}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{xcolor}
+
+\definecolor{luhblue}{RGB}{21,101,192}
+\definecolor{alertred}{RGB}{198,40,40}
+\definecolor{okgreen}{RGB}{27,94,32}
+\definecolor{teal0}{RGB}{15,139,141}
+
+\setbeamercolor{frametitle}{bg=luhblue, fg=white}
+\setbeamercolor{progress bar}{fg=luhblue}
+\setbeamercolor{alerted text}{fg=alertred}
+\setbeamercolor{example text}{fg=okgreen}
+\metroset{progressbar=frametitle, block=fill}
+
+\graphicspath{{../paper_figs/}{../results/design_feedback/}}
+
+\newcommand{\real}{\textcolor{okgreen}{\textbf{real data}}}
+\newcommand{\synth}{\textcolor{alertred}{\textbf{synthetic}}}
+
+\title{A Structure-Agnostic SHM Decision Framework\\for Reusable CFRP Spacecraft Structures}
+\subtitle{from Real-Data Detection to Physics-Grounded Life Prognosis}
+\author{K.\ Nishioka \and co-authors}
+\institute{Keio University \quad / \quad Composites Part B (draft)}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+% ------------------------------------------------------------------
+\begin{frame}{The reusable-vehicle decision}
+  \begin{columns}[T]
+    \begin{column}{0.56\textwidth}
+      Reusable launch vehicles change the SHM question:
+      \begin{itemize}
+        \item not ``did it survive one flight?''
+        \item but \alert{may it fly again --- and for how many flights?}
+      \end{itemize}
+      \vspace{2mm}
+      CFRP primary structures (interstage, fairing, motor case, tank, drive
+      shaft) fail by \emph{internal} delamination / debond --- invisible,
+      inferred from NDT.
+      \vspace{2mm}
+
+      \textbf{Gap:} no end-to-end pipeline that propagates uncertainty from
+      detection to a re-flight decision \emph{and} states what real data supports.
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \centering
+      \footnotesize
+      detect $\to$ classify $\to$ characterise\\
+      $\to$ prognose $\to$ clear\\
+      $\to$ fleet-learn $\to$ design
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ------------------------------------------------------------------
+\begin{frame}{One decision core, five structures, four load modes}
+  \centering
+  \includegraphics[width=0.96\textwidth]{framework_overview5.pdf}
+  \vspace{1mm}
+  \begin{itemize}\footnotesize
+    \item Shared, structure-agnostic decision core (Stage 0/2/4/5 + clearance).
+    \item Only \emph{detection} (Stage 1) and \emph{prognosis physics} (Stage 3)
+          are structure-specific --- pluggable.
+  \end{itemize}
+\end{frame}
+
+% ------------------------------------------------------------------
+\begin{frame}{The five structures span the load-mode space}
+  \centering\small
+  \begin{tabular}{@{}lllc@{}}
+    \toprule
+    structure & load mode & detection front-end & evidence \\ \midrule
+    interstage      & membrane          & surface-stress GNN & FEM + meas.\ TSA \\
+    fairing         & transv./bending   & guided-wave GNN    & FEM + real OGW \\
+    SRB-3 case      & pressure burst    & acoustic emission  & FEM + real AE \\
+    \textbf{drive shaft} & \textbf{torsion} & shared $|z|$ (future) & CZM-FEM \\
+    COPV tank       & int.\ pressure    & shared $|z|$ (future) & FEM \\
+    \bottomrule
+  \end{tabular}
+  \vspace{3mm}
+  \begin{itemize}\footnotesize
+    \item Three demonstrated end-to-end with \real; two extend the load-mode
+          coverage with FEM prognosis.
+  \end{itemize}
+\end{frame}
+
+% ------------------------------------------------------------------
+\begin{frame}{Detection front-ends --- grounded in real data}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{anomaly_zoo_benchmark.pdf}
+      \footnotesize Stage-0 $|z|$ screen: per-node statistic dominates
+      (AUROC $\approx0.99$, fixed geometry).
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \footnotesize
+      Structure-specific Stage-1 detectors:
+      \begin{itemize}
+        \item interstage: surface-stress GNN, macro-F1 $0.76$ (vs GAT $0.61$);
+              detection generalises, localisation collapses OOD.
+        \item fairing: guided-wave GNN, F1 $0.86$.
+        \item SRB-3: real AE, per-hit AUROC $0.89$ / per-specimen $1.00$.
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ------------------------------------------------------------------
+\begin{frame}{How far does real data carry the pipeline? (honest)}
+  \centering
+  \includegraphics[width=0.95\textwidth]{fairing_real_e2e.pdf}
+  \begin{itemize}\footnotesize
+    \item Detect / classify / characterise on the fairing are \real{}
+          (long-term guided waves, impact wavefield).
+    \item \synth{} from Stage-3 prognosis onward (representative phase-field,
+          synthetic fleet) --- the life side is the largest open gap.
+  \end{itemize}
+\end{frame}
+
+% ------------------------------------------------------------------
+\begin{frame}{Structure-agnostic core --- and its boundary}
+  \begin{columns}[T]
+    \begin{column}{0.6\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{structure_agnostic_loso.pdf}
+    \end{column}
+    \begin{column}{0.4\textwidth}
+      \footnotesize
+      A single margin surrogate over \textbf{1{,}499 real-FEM} critical-load
+      states fits all five ($R^2{=}0.94$, dangerous-miss $1.1\%$).
+      \vspace{2mm}
+
+      \alert{Honest boundary:} leave-one-\emph{load-mode}-out to the unseen
+      torsion shaft \emph{fails} ($R^2<0$).
+      \vspace{1mm}
+
+      \textbf{Geometry transfers; load mode does not.}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ------------------------------------------------------------------
+\begin{frame}{New load mode: the CFRP torsion drive shaft}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{shaft_torsion_3d.pdf}\\
+      \footnotesize CGAX screen: $\pm45$ tube, groove damage, $T_{cr}$ sweep.
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{shaft_explicit_debond.pdf}\\
+      \footnotesize 3-D $\pm45$ + interlaminar CZM: full $0\to100\%$ debond.
+      Implicit stalls at the snap; \textbf{explicit} captures it.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ------------------------------------------------------------------
+\begin{frame}{End-to-end decision reliability (vs a \synth{} oracle)}
+  \begin{columns}[T]
+    \begin{column}{0.58\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{decision_uq.pdf}
+    \end{column}
+    \begin{column}{0.42\textwidth}
+      \footnotesize
+      Propagate uncertainty to the clearance call; score against the exact
+      FD-physics oracle.
+      \begin{itemize}
+        \item accuracy \textbf{85\%}, dangerous-miss \textbf{0\%}
+        \item Platt recalibration: ECE $0.18\!\to\!0.06$
+      \end{itemize}
+      \alert{Measured against a synthetic oracle} --- internal error
+      propagation, not agreement with real life tests.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ------------------------------------------------------------------
+\begin{frame}{Sim-to-real: normalisation choice controls false alarms}
+  \begin{columns}[T]
+    \begin{column}{0.55\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{payload_da_longterm.pdf}
+    \end{column}
+    \begin{column}{0.45\textwidth}
+      \footnotesize
+      Real OGW temperature shift $9^\circ\!\to\!30^\circ$C:
+      \begin{itemize}
+        \item uncorrected FPR \textbf{14\%} (temperature mimics damage)
+        \item quantile DA $\to$ \textcolor{okgreen}{\textbf{5\%}} (design target)
+        \item \alert{z-score normalisation worsens to 30\%}
+      \end{itemize}
+      Interstage TSA: quantile DA closes 97\% of the gap.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ------------------------------------------------------------------
+\begin{frame}{Stage-5 design feedback --- mechanism, not a calibrated value}
+  \begin{columns}[T]
+    \begin{column}{0.6\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{design_robustness.pdf}
+    \end{column}
+    \begin{column}{0.4\textwidth}
+      \footnotesize
+      Fleet-driven inverse design steers off-axis angle + interface toughness.
+      \vspace{2mm}
+
+      \alert{Honest limitation:} under uncalibrated phase-field constants the
+      optimal angle spans $15^\circ$--$75^\circ$ --- leverage exists only near
+      the growth transition.
+      \vspace{1mm}
+
+      The \textbf{mechanism} is robust; a quoted optimum needs calibration.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ------------------------------------------------------------------
+\begin{frame}{Honest accounting}
+  \begin{itemize}
+    \item \real{}: detection / classification / characterisation
+          (guided waves, AE, TSA), posterior coverage, $1{,}499$-state FEM core.
+    \item \synth{}: prognosis, clearance, fleet, design --- representative
+          phase-field + synthetic fleets; decision UQ vs a synthetic oracle.
+    \item \alert{Largest gap:} no real life-test validation of the life side.
+    \item Priority inputs: Kojima TSA full-field (interstage), real fatigue data.
+  \end{itemize}
+\end{frame}
+
+% ------------------------------------------------------------------
+\begin{frame}{Bridge to the Keio continuation}
+  \begin{itemize}
+    \item The differentiable, fast forward (FNO; autograd-exact) is what a
+          TMCMC / Bayesian-inverse phase needs.
+    \item Its physics --- anisotropic phase-field seeded by interlaminar
+          cohesive zones --- is the prognosis layer the torsion shaft extends
+          from mode-I to mode-II/III shear.
+    \item[$\Rightarrow$] \textbf{Phase-field $\times$ GNN prognosis}, calibrated
+          on measured data, is the computational-solid-mechanics continuation.
+  \end{itemize}
+\end{frame}
+
+% ------------------------------------------------------------------
+\begin{frame}[standout]
+  One decision core across four load modes.\\[2mm]
+  Real where data permits, honest where it does not.\\[2mm]
+  Closing the life-side real-data gap is next.
+\end{frame}
+
+\end{document}
