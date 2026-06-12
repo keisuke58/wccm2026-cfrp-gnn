@@ -39,9 +39,12 @@ Detection, classification and damage characterisation are grounded in real data
 (long-term guided waves with temperature domain adaptation, an impact wavefield,
 and acoustic emission); a per-node anomaly statistic reaches AUROC $\approx0.99$ on
 fixed geometry (nine-method benchmark) and a flow-matching posterior recovers
-defect position/size/depth at nominal $90\%$ coverage. \emph{Life prognosis, flight
-clearance, fleet learning and design feedback are not yet real-data-validated}:
-they use a representative anisotropic phase-field forward and synthetic fleets, so
+defect position/size/depth at nominal $90\%$ coverage. \emph{The life side is only partly
+real-data-grounded}: its fatigue Paris \emph{exponent} is calibrated to real CFRP
+mode-I DCB data (4TU; $m\!\approx\!17$, not the representative $3$; flips a
+mid-size-debond clearance from RETIRE to OK), but absolute growth rates, the
+phase-field constants, the fleet and the decision oracle remain
+representative/synthetic. Consequently
 the end-to-end decision accuracy ($85\%$, zero dangerous misses) is measured against
 a synthetic finite-difference physics oracle rather than real life tests, and the
 design optimum is a robust trade-off \emph{mechanism} but not a calibrated value.
