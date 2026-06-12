@@ -27,3 +27,4 @@ training_pid_*
 # allow result figures explicitly (small PNGs curated under results/)
 !results/*.png
 data/srb3_ae/
+data/composite_fatigue_4tu/

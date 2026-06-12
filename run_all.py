@@ -49,6 +49,7 @@ GROUPS: list[tuple[str, list[tuple[str, bool]]]] = [
         ("flight_load_spectrum", False),
         ("physics_validation", False),
         ("nasa_rul_validation", False),       # REAL run-to-failure (honest neg.)
+        ("composite_fatigue_calibration", False),  # REAL Paris calibration [R]
     ]),
     ("Stage 3/clear — decision UQ (3 structures, symmetric)", [
         ("decision_uq", True),

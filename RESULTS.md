@@ -9,7 +9,7 @@ python run_all.py --fig      # + regenerate every figure under paper_figs/
 python run_all.py --quick    # skip the slow FD/FMPE modules
 ```
 
-**Status (2026-06-12): 26 modules, 657/657 checks pass** (637 unit tests +
+**Status (2026-06-12): 27 modules, 671/671 checks pass** (651 unit tests +
 20 `cost_calibration` checks). Near-term venue = JSCES 2027 (May);
 `nishioka_jsces2027.tex` carries the 3-structure story.
 
@@ -55,14 +55,16 @@ case against a real run-to-failure coupon dataset (NASA PCoE composite is on dis
 real RUL validation NOT yet done — only loaded for detection). Depth > breadth:
 better to validate one thread than to add another breadth module.
 
-**Update (2026-06-12): fix (2) ATTEMPTED → honest negative.** `nasa_rul_validation`
-runs RUL against the NASA PCoE **real run-to-failure** coupons. The method is sound
-on controlled data but **fails on the real coupons (α-λ ≈ 0%)** — only 3/13 give a
-usable raw-strain trajectory and they share no calibrated failure level. So the
-prognosis remains **unvalidated against real failure**; this is now a tested,
-documented gap (not an untested assumption). A credible result needs calibrated
-damage indicators (published normalised-stiffness / X-ray crack density) + a
-Bayesian degradation model — concretely scoped, deliberately not faked.
+**Update (2026-06-12): fix (2) DONE for the Paris law (positive [R]).**
+`composite_fatigue_calibration` fits the Paris delamination law to **real CFRP
+Mode-I fatigue** (4TU DCB, 37 specimens). Within-specimen R²=0.98; Bayesian
+population **m = 16.7 [CI 15.0–18.3]**, so the framework's representative **m=3 is
+unsupported (~6× too shallow)**, and a single global law fails to generalise
+(fibre-bridging R-curve). This is a genuine real-data calibration AND critique of
+the Stage-3 prognosis. (The earlier `nasa_rul_validation` RUL attempt via raw
+strain was an honest negative — that proxy is a dead-end; the Paris route via
+clean tabular fracture data is the one that worked.) Remaining: real run-to-failure
+of the actual structures, and the interstage Kojima measured end-to-end (fix 1).
 
 Tier tags **[R]/[S]/[U]** are applied per row in the tables below.
 
@@ -105,7 +107,8 @@ Tier tags **[R]/[S]/[U]** are applied per row in the tables below.
 | `phasefield_3d` | 12/12 | 3-D AT2 phase-field, MMS convergence **2.05** |
 | `flight_load_spectrum` | 12/12 | simple load proxy under-predicts life **3.4×** (S-N anchored) |
 | `physics_validation` | 12/12 | MMS 2-D **2.04** / 3-D **2.05**, mesh sensitivity 0.4% |
-| `nasa_rul_validation` **[R, honest negative]** | 16/16 | **real-data confrontation** — RUL vs NASA PCoE composite **run-to-failure** coupons. Method sound on controlled data (noiseless → α-λ≈1.0) but **FAILS on real coupons (α-λ ≈ 0%)**: only 3/13 give a usable raw-strain trajectory, no calibrated common failure level. **The honest finding: the prognosis is genuinely UNVALIDATED against real failure.** Path to a real result = published normalised-stiffness / X-ray crack-density + Bayesian degradation model (future work, not faked) |
+| `nasa_rul_validation` **[R, honest negative]** | 16/16 | **real-data confrontation** — RUL vs NASA PCoE composite **run-to-failure** coupons. Method sound on controlled data (noiseless → α-λ≈1.0) but **FAILS on real coupons (α-λ ≈ 0%)**: only 3/13 give a usable raw-strain trajectory, no calibrated common failure level. Honest finding: RUL via that proxy is unvalidated (raw-strain is a dead-end; gauge debonds). |
+| `composite_fatigue_calibration` **[R, POSITIVE]** | 14/14 | **first real-data prognosis calibration** — fits the Paris delamination law to **real CFRP Mode-I fatigue** (4TU Yao/Alderliesten DCB, 37 specimens, 1270 (ΔG,da/dN) pts). **Within-specimen Paris fits excellently (median R²=0.98)**; Bayesian population posterior gives **real m = 16.7 [95% CI 15.0–18.3]** — the framework's representative **m=3 is unsupported (~6× too shallow)**. A single global law fails to generalise (LOSO R²<0; fibre-bridging R-curve). Concrete real-data fix for the Stage-3 Paris constant + an honest critique of the single-(C,m) assumption |
 
 ## Decision UQ — 3 structures, symmetric audited form
 oracle decomposition + 95% bootstrap CI + dangerous-miss + Platt ECE recalibration.
