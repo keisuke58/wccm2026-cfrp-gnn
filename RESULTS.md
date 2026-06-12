@@ -25,6 +25,40 @@ spanning three sensing modalities**:
 
 ---
 
+## ⚠️ VALIDATION STATUS — read this before believing any number below
+An honest, self-critical audit of what is and is NOT validated (2026-06-12). The
+framework is, today, **a well-built SIMULATION demonstration, not an experimentally
+validated capability.** Every result falls into exactly one of three tiers:
+
+- **[R] real data, externally meaningful** — only the DETECTION front-ends touch
+  real measurements: SRB-3 AE pristine-vs-damaged (4TU, real AE), the FEM-coupon
+  detection harness, OGW temperature DA. *Even these validate detection, not
+  prognosis.* The interstage **measured** detection AUROC is still BLOCKED (Kojima
+  masks); the AE is a compression-coupon **proxy**, not the motor case itself.
+- **[S] self-consistency, NOT ground truth** — every "oracle", oracle-decomposition
+  clearance accuracy, decision-UQ, LOSO transfer, conformal, system_baseline number
+  uses the SAME FEM/surrogate model as both the predictor and the "truth." These are
+  **internal-consistency checks** (does UQ propagate correctly?), not validations
+  against real failure. The CZM-surrogate R²=0.994 is a model approximating a model
+  (half self-circular). Do not read "85% clearance accuracy" as "85% correct vs
+  reality."
+- **[U] representative / uncalibrated** — ALL Stage-3 prognosis physics (phase-field,
+  debond ERR+Paris, burst hoop-stress, CZM p_cr), every cost/value constant, every
+  fleet growth rate. Lumped, trend-level, NOT fitted to any real fracture/fatigue
+  test. Absolute numbers are illustrative only.
+
+**The core gap (concede openly):** no result has been compared to the real failure
+of the actual interstage / fairing / SRB-3, nor to a real CFRP fracture/fatigue
+coupon. Highest-leverage fixes, in order: (1) one structure end-to-end on real
+measured data (interstage Kojima — external dependency); (2) calibrate ONE prognosis
+case against a real run-to-failure coupon dataset (NASA PCoE composite is on disk,
+real RUL validation NOT yet done — only loaded for detection). Depth > breadth:
+better to validate one thread than to add a 26th module.
+
+Tier tags **[R]/[S]/[U]** are applied per row in the tables below.
+
+---
+
 ## Stage 0 — anomaly / robustness
 | module | tests | headline |
 |---|---|---|
