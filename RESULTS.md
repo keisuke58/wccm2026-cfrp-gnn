@@ -9,7 +9,7 @@ python run_all.py --fig      # + regenerate every figure under paper_figs/
 python run_all.py --quick    # skip the slow FD/FMPE modules
 ```
 
-**Status (2026-06-12): 25 modules, 641/641 checks pass** (621 unit tests +
+**Status (2026-06-12): 26 modules, 657/657 checks pass** (637 unit tests +
 20 `cost_calibration` checks). Near-term venue = JSCES 2027 (May);
 `nishioka_jsces2027.tex` carries the 3-structure story.
 
@@ -53,7 +53,16 @@ coupon. Highest-leverage fixes, in order: (1) one structure end-to-end on real
 measured data (interstage Kojima — external dependency); (2) calibrate ONE prognosis
 case against a real run-to-failure coupon dataset (NASA PCoE composite is on disk,
 real RUL validation NOT yet done — only loaded for detection). Depth > breadth:
-better to validate one thread than to add a 26th module.
+better to validate one thread than to add another breadth module.
+
+**Update (2026-06-12): fix (2) ATTEMPTED → honest negative.** `nasa_rul_validation`
+runs RUL against the NASA PCoE **real run-to-failure** coupons. The method is sound
+on controlled data but **fails on the real coupons (α-λ ≈ 0%)** — only 3/13 give a
+usable raw-strain trajectory and they share no calibrated failure level. So the
+prognosis remains **unvalidated against real failure**; this is now a tested,
+documented gap (not an untested assumption). A credible result needs calibrated
+damage indicators (published normalised-stiffness / X-ray crack density) + a
+Bayesian degradation model — concretely scoped, deliberately not faked.
 
 Tier tags **[R]/[S]/[U]** are applied per row in the tables below.
 
@@ -96,6 +105,7 @@ Tier tags **[R]/[S]/[U]** are applied per row in the tables below.
 | `phasefield_3d` | 12/12 | 3-D AT2 phase-field, MMS convergence **2.05** |
 | `flight_load_spectrum` | 12/12 | simple load proxy under-predicts life **3.4×** (S-N anchored) |
 | `physics_validation` | 12/12 | MMS 2-D **2.04** / 3-D **2.05**, mesh sensitivity 0.4% |
+| `nasa_rul_validation` **[R, honest negative]** | 16/16 | **real-data confrontation** — RUL vs NASA PCoE composite **run-to-failure** coupons. Method sound on controlled data (noiseless → α-λ≈1.0) but **FAILS on real coupons (α-λ ≈ 0%)**: only 3/13 give a usable raw-strain trajectory, no calibrated common failure level. **The honest finding: the prognosis is genuinely UNVALIDATED against real failure.** Path to a real result = published normalised-stiffness / X-ray crack-density + Bayesian degradation model (future work, not faked) |
 
 ## Decision UQ — 3 structures, symmetric audited form
 oracle decomposition + 95% bootstrap CI + dangerous-miss + Platt ECE recalibration.
