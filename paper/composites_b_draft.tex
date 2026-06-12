@@ -14,8 +14,9 @@
 \usepackage[hidelinks]{hyperref}
 \graphicspath{{../paper_figs/}{../results/}}
 
-\title{A Calibrated, Physics-Grounded Structural-Health-Monitoring Stack for
-CFRP Structures: from Anomaly Screening to Fatigue-Aware Life Prognosis}
+\title{A Structure-Agnostic Structural-Health-Monitoring Decision Framework for
+Reusable CFRP Spacecraft Structures: from Real-Data Detection to
+Physics-Grounded Life Prognosis}
 \author{K.\ Nishioka \and \textit{(co-authors TBD)}}
 \date{Draft --- \today}
 
@@ -23,20 +24,29 @@ CFRP Structures: from Anomaly Screening to Fatigue-Aware Life Prognosis}
 \maketitle
 
 \begin{abstract}
-We present an end-to-end structural-health-monitoring (SHM) pipeline for
-carbon-fibre-reinforced-polymer (CFRP) structures that proceeds from defect
-\emph{detection} to a calibrated, physics-grounded \emph{life-prognosis}
-decision. On full-field thermoelastic stress data of a perforated CFRP
-interstage, we (i) benchmark nine anomaly detectors and show that a simple
-per-node statistic attains AUROC $\approx 0.99$ while deep alternatives do not,
-and characterise the measurement-noise limit at which all detectors fail;
-(ii) recover defect position, size and depth as a \emph{calibrated} Bayesian
-posterior via flow-matching posterior estimation (FMPE), with $90\%$ credible
-intervals covering at the nominal rate; and (iii) propagate that posterior
-through an anisotropic phase-field fracture model with fatigue accumulation to
-obtain a flight-clearance decision with an expected remaining-life estimate.
-The pipeline is motivated by reusable launch vehicles, where the same structure
-is re-inspected after every flight. % key numbers to finalise
+We present a structure-agnostic structural-health-monitoring (SHM) \emph{decision}
+framework for reusable carbon-fibre-reinforced-polymer (CFRP) spacecraft
+structures: detect $\to$ classify $\to$ characterise $\to$ prognose $\to$ clear
+(OK/REPAIR/RETIRE) $\to$ fleet-learn $\to$ design. A single decision core is shared
+across five structures spanning four load modes --- in-plane membrane,
+transverse-pressure/bending, internal-pressure burst, and torsional interlaminar
+shear --- with only the detection front-end and the prognosis physics
+structure-specific; a single growth-margin surrogate fits $1{,}499$ real finite-
+element critical-load states ($R^2{=}0.94$), though a leave-one-\emph{load-mode}-out
+test shows the core extrapolates across geometry but \emph{not} to an unseen load
+mode. We are explicit about what real measurements support and what they do not.
+Detection, classification and damage characterisation are grounded in real data
+(long-term guided waves with temperature domain adaptation, an impact wavefield,
+and acoustic emission); a per-node anomaly statistic reaches AUROC $\approx0.99$ on
+fixed geometry (nine-method benchmark) and a flow-matching posterior recovers
+defect position/size/depth at nominal $90\%$ coverage. \emph{Life prognosis, flight
+clearance, fleet learning and design feedback are not yet real-data-validated}:
+they use a representative anisotropic phase-field forward and synthetic fleets, so
+the end-to-end decision accuracy ($85\%$, zero dangerous misses) is measured against
+a synthetic finite-difference physics oracle rather than real life tests, and the
+design optimum is a robust trade-off \emph{mechanism} but not a calibrated value.
+Closing the life-side real-data gap is the priority and motivates the
+differentiable, calibrated forward of the continuation.
 \end{abstract}
 
 \section{Introduction}
