@@ -305,6 +305,31 @@ the majority baseline, was an artefact of that restricted setting.)
 % accumulates across flights => survival decays even at constant sub-critical
 % load (no i.i.d. shortcut). Demo numbers: nominal OK E[~20], max-Q RETIRE.
 
+\paragraph{Real-data fatigue calibration --- the life side consumes real fracture
+data.} The Paris exponent that governs debond growth is calibrated to real CFRP
+mode-I DCB data (4TU, $37$ specimens, $\sim$$1{,}270$ points): a Normal--Normal
+hierarchy gives a population posterior $m\!\approx\!17$ (95\% CI $15$--$18$), far
+steeper than the representative $m\!\approx\!3$, and a single $(C,m)$ \emph{fails}
+leave-one-specimen-out ($R^2<0$) --- the signature of fibre bridging (an R-curve),
+not one global law. We therefore feed the \emph{posterior} (sampling
+$m\sim\mathcal N(\mu_m,\sigma_m)$ per draw, propagating the between-specimen
+spread) into the fairing Stage-3 prognosis rather than a point exponent. This
+changes decisions (Fig.~\ref{fig:fatlink}): a mid-size debond that the
+representative $m{=}3$ over-calls as RETIRE ($P_{\text{grow}}{=}0.64$) clears as OK
+($0.02$) under the real-data exponent, while small/large cases are unchanged. The
+\emph{exponent} (the decision-governing shape) is now real-data-grounded; the
+absolute Paris rate $C$ remains representative, so this calibrates the life-side
+\emph{trend}, not a certified rate.
+\begin{figure}[t]\centering
+  \includegraphics[width=0.62\linewidth]{stage3_fatigue_link.pdf}
+  \caption{Stage-3 fairing prognosis with the real-data-calibrated Paris exponent
+  (4TU DCB mode-I, $m\!\approx\!17$). The representative $m{=}3$ over-calls a
+  mid-size debond as RETIRE; the calibrated posterior (with its bridging spread)
+  clears it. Single $(C,m)$ fails leave-one-specimen-out, so the population
+  posterior is propagated rather than a point estimate.}
+  \label{fig:fatlink}
+\end{figure}
+
 \paragraph{Fast forward surrogate.} The FD growth solve ($\approx1.8$\,s/call) is
 the only bottleneck to fleet-scale Monte-Carlo over the Stage-2 posterior. We
 train a Fourier neural operator
