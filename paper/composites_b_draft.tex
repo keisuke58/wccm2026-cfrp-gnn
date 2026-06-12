@@ -442,6 +442,38 @@ distribution gaps: a \emph{data} gap (synthetic $\to$ measured fields) and an
 section closes both, and the second is the concrete bridge to the Keio
 continuation.
 
+\paragraph{Real-data coverage --- how far real measurements carry the pipeline.}
+Before quoting any synthetic-grounded number we state, per stage, exactly how far
+\emph{measured} data reaches. On the fairing --- the structure with the most real
+measurements --- we trace the chain end-to-end on real Open-Guided-Waves data
+(Fig.~\ref{fig:realcov}). \emph{Stage~0 detection} runs on the real long-term
+guided-wave campaign (34 months, large-$N$ healthy/damaged); it is genuinely
+temperature-confounded (mean FPR $\sim$$0.5$ uncompensated) and is recovered only
+by the domain adaptation below --- so detection is real but only deployable
+\emph{with} the temperature correction. \emph{Stage~1 classification} and
+\emph{Stage~2 characterisation} run on the real stringer wavefield (Intact /
+1st / 2nd impact): the per-sensor damage index is monotone in severity
+(mean DI $0\!\to\!0.57\!\to\!1.00$) and spatially localises the impact (peak-DI
+sensor moves $250\!\to\!467$\,mm) --- real signals, though with one measurement
+per state these are demonstrated as a damage-index pattern, not a large-$N$ ML
+score. \emph{Stage~3 prognosis onward is synthetic}: no real cycle/growth test
+exists for this article, so the clearance, fleet and design results below use the
+representative phase-field forward and a synthetic fleet. The honest headline is
+that detection/classification/characterisation are real-data-grounded and the
+\emph{life}-side of the stack is not yet --- the single largest gap, and the
+reason the Kojima TSA full-field campaign (interstage) and a real fatigue
+dataset are the priority next inputs.
+\begin{figure}[t]\centering
+  \includegraphics[width=\linewidth]{fairing_real_e2e.pdf}
+  \caption{Real-data coverage on the fairing. (a) Stage-0 detection on the real
+  long-term guided-wave set (recall vs.\ temperature --- the confound DA must
+  fix); (b) Stage-1/2 on the real stringer wavefield (per-sensor damage index:
+  detect, classify 1st vs 2nd impact, and localise); (c) real monotone severity
+  $0\!\to\!0.57\!\to\!1.00$; (d) the honest coverage map --- detect/classify/
+  characterise are real, prognosis onward is synthetic.}
+  \label{fig:realcov}
+\end{figure}
+
 \paragraph{Sim-to-real domain adaptation, on both real-data structures.} The
 cross-structure real-data result is that an \emph{unsupervised} per-feature
 quantile matching aligns measured to FEM statistics where naive normalisation
@@ -550,7 +582,12 @@ The end-to-end decision accuracy (pipeline vs.\ oracle) is $\mathbf{85\%}$, and
 the safety-critical \textbf{dangerous-miss rate
 $P(\text{OK}\mid\text{oracle}{=}\text{RETIRE})$ is $\mathbf{0\%}$}: all $16$
 retire-worthy vehicles are caught (Fig.~\ref{fig:decuq}a), and every error is
-confined to the low-consequence OK$\leftrightarrow$REPAIR band. The
+confined to the low-consequence OK$\leftrightarrow$REPAIR band. These figures are
+measured against a \emph{synthetic} oracle --- the exact FD phase-field integrated
+over the load distribution --- because no measured clearance ground truth exists;
+they quantify internal error propagation (posterior + surrogate vs.\ exact
+physics), \emph{not} agreement with real life-test outcomes, which remains
+future work (\S\ref{sec:bridge}). The
 decomposition is informative: the Stage-2 posterior is the dominant error source
 (decision-flip rate $25\%$) over the surrogate forward ($17.5\%$), and the two
 partially cancel to a $15\%$ total (Fig.~\ref{fig:decuq}b) --- a slightly
