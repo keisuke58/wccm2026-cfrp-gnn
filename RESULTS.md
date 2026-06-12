@@ -9,7 +9,7 @@ python run_all.py --fig      # + regenerate every figure under paper_figs/
 python run_all.py --quick    # skip the slow FD/FMPE modules
 ```
 
-**Status (2026-06-12): 22 modules, 555/555 checks pass** (535 unit tests +
+**Status (2026-06-12): 22 modules, 585/585 checks pass** (565 unit tests +
 20 `cost_calibration` checks). Near-term venue = JSCES 2027 (May);
 `nishioka_jsces2027.tex` carries the 3-structure story.
 
@@ -83,7 +83,7 @@ oracle decomposition + 95% bootstrap CI + dangerous-miss + Platt ECE recalibrati
 | module | tests | headline |
 |---|---|---|
 | `loso_decision_transfer` | 49/49 | **LOSO cross-structure transfer**: cost-optimal thresholds transfer zero-shot (0 pp acc gap, **0% dangerous-miss**; RAW fixed-0.5 = 65–79% acc, 15–38% dangerous-miss); cross-structure Platt cuts held-out ECE (SRB-3 0.131→0.074, fairing 0.110→0.103) |
-| `conformal_clearance` | 61/61 | distribution-free split-conformal clearance set; pooled coverage 0.95→**97%**, mean set size 1.5–2.3; one-sided RETIRE-omission guarantee |
+| `conformal_clearance` | 91/91 | distribution-free split-conformal clearance set; pooled coverage 0.95→**97%**, mean set size 1.5–2.3; one-sided RETIRE-omission guarantee with **K-fold cross-conformal shore-up** (pooled omission within budget at every α_danger: 19.7/9.4/3.4% ≤ 20/10/5%) + Mondrian cross-structure |
 | `voi_inspection` | 28/28 | Stage-2.5 value of information: EVPI/EVSI peak at **P≈0.48**, inspect-band **P∈[0.38,0.58]** = quantifies the abstract's "fragile at P~0.3–0.5" |
 
 ## Stage 4/5 — fleet learning, design, system baseline
@@ -103,10 +103,16 @@ oracle decomposition + 95% bootstrap CI + dangerous-miss + Platt ECE recalibrati
    (Kojima TSA campaign). One `detection_auroc(field, mask)` call from closing.
 3. **Kojima TSA data = co-author pending.** Use is verbally OK'd; formal
    co-authorship/scope agreement with Kojima (CPB 2025 data owner) still pending.
-4. **Conformal RETIRE-omission on small real samples.** The one-sided dangerous
-   guarantee is clean on the large synthetic set but exceeds budget on the small
-   real-prognosis splits (few RETIRE points/split) — needs more calibration data
-   or Mondrian (per-class) conformal. Marginal (not conditional) coverage only.
+4. **Conformal RETIRE-omission — shored up (2026-06-12).** The single-split
+   one-sided guarantee was high-variance on small real splits (pooled breached:
+   33/17/6% vs 20/10/5% budget). Fixed with **K-fold cross-conformal** (every
+   RETIRE point tested once, tighter q̂): the **pooled** guarantee now holds at
+   every budget (19.7/9.4/3.4% ≤ 20/10/5%); per-structure only ~1–2 pp finite-
+   sample noise remains at the αd=0.20 small-N corner. **Mondrian** cross-
+   structure borrowing holds for interstage↔fairing but FAILS for srb3 (its
+   near-binary burst gives a different RETIRE-score distribution) — an honest
+   bound on cross-structure exchangeability. Coverage is still MARGINAL, not
+   conditional/per-input.
 5. **LOSO N=3 folds.** The decision-layer transfer is shown across 3 structures /
    physics / modalities — strong evidence it is shared, not fleet-scale proof; and
    the cost thresholds are partly cost-anchored so part of their transfer is

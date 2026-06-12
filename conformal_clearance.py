@@ -242,6 +242,88 @@ def dangerous_omission(sc: Scenarios, alpha_danger: float, seed: int = 0,
     }
 
 
+def dangerous_omission_cv(sc: Scenarios, alpha_danger: float, n_folds: int = 5,
+                          seed: int = 0) -> dict:
+    """K-fold CROSS-CONFORMAL version of the one-sided RETIRE-omission guarantee
+    — the small-sample shore-up.
+
+    The single-split `dangerous_omission` calibrates q̂ on only HALF the RETIRE
+    points and reports the omission on the other half: on a small real structure
+    set (few RETIRE points / split) that estimate is high-variance and can breach
+    the budget by chance.  Cross-conformal removes that variance: partition into K
+    folds; for each fold-as-test, calibrate q̂ on the RETIRE points of the OTHER
+    K-1 folds (≈(K-1)/K of all RETIRE points → a tighter quantile), and aggregate
+    the omissions over ALL folds so every RETIRE point is tested exactly once.
+    The reported rate is then the leave-fold-out omission over the FULL set, the
+    stable estimate of the guarantee P(RETIRE ∉ set | oracle=RETIRE) ≤ α_danger."""
+    p = np.asarray(sc.p_pipeline, dtype=float)
+    oracle = sb.oracle_decisions(sc)
+    M = p.size
+    retire_j = DECISIONS.index("RETIRE")
+    s_retire = nonconformity(p, sc.alpha, sc.beta)[:, retire_j]
+    rng = np.random.default_rng(seed + 991)
+    K = int(min(max(2, n_folds), M))
+    folds = np.array_split(rng.permutation(M), K)
+
+    omit = n_ret_test = cal_ret_tot = 0
+    for k in range(K):
+        test = folds[k]
+        cal = np.concatenate([folds[j] for j in range(K) if j != k])
+        cal_ret = cal[oracle[cal] == "RETIRE"]
+        qhat = (conformal_quantile(s_retire[cal_ret], alpha_danger)
+                if cal_ret.size else 1.0)
+        cal_ret_tot += cal_ret.size
+        test_ret = test[oracle[test] == "RETIRE"]
+        if test_ret.size:
+            omit += int((s_retire[test_ret] > qhat).sum())
+            n_ret_test += test_ret.size
+    rate = float(omit / n_ret_test) if n_ret_test else 0.0
+    return {
+        "alpha_danger": alpha_danger, "omission_rate": rate,
+        "n_retire_test": int(n_ret_test), "n_folds": K,
+        "mean_retire_cal": float(cal_ret_tot / K),
+    }
+
+
+def dangerous_omission_mondrian(per: dict, alpha_danger: float,
+                                seed: int = 0) -> dict:
+    """MONDRIAN cross-structure pooling of the one-sided RETIRE calibration — the
+    cross-structure shore-up (ties to the LOSO decision-transfer spine).
+
+    For each structure we calibrate the RETIRE-inclusion threshold q̂ on the
+    RETIRE nonconformity scores POOLED FROM THE OTHER structures (leave-this-
+    structure-out), then test omission on THIS structure's RETIRE points.  A small
+    structure thus borrows RETIRE calibration strength from the others.  Valid as
+    a cross-structure (Mondrian-by-class) guarantee IF the RETIRE-nonconformity is
+    exchangeable across structures — an APPROXIMATION (different physics), stated.
+    Returns the per-structure leave-one-structure-out omission rate."""
+    names = [k for k in per if k != "pooled"]
+    retire_j = DECISIONS.index("RETIRE")
+    # precompute (s_retire, oracle) per structure
+    cache = {}
+    for nm in names:
+        sc = per[nm]
+        p = np.asarray(sc.p_pipeline, dtype=float)
+        oracle = sb.oracle_decisions(sc)
+        s_ret = nonconformity(p, sc.alpha, sc.beta)[:, retire_j]
+        cache[nm] = (s_ret, oracle)
+    out = {}
+    for nm in names:
+        s_ret, oracle = cache[nm]
+        # calibration = RETIRE scores pooled from all OTHER structures
+        cal_pool = np.concatenate(
+            [cache[o][0][cache[o][1] == "RETIRE"] for o in names if o != nm]
+            or [np.empty(0)])
+        qhat = (conformal_quantile(cal_pool, alpha_danger)
+                if cal_pool.size else 1.0)
+        test_ret = s_ret[oracle == "RETIRE"]
+        rate = (float((test_ret > qhat).mean()) if test_ret.size else 0.0)
+        out[nm] = {"alpha_danger": alpha_danger, "omission_rate": rate,
+                   "qhat": qhat, "n_retire_cal_pool": int(cal_pool.size),
+                   "n_retire_test": int(test_ret.size)}
+    return out
+
+
 # ═════════════════════════════════════════════════════════════════════════════
 #  Scenario sets — reuse system_baseline's per-structure builders + a pool
 # ═════════════════════════════════════════════════════════════════════════════
@@ -283,7 +365,16 @@ def evaluate(seed: int = 0, M: int = 80) -> dict:
     for name, sc in per.items():
         cov = {a: split_calibrate(sc, a, seed=seed) for a in ALPHAS}
         dang = {ad: dangerous_omission(sc, ad, seed=seed) for ad in ALPHA_DANGERS}
-        out[name] = {"sc": sc, "cov": cov, "dang": dang}
+        dang_cv = {ad: dangerous_omission_cv(sc, ad, seed=seed)
+                   for ad in ALPHA_DANGERS}
+        out[name] = {"sc": sc, "cov": cov, "dang": dang, "dang_cv": dang_cv}
+    # Mondrian cross-structure (leave-one-structure-out) RETIRE calibration.
+    mond = {ad: dangerous_omission_mondrian(per, ad, seed=seed)
+            for ad in ALPHA_DANGERS}
+    for name in per:
+        if name == "pooled":
+            continue
+        out[name]["dang_mond"] = {ad: mond[ad][name] for ad in ALPHA_DANGERS}
     return out
 
 
@@ -335,9 +426,10 @@ def print_report(res: dict) -> None:
             row += f"{cov[a]['set_size']:13.2f}"
         print(row)
 
-    # ---- dangerous-omission table -------------------------------------------
+    # ---- dangerous-omission table (single split — high variance on small sets)
     print("\n  DANGEROUS-OMISSION RATE  P(oracle=RETIRE ∧ RETIRE ∉ set)  "
           "(one-sided; ≤ α_danger):")
+    print("  [a] single split (the baseline — high variance when few RETIRE/split):")
     hdr = (f"    {'structure':<16}" +
            "".join(f"{'αd='+format(ad,'.2f'):>13}" for ad in ALPHA_DANGERS))
     print(hdr)
@@ -350,7 +442,38 @@ def print_report(res: dict) -> None:
             ok_mark = "✓" if r <= ad + 1e-9 else "✗"
             row += f"{r*100:9.1f}% {ok_mark} "
         print(row)
-    print("    (✓ = dangerous-omission stayed within its budget α_danger)")
+
+    # ---- K-fold cross-conformal (the small-sample shore-up) ------------------
+    print("  [b] K-fold cross-conformal (shore-up — all RETIRE points tested, "
+          "tighter q̂):")
+    print(hdr)
+    print("    " + "-" * (len(hdr) - 4))
+    for name in order:
+        dcv = res[name]["dang_cv"]
+        row = f"    {name:<16}"
+        for ad in ALPHA_DANGERS:
+            r = dcv[ad]["omission_rate"]
+            ok_mark = "✓" if r <= ad + 1e-9 else "✗"
+            row += f"{r*100:9.1f}% {ok_mark} "
+        print(row)
+
+    # ---- Mondrian cross-structure (leave-one-structure-out) -----------------
+    print("  [c] Mondrian cross-structure (RETIRE calibration borrowed from the "
+          "OTHER structures):")
+    print(hdr)
+    print("    " + "-" * (len(hdr) - 4))
+    for name in [n for n in order if n != "pooled"]:
+        dm = res[name].get("dang_mond")
+        if not dm:
+            continue
+        row = f"    {name:<16}"
+        for ad in ALPHA_DANGERS:
+            r = dm[ad]["omission_rate"]
+            ok_mark = "✓" if r <= ad + 1e-9 else "✗"
+            row += f"{r*100:9.1f}% {ok_mark} "
+        print(row)
+    print("    (✓ = dangerous-omission within budget α_danger;  [b]/[c] are the "
+          "small-sample fixes)")
 
     # ---- headline -----------------------------------------------------------
     pooled = res["pooled"]
@@ -425,20 +548,27 @@ def make_figure(res: dict, out_path: str) -> str:
     ax[1].legend(fontsize=5.5, loc="upper left"); ax[1].tick_params(labelsize=6)
     ax[1].set_ylim(0.9, 3.1)
 
-    # (c) dangerous-omission vs α_danger — on/below y=x budget.
+    # (c) dangerous-omission vs α_danger — single split (faded) vs K-fold
+    #     cross-conformal shore-up (solid); on/below y=x budget.
     budget = np.array(ALPHA_DANGERS)
     ax[2].plot([0.0, max(ALPHA_DANGERS)], [0.0, max(ALPHA_DANGERS)],
                "k--", lw=0.8, label="y=x budget")
     for s in structs:
-        om = np.array([res[s]["dang"][ad]["omission_rate"]
-                       for ad in ALPHA_DANGERS])
-        ax[2].plot(budget, om, mk[s] + "-", color=pal[s], ms=5, lw=1.2,
+        om_split = np.array([res[s]["dang"][ad]["omission_rate"]
+                             for ad in ALPHA_DANGERS])
+        om_cv = np.array([res[s]["dang_cv"][ad]["omission_rate"]
+                          for ad in ALPHA_DANGERS])
+        ax[2].plot(budget, om_split, mk[s] + ":", color=pal[s], ms=4, lw=0.8,
+                   alpha=0.35)
+        ax[2].plot(budget, om_cv, mk[s] + "-", color=pal[s], ms=5, lw=1.4,
                    label=s)
+    ax[2].plot([], [], "k:", lw=0.8, alpha=0.4, label="single split")
+    ax[2].plot([], [], "k-", lw=1.4, label="K-fold cross-conf.")
     ax[2].set_xlabel("budget  α_danger", fontsize=7)
     ax[2].set_ylabel("RETIRE-omission rate", fontsize=7)
-    ax[2].set_title("(c) dangerous-omission\n(on/below diagonal = within "
-                    "budget)", fontsize=8)
-    ax[2].legend(fontsize=5.5, loc="upper left"); ax[2].tick_params(labelsize=6)
+    ax[2].set_title("(c) dangerous-omission: cross-conformal fix\n"
+                    "(on/below diagonal = within budget)", fontsize=8)
+    ax[2].legend(fontsize=5.0, loc="upper left"); ax[2].tick_params(labelsize=6)
 
     plt.tight_layout()
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
@@ -537,6 +667,38 @@ def run_tests() -> int:
         ok(d["omission_rate"] <= ad + tol,
            f"dangerous-omission {d['omission_rate']:.3f} ≤ {ad}+tol")
 
+    # ---- K-fold cross-conformal shore-up: tests EVERY RETIRE point once, ----
+    #      stays within budget, and uses more calibration RETIRE per fold ------
+    oracle_ws = sb.oracle_decisions(sc)
+    n_retire_total = int(np.sum(oracle_ws == "RETIRE"))
+    for ad in ALPHA_DANGERS:
+        dcv = dangerous_omission_cv(sc, ad, n_folds=5, seed=0)
+        ok(dcv["omission_rate"] <= ad + tol,
+           f"CV dangerous-omission {dcv['omission_rate']:.3f} ≤ {ad}+tol")
+        ok(dcv["n_retire_test"] == n_retire_total,
+           "CV tests every RETIRE point exactly once")
+        ok(dcv["mean_retire_cal"] >= 0.0, "CV reports mean calibration RETIRE")
+
+    # ---- the shore-up's PURPOSE: on a SMALL set with few RETIRE/split, the ---
+    #      single split can breach budget while K-fold CV stays within it ------
+    small = _synthetic_wellspec(M=44, seed=3)
+    worst_split = max(dangerous_omission(small, 0.10, seed=s)["omission_rate"]
+                      for s in range(6))
+    cv_small = dangerous_omission_cv(small, 0.10, n_folds=5, seed=0)
+    ok(cv_small["omission_rate"] <= worst_split + 1e-9,
+       "K-fold CV omission ≤ worst single-split omission (variance reduced)")
+
+    # ---- Mondrian cross-structure: valid per-structure rates, borrows cal ----
+    per_ws = {"A": _synthetic_wellspec(M=60, seed=1),
+              "B": _synthetic_wellspec(M=60, seed=2),
+              "C": _synthetic_wellspec(M=60, seed=4)}
+    mond = dangerous_omission_mondrian(per_ws, 0.10, seed=0)
+    ok(set(mond) == {"A", "B", "C"}, "Mondrian returns every structure")
+    for nm, d in mond.items():
+        ok(0.0 <= d["omission_rate"] <= 1.0, f"Mondrian rate in [0,1] ({nm})")
+        ok(d["n_retire_cal_pool"] > 0,
+           f"Mondrian borrows RETIRE calibration from other structures ({nm})")
+
     # ---- pooled coverage holds across structures ----------------------------
     scs = [_synthetic_wellspec(M=250, seed=s) for s in (1, 2, 3)]
     pooled = pool_scenarios(scs)
@@ -570,6 +732,11 @@ def run_tests() -> int:
             d = res[name]["dang"][ad]
             ok(0.0 <= d["omission_rate"] <= 1.0,
                f"{name}: omission rate in [0,1] (αd={ad})")
+            dcv = res[name]["dang_cv"][ad]
+            ok(0.0 <= dcv["omission_rate"] <= 1.0,
+               f"{name}: CV omission rate in [0,1] (αd={ad})")
+    ok(all("dang_mond" in res[nm] for nm in res if nm != "pooled"),
+       "evaluate attaches Mondrian cross-structure omission per structure")
 
     print(f"conformal_clearance: {n}/{n} unit tests passed")
     return n
