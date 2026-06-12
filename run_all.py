@@ -55,10 +55,11 @@ GROUPS: list[tuple[str, list[tuple[str, bool]]]] = [
         ("srb3_decision_uq", False),
         ("cost_calibration", False),
     ]),
-    ("Decision-core rigor (transfer / guarantee / VoI)", [
+    ("Decision-core rigor (transfer / guarantee / VoI / lifetime)", [
         ("loso_decision_transfer", False),
         ("conformal_clearance", False),
         ("voi_inspection", False),
+        ("lifetime_policy", False),           # sequential optimal-stopping
     ]),
     ("Stage 4/5 — fleet learning + design + system baseline", [
         ("system_baseline", False),
