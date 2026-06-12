@@ -57,25 +57,128 @@ is re-inspected after every flight. % key numbers to finalise
   \label{fig:pipeline}
 \end{figure}
 
-\section{Data and problem setting}
-% - CFRP interstage FEM, DSPSS first stress invariant, 13942 nodes, 1x1/2x2/4x4
-%   hole defects; label masks; per-sample z-score normalisation (no healthy
-%   reference needed -> deployable on a single measured field).
-% - guided-wave H3 fairing set (Payload) for the type/location head + rocket
-%   framing.
+\section{Structures and data: a load-mode-spanning frame}
+\label{sec:structures}
+The framework is demonstrated on five reusable CFRP spacecraft structures chosen
+to \emph{span the load-mode space} rather than to repeat one geometry
+(Fig.~\ref{fig:structures}, Table~\ref{tab:structures}). The premise of the paper
+is a separation of concerns: the \emph{decision core} --- anomaly screening
+(Stage~0), calibrated characterisation (Stage~2), end-to-end decision UQ, fleet
+learning (Stage~4) and design feedback (Stage~5) --- is structure- and
+load-mode-agnostic, while only the \emph{detection front-end} (Stage~1) and the
+\emph{prognosis physics} (Stage~3) are structure-specific and enter through a
+small pluggable interface. Adding a structure therefore means adding one detector
+and one prognosis model and reusing the rest.
 
-\section{Stage 0 --- anomaly screening}
-\paragraph{Methods.} Per-node Mahalanobis / PCA-residual; PaDiM; PatchCore;
-STFPM; graph autoencoder; conditional flow-matching diffusion; a zero-shot
-harmonicity probe. Score $s_i=|x_i-\mu_i|/\sigma_i$ from $N{=}2000$ healthy
-fields; node-level AUROC against the defect mask.
-\paragraph{Result.} Per-node statistics dominate (Table~\ref{tab:zoo},
-Fig.~\ref{fig:zoo}). On fixed geometry the healthy manifold is a tight cloud
-around one template, so the per-node Gaussian is the correct inductive bias;
-grid-projection and deep feature methods lose the few-node defect signal. All
-methods collapse by additive noise $\sigma{=}0.1$ (defect amplitude $<0.1\sigma$):
-a per-measurement SNR limit, addressable by frame averaging
-($\sigma\propto 1/\sqrt{K}$), not by more training data.
+\begin{figure}[t]\centering
+  \includegraphics[width=\linewidth]{framework_overview_3d.pdf}
+  \caption{The three end-to-end structures and the shared pipeline (interstage
+  surface stress, fairing guided waves, SRB-3 acoustic emission). Two further
+  structures extend the frame (Table~\ref{tab:structures}): the CFRP \emph{drive
+  shaft} adds the \textsc{torsion} load mode --- interlaminar mode-II/III shear,
+  the CZM$\to$phase-field prognosis that bridges to the Keio continuation
+  (\S\ref{sec:bridge}) --- and the COPV tank is the internal-pressure extension.}
+  \label{fig:structures}
+\end{figure}
+
+\begin{table}[t]\centering\footnotesize
+  \setlength{\tabcolsep}{4pt}
+  \caption{The five structures span membrane, bending, transverse-pressure and
+  \emph{torsional-shear} load modes under one decision core. ``Front-end'' =
+  structure-specific Stage-1 detector; all share the Stage-0 $|z|$ screen.}
+  \label{tab:structures}
+  \begin{tabular}{@{}lllll@{}}
+    \toprule
+    structure & load mode & detection front-end & prognosis physics & data \\ \midrule
+    interstage      & membrane        & surface-stress GNN (A) & phase-field delam.\ & FEM + meas.\ TSA \\
+    fairing         & transv./bending & guided-wave GNN        & skin--core debond   & FEM + real OGW \\
+    SRB-3 case      & pressure burst  & acoustic emission      & burst (Paris)       & FEM + real AE \\
+    \textbf{drive shaft} & \textbf{torsion} & shared $|z|$ (future) & \textbf{interlam.\ CZM$\to$PF} & \textbf{CZM-FEM (144)} \\
+    COPV tank       & int.\ pressure  & shared $|z|$ (future)  & burst              & FEM (102) \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\paragraph{The interstage (primary data structure).} The quantitative backbone is
+a perforated CFRP interstage: full-field thermoelastic stress (DSPSS first stress
+invariant) on a $13\,942$-node mesh with $1{\times}1/2{\times}2/4{\times}4$ hole
+defects and label masks. Per-sample $z$-score normalisation needs no healthy
+reference, so the detector deploys on a single measured field. This structure
+carries the FEM training set, the measured TSA campaign (\S\ref{sec:bridge}), and
+the phase-field prognosis (Stage~3).
+
+\paragraph{The torsion drive shaft (the new load mode, the Keio foundation).} An
+H3-class CFRP drive shaft / torque tube is the first structure whose primary load
+is \emph{torsion}: a $[\pm45]$ tube carries torque as wall shear $\tau_{z\theta}$,
+and damage grows by interlaminar mode-II/III shear --- physics absent from the
+four pressure/bending structures. We model it with an axisymmetric-with-twist
+(CGAX) screen (a $\sim$$140$-state sweep of groove length, depth, slenderness
+$R/t$ and $\pm45$ shear modulus; analytically verified against thin-wall torsion,
+$\tau=T/2\pi R^2t$) and, where delamination is the star, a 3-D $\pm45$ laminate
+with explicit interlaminar cohesive zones. A circumferential groove concentrates
+the wall shear (peak $\tau_{z\theta}$ rising $17\!\to\!39$\,MPa as residual
+thickness falls to $40\%$), so the critical torque drops monotonically with damage
+--- the same damage-size$\to$critical-load signature as the other structures, now
+in shear. This interlaminar-CZM model is the concrete foundation of the
+phase-field prognosis programme that bridges to the Keio continuation
+(\S\ref{sec:bridge}).
+
+\paragraph{Structure-agnostic core, and the load-mode boundary.} The claim that
+the decision core is structure-agnostic is testable: across all five structures
+we collect $1{,}499$ critical-load FEM states, normalise each to a growth margin
+by its representative operating load, and fit a \emph{single} gradient-boosted
+margin surrogate on four shared damage descriptors plus a structure one-hot. In
+distribution it fits all five ($R^2=0.94$; per-structure $0.71$--$0.94$) and the
+shared OK/REPAIR/RETIRE rule reproduces the FEM verdict at $86\%$ accuracy with a
+$1.1\%$ dangerous-miss rate (Fig.~\ref{fig:loso}). The honest boundary is exposed
+by a leave-one-\emph{load-mode}-out test: training on the four
+pressure/bending structures and predicting the held-out \textsc{torsion} drive
+shaft \emph{fails to extrapolate} ($R^2=-1.4$, dangerous-miss $17\%$) --- whereas
+holding out a structure within a seen load mode does not. Geometry transfers;
+\emph{load mode does not}. This bounds ``structure-agnostic'' precisely and is the
+quantitative reason the drive shaft needs its own torsional-shear FEM rather than
+borrowing the pressure structures' surrogate (full FEM mechanics in the companion
+conference paper; here we report the synthesis).
+\begin{figure}[t]\centering
+  \includegraphics[width=\linewidth]{structure_agnostic_loso.pdf}
+  \caption{Structure-agnostic margin surrogate over $1{,}499$ real-FEM states
+  across five structures. (a) growth margin vs.\ damage size; (b) single surrogate
+  in-distribution ($R^2=0.94$, dangerous-miss $1.1\%$); (c) decision distribution.
+  A leave-one-load-mode-out hold-out of the torsion drive shaft does not
+  extrapolate --- load mode, unlike geometry, is a genuine generalisation
+  boundary.}
+  \label{fig:loso}
+\end{figure}
+
+\paragraph{Maturity, stated honestly.} Three structures are demonstrated
+\emph{end-to-end} with real detection data and a Stage-3 prognosis (interstage,
+fairing, SRB-3). The drive shaft and the COPV tank each contribute a real FEM
+prognosis (torsional-shear and internal-pressure respectively) but do \emph{not}
+yet have a bespoke detector --- they inherit the shared Stage-0 $|z|$ screen, and
+the drive shaft additionally carries the new torsion load mode. Every Stage-3
+model is \emph{representative} --- lumped constants and trends, not certification
+values; the contribution is the end-to-end pluggable framework across load modes,
+not calibrated per-structure life numbers.
+
+\section{Detection front-ends and anomaly screening (Stage 0--1)}
+Detection is the one layer the structures do \emph{not} share: each sensing
+modality has its own front-end, and everything downstream of a detected,
+localised flaw is structure-agnostic. Three real front-ends are demonstrated, on
+top of a shared geometry-agnostic screen.
+
+\paragraph{Shared Stage-0 screen.} A reference-free per-node statistic
+$s_i=|x_i-\mu_i|/\sigma_i$ (from $N{=}2000$ healthy fields; node-level AUROC vs.\
+the defect mask) is the structure-agnostic anomaly screen any fixed-geometry field
+inherits --- including the drive shaft and tank. Benchmarked against eight
+alternatives (PaDiM, PatchCore, STFPM, graph autoencoder, flow-matching diffusion,
+a zero-shot harmonicity probe; Table~\ref{tab:zoo}, Fig.~\ref{fig:zoo}), per-node
+statistics dominate: on fixed geometry the healthy manifold is a tight cloud
+around one template, so the per-node Gaussian is the correct inductive bias, and
+grid-projection / deep feature methods lose the few-node defect signal. The defect
+sits below $0.1\sigma$, so all detectors degrade with measurement noise --- a
+per-measurement SNR limit addressable by frame averaging
+($\sigma\propto 1/\sqrt{K}$), not more training data (quantified in
+\S\ref{sec:verif}).
 \begin{figure}[t]\centering
   \includegraphics[width=\linewidth]{anomaly_zoo_benchmark.pdf}
   \caption{(a) Clean node-level AUROC by method. (b) Collapse with measurement
@@ -100,8 +203,24 @@ a per-measurement SNR limit, addressable by frame averaging
     \bottomrule
   \end{tabular}
 \end{table}
+\paragraph{Structure-specific Stage-1 front-ends.} \emph{Interstage} ---
+surface-stress (DSPSS) graph neural network (cite~A): a mesh-physics GNN reaches
+macro-F1 $0.76$ vs.\ $0.61$ for a plain GAT, and an OOD study shows the operational
+split cleanly --- \emph{detection generalises to unseen defect sizes while precise
+localisation collapses}, a distinction invisible to macro-F1 and exposed only by
+defect-only F1 with separated detection/localisation metrics. \emph{Fairing} ---
+guided-wave GNN (LGSTA node-classification F1 $0.86$, SAGE $0.79$); its type signal
+is verified to be a genuine damage cue rather than a season/temperature confound
+(\S\ref{sec:stage1}). \emph{SRB-3 motor case} --- acoustic emission on real
+experimental data ($\sim$$48$k Vallen hits): a group-aware pristine-vs-damaged
+classifier reaches per-hit AUROC $0.888$ / per-specimen $1.000$ (linear baseline
+$\sim$$0.52$), with amplitude--duration damage-mode clustering reported honestly
+(compression-pristine coupons also emit high-energy AE, so the multivariate
+detector --- not a single cluster fraction --- is the read-out). The drive shaft
+and tank inherit the shared $|z|$ screen pending bespoke front-ends.
 
 \section{Stage 1 --- classification and type identifiability}
+\label{sec:stage1}
 % GNN gives the semantic label (layer/region/type) that anomaly scoring cannot.
 % Table of complementary failure modes: Mahalanobis open to unknown size but
 % noise-fragile and geometry-bound; GNN noise-robust (12%) and transferable but
@@ -269,11 +388,38 @@ $4\!\to\!5$ handoff.
   \label{fig:pareto}
 \end{figure}
 
-\section{Towards differentiable inversion: closing the loop}
-The amortised Stage-2 posterior never sees the forward physics. We prototype
-the converse: a JAX-differentiable anisotropic AT2 forward $F(\theta)$
-(gradient finite-difference-verified to relative $3\times10^{-7}$) whose
-Jacobian supplies a physics-grounded Laplace posterior
+\section{Sim-to-real, domain adaptation, and the inverse-problem bridge}
+\label{sec:bridge}
+The stack is trained on synthetic FEM, so deployment must cross two distinct
+distribution gaps: a \emph{data} gap (synthetic $\to$ measured fields) and an
+\emph{inference} gap (in-distribution $\to$ out-of-distribution defects). This
+section closes both, and the second is the concrete bridge to the Keio
+continuation.
+
+\paragraph{Sim-to-real domain adaptation, on both real-data structures.} The
+cross-structure real-data result is that an \emph{unsupervised} per-feature
+quantile matching aligns measured to FEM statistics where naive normalisation
+fails. On the \emph{interstage}, the stack ingests measured TSA-derived full-field
+DSPSS from a 22-specimen CFRP campaign and the quantile step closes $\sim$$97\%$
+of the FEM$\to$measured gap (proxy-$\mathcal{A}$ distance $2.0\!\to\!0.3$,
+Fig.~\ref{fig:tsa}). On the \emph{fairing}, the gap is a real long-term operational
+shift --- guided-wave records collected across seasons carry a temperature drift;
+the same quantile DA recovers the false-positive rate from $14\%$ to $5\%$, whereas
+$z$-score standardisation makes it \emph{worse} ($\to 30\%$). The measured
+interstage data are used under co-authorship with the TSA campaign's owner.
+\begin{figure}[t]\centering
+  \includegraphics[width=\linewidth]{tsa_sim2real.pdf}
+  \caption{Sim-to-real on the interstage. Measured TSA-derived DSPSS vs.\ FEM, and
+  the proxy-$\mathcal{A}$ distance before/after unsupervised quantile domain
+  adaptation ($2.0\!\to\!0.3$, $\sim$$97\%$ of the gap closed).}
+  \label{fig:tsa}
+\end{figure}
+
+\paragraph{Forward physics generalises where amortised inference does not.} The
+inference gap motivates the converse of the amortised Stage-2 posterior, which
+never sees the forward physics. We prototype a JAX-differentiable anisotropic AT2
+forward $F(\theta)$ (gradient finite-difference-verified to relative
+$3\times10^{-7}$) whose Jacobian supplies a physics-grounded Laplace posterior
 $\Sigma=\sigma^2(J^\top J + \Lambda_{\text{prior}})^{-1}$ --- no labelled
 $(\theta,x)$ pairs.
 \begin{table}[h]\centering\small
@@ -310,8 +456,19 @@ generalisation signature (in-/out-of-distribution $c_x$ RMSE $0.15\to0.39$,
 coverage $0.72\to0.56$), at a calibration cost --- in-distribution coverage
 $0.72$ rather than the exact forward's $\sim$$0.95$ --- that is the honest price
 of a smooth surrogate. This makes amortised-quality \emph{differentiable}
-inversion interactive, the cheap forward the Keio Phase-3 TMCMC/Bayesian-inverse
-plan needs.
+inversion interactive.
+
+\paragraph{The bridge to the Keio continuation.} These two threads converge on the
+same forward programme. The differentiable, fast forward is exactly what a
+TMCMC/Bayesian-inverse phase needs; and its physics --- anisotropic phase-field
+fracture seeded by interlaminar cohesive zones --- is the \emph{prognosis} layer
+that the new torsion drive shaft (\S\ref{sec:structures}) extends from
+mode-I delamination to mode-II/III interlaminar shear. The CZM$\to$phase-field
+prognosis demonstrated here on four structures, now under torsion, is therefore
+not only this paper's Stage~3: it is the computational-solid-mechanics foundation
+of the Keio phase-field $\times$ GNN-prognosis continuation, where a
+differentiable forward and fleet-scale Bayesian inversion close the loop on
+measured data.
 
 \section{End-to-end decision reliability}
 Every stage above is calibrated in isolation; an operator, however, only sees
@@ -362,6 +519,7 @@ plausible economics --- a fragility invisible to a single assumed cost point.
 \end{figure}
 
 \section{Solver verification and detector robustness}
+\label{sec:verif}
 \paragraph{Verification.} The FD phase-field operator passes a
 method-of-manufactured-solutions test at second order in 2-D (interior order
 $2.04$) and 3-D (order $2.05$, a small-grid proof the scheme extends to
