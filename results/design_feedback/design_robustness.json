@@ -1,0 +1,106 @@
+{
+  "baseline_constants": {
+    "ell": 0.04313725490196079,
+    "Gc_ply": 0.0008,
+    "load": 0.11
+  },
+  "scenarios": {
+    "baseline": {
+      "argmin_offaxis": 75.0,
+      "argmin_gcint": 0.9,
+      "obj_opt": 2.952378142940462,
+      "obj_baseline": 3.200937033946025,
+      "reduction": 0.24855889100556272,
+      "grid_offaxis_at_best_gc": [
+        3.016699261767138,
+        3.0010768289202057,
+        2.993129760795588,
+        2.952378142940462
+      ]
+    },
+    "ell x0.8": {
+      "argmin_offaxis": 35.0,
+      "argmin_gcint": 0.9,
+      "obj_opt": 1.3327246759338702,
+      "obj_baseline": 2.3801062054006623,
+      "reduction": 1.047381529466792,
+      "grid_offaxis_at_best_gc": [
+        1.7959857550570708,
+        1.3327246759338702,
+        1.381760698249501,
+        1.4465737491714017
+      ]
+    },
+    "ell x1.3": {
+      "argmin_offaxis": 15.0,
+      "argmin_gcint": 0.3,
+      "obj_opt": 3.5285527743229963,
+      "obj_baseline": 3.565205555381963,
+      "reduction": 0.03665278105896652,
+      "grid_offaxis_at_best_gc": [
+        3.539722159776449,
+        3.5615409248647825,
+        3.5537478900072115,
+        3.545199809901013
+      ]
+    },
+    "Gc_ply x0.6": {
+      "argmin_offaxis": 15.0,
+      "argmin_gcint": 0.3,
+      "obj_opt": 3.482284065786976,
+      "obj_baseline": 3.5650076231886136,
+      "reduction": 0.08272355740163784,
+      "grid_offaxis_at_best_gc": [
+        3.563366545339022,
+        3.6170458039458877,
+        3.625930653957857,
+        3.6254585323563857
+      ]
+    },
+    "Gc_ply x1.6": {
+      "argmin_offaxis": 35.0,
+      "argmin_gcint": 0.3,
+      "obj_opt": 0.0,
+      "obj_baseline": 0.01,
+      "reduction": 0.01,
+      "grid_offaxis_at_best_gc": [
+        0.06,
+        0.06,
+        0.06,
+        0.06
+      ]
+    },
+    "fleet load x0.85": {
+      "argmin_offaxis": 55.0,
+      "argmin_gcint": 0.6,
+      "obj_opt": 0.029999999999999992,
+      "obj_baseline": 0.14777976219741132,
+      "reduction": 0.11777976219741132,
+      "grid_offaxis_at_best_gc": [
+        0.06,
+        0.06,
+        0.06,
+        0.06
+      ]
+    },
+    "fleet load x1.15": {
+      "argmin_offaxis": 15.0,
+      "argmin_gcint": 0.3,
+      "obj_opt": 3.411193622545273,
+      "obj_baseline": 3.4845651304734084,
+      "reduction": 0.0733715079281354,
+      "grid_offaxis_at_best_gc": [
+        3.466437387132358,
+        3.5196183854033154,
+        3.5217909105341345,
+        3.5149586600654557
+      ]
+    }
+  },
+  "finding": {
+    "offaxis_spread_deg": 60.0,
+    "n_leverage_scenarios": 1,
+    "robust": false,
+    "note": "optimum sensitive to ell/Gc_ply/load; leverage only near transition"
+  }
+}
