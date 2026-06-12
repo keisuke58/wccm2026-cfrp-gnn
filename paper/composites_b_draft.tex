@@ -373,11 +373,14 @@ forward model here is the exact FD phase-field, \emph{not} the Stage-3 FNO
 surrogate: the surrogate's inputs are $(d_0,\text{load})$ only and every
 training sample shares the baseline layup, so any design change is fully
 out-of-distribution --- a layup-conditioned operator is left as future work.
-With GP/EI ($32$ evaluations), the optimiser moves the $(0/{\pm}30)_s$ baseline
+With GP/EI ($32$ evaluations), at a representative operating point near the
+growth transition the optimiser illustratively moves the $(0/{\pm}30)_s$ baseline
 to steeper off-axis plies ($30^\circ\!\to\!74^\circ$) and a tougher interface
-($G_c^{\text{int}}$ ratio $0.40\!\to\!0.87$), cutting mean log-growth $10\%$ and
-raising expected remaining flights from $\mathbf{1.9}$ to $\mathbf{6.0}$
-(Fig.~\ref{fig:design}). Both levers are physically aligned --- steeper plies
+($G_c^{\text{int}}$ ratio $0.40\!\to\!0.87$), cutting mean log-growth $10\%$
+(expected remaining flights $1.9\!\to\!6.0$ at that point; Fig.~\ref{fig:design}).
+These figures are \emph{representative, not calibrated}: a robustness check below
+shows the specific optimum is sensitive to the uncalibrated forward constants.
+Both levers are nonetheless physically aligned --- steeper plies
 rotate the cheap matrix-crack direction away from the seeded delamination path,
 and a tougher interface blunts the dominant interlaminar channel; interface
 toughening is the dominant lever. A single growth objective rails the off-axis
@@ -403,6 +406,32 @@ $4\!\to\!5$ handoff.
   moves off the manufacturable cap into the interior as the stiffness weight
   grows.}
   \label{fig:pareto}
+\end{figure}
+
+\paragraph{Robustness to the uncalibrated forward (honest limitation).} The
+Stage-5 forward is the exact FD phase-field but with \emph{representative}
+(uncalibrated) constants and a synthetic near-transition fleet load. We test how
+far the design \emph{conclusion} survives this: perturbing the phase-field length
+scale $\ell$ and ply toughness $G_c^{\text{ply}}$ by tens of percent and the fleet
+load by $\pm15\%$, then re-optimising (Fig.~\ref{fig:designrob}). The optimal
+off-axis angle is \emph{not} robust --- it spans $15^\circ$--$75^\circ$ across the
+perturbations --- because phase-field growth is threshold-like: the uncalibrated
+constants set whether the operating point sits in the narrow sub-/super-critical
+\emph{transition window} where the layup has leverage; outside it growth saturates
+(every design fails) or vanishes (every design is safe) and the optimum is
+ill-posed. The design-feedback \emph{mechanism} (fleet-driven inverse design, the
+growth--stiffness trade-off, interface toughening as the dominant lever) is sound,
+but a \emph{quoted optimal angle is not a determinate result} until the forward is
+calibrated --- the motivation for the calibrated, layup-conditioned forward of the
+Keio continuation (\S\ref{sec:bridge}).
+\begin{figure}[t]\centering
+  \includegraphics[width=\linewidth]{design_robustness.pdf}
+  \caption{Stage~5 robustness. Perturbing the uncalibrated phase-field constants
+  ($\ell$, $G_c^{\text{ply}}$) and the fleet load: (a) the objective has off-axis
+  leverage only near the growth transition; (b) the optimal off-axis angle spans
+  $15^\circ$--$75^\circ$ (not robust); (c) the design improvement collapses once
+  the constants push the operating point off the transition window.}
+  \label{fig:designrob}
 \end{figure}
 
 \section{Sim-to-real, domain adaptation, and the inverse-problem bridge}
