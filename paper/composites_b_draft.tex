@@ -71,13 +71,17 @@ small pluggable interface. Adding a structure therefore means adding one detecto
 and one prognosis model and reusing the rest.
 
 \begin{figure}[t]\centering
-  \includegraphics[width=\linewidth]{framework_overview_3d.pdf}
-  \caption{The three end-to-end structures and the shared pipeline (interstage
-  surface stress, fairing guided waves, SRB-3 acoustic emission). Two further
-  structures extend the frame (Table~\ref{tab:structures}): the CFRP \emph{drive
-  shaft} adds the \textsc{torsion} load mode --- interlaminar mode-II/III shear,
-  the CZM$\to$phase-field prognosis that bridges to the Keio continuation
-  (\S\ref{sec:bridge}) --- and the COPV tank is the internal-pressure extension.}
+  \includegraphics[width=\linewidth]{framework_overview5.pdf}
+  \caption{The five CFRP structures (top, each with its physical field: interstage
+  surface-stress concentration, fairing guided waves, SRB-3 / COPV hoop-stress with
+  knuckle concentration, drive-shaft torsional twist with $\pm45$ fibres) and the
+  shared decision core (bottom). Three are demonstrated end-to-end with real
+  detection data (interstage, fairing, SRB-3); the COPV tank and the
+  \textsc{torsion} drive shaft extend the frame with real FEM prognosis
+  (Table~\ref{tab:structures}). Only detection (Stage~1) and prognosis physics
+  (Stage~3) are structure-specific --- the drive shaft's CZM$\to$phase-field
+  prognosis bridges to the Keio continuation (\S\ref{sec:bridge}); everything else
+  is shared.}
   \label{fig:structures}
 \end{figure}
 
