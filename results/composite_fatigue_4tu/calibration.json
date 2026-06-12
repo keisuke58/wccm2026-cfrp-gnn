@@ -1,0 +1,16 @@
+{
+  "mu_m": 16.660596011691585,
+  "sigma_m": 4.7898340837770395,
+  "mu_ci": [
+    15.021669786192797,
+    18.269764786245567
+  ],
+  "logC_mean": -84.30853654062183,
+  "framework_m": 3.0,
+  "loso_median_r2": -26.182679390264354,
+  "loso_frac_pos": 0.02702702702702703,
+  "using_real": true,
+  "n_spec": 37,
+  "n_points": 1270,
+  "note": "real CFRP DCB mode-I; single (C,m) fails LOSO (bridging) -> use the population posterior (mu_m,sigma_m), not a point m."
+}

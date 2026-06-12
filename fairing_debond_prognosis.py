@@ -61,11 +61,26 @@ class FairingConfig:
     kappa: float = 8.0e3          # lumped ERR constant: G = kappa * load^2 * a^a_exp
     a_exp: float = 2.0            # ERR exponent in debond radius (representative)
     paris_C: float = 1.0e-3       # Paris coefficient da/dN = C (G/Gc)^m
-    paris_m: float = 3.0          # Paris exponent
+    paris_m: float = 3.0          # Paris exponent (default = representative)
+    paris_m_sigma: float = 0.0    # >0: sample m~N(paris_m,sigma) per draw (real-data spread)
     cycles_per_flight: int = 100  # acoustic/inertial load cycles per flight
     a_init_frac: float = 1.0      # scales the seeded debond radius
     growth_rel_threshold: float = 0.5   # rel area growth per flight = "grown"
     a_max: float = 0.20           # facesheet patch half-size (debond saturates)
+
+    @classmethod
+    def from_calibration(cls, path: str | None = None, **kw):
+        """Build a config whose Paris exponent is the REAL-DATA calibrated
+        population posterior (4TU DCB mode-I; composite_fatigue_calibration.py).
+        Uses the hierarchical mean as paris_m and the between-specimen sigma as
+        paris_m_sigma, so the prognosis PROPAGATES the bridging spread rather than
+        assuming a single point exponent (which fails leave-one-specimen-out)."""
+        import json, os
+        if path is None:
+            path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                "results", "composite_fatigue_4tu", "calibration.json")
+        a = json.load(open(path))
+        return cls(paris_m=float(a["mu_m"]), paris_m_sigma=float(a["sigma_m"]), **kw)
 
 
 def energy_release_rate(a: np.ndarray | float, load: float,
@@ -77,19 +92,22 @@ def energy_release_rate(a: np.ndarray | float, load: float,
 
 
 def simulate_debond_growth(a0: float, load: float,
-                           cfg: FairingConfig | None = None) -> dict:
+                           cfg: FairingConfig | None = None,
+                           m_override: float | None = None) -> dict:
     """One flight (K cycles) of Paris interfacial-debond growth from radius a0.
 
     da/dN = C (G(a,load)/Gc)^m, integrated over K cycles (forward Euler in cycle
     count; a clipped to a_max). Returns the interstage-compatible contract:
     grown / rel_growth (debond AREA growth) plus a_final.
+    `m_override` lets a caller inject a sampled Paris exponent (real-data posterior).
     """
     cfg = cfg or FairingConfig()
+    m = cfg.paris_m if m_override is None else float(m_override)
     a = float(np.clip(a0, 1e-6, cfg.a_max))
     area0 = np.pi * a ** 2
     for _ in range(cfg.cycles_per_flight):
         G = energy_release_rate(a, load, cfg)
-        da = cfg.paris_C * (G / cfg.Gc_interface) ** cfg.paris_m
+        da = cfg.paris_C * (G / cfg.Gc_interface) ** m
         a = min(a + da, cfg.a_max)
     area_final = np.pi * a ** 2
     rel = (area_final - area0) / max(area0, 1e-12)
@@ -111,8 +129,15 @@ def debond_growth_probability(posterior_a: np.ndarray, load: float,
     a = np.atleast_1d(np.asarray(posterior_a, dtype=float)).ravel()
     if len(a) > n_draws:
         a = a[rng.choice(len(a), n_draws, replace=False)]
-    flags = [simulate_debond_growth(ai * cfg.a_init_frac, load, cfg)["grown"]
-             for ai in a]
+    # real-data calibrated exponent: sample m~N(mu,sigma) per draw to propagate
+    # the between-specimen (fibre-bridging) spread; else fixed cfg.paris_m.
+    if cfg.paris_m_sigma > 0:
+        ms = np.clip(rng.normal(cfg.paris_m, cfg.paris_m_sigma, size=len(a)), 0.5, None)
+        flags = [simulate_debond_growth(ai * cfg.a_init_frac, load, cfg, m_override=mi)["grown"]
+                 for ai, mi in zip(a, ms)]
+    else:
+        flags = [simulate_debond_growth(ai * cfg.a_init_frac, load, cfg)["grown"]
+                 for ai in a]
     return float(np.mean(flags))
 
 

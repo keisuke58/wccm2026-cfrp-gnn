@@ -235,6 +235,22 @@ def run_study(verbose: bool = True) -> dict:
            "n_points": int(sum(len(g) for _, g, _ in specimens)),
            "fits": fits, "m_hat": m_hat, "r2_within": r2_within,
            "pop": pop, "loso": loso, "specimens": specimens}
+    # --- 下流の Stage-3 予後が読む較正アーティファクトを保存 ---
+    import json
+    art = {"mu_m": float(pop["mu_mean"]), "sigma_m": float(pop["sigma_mean"]),
+           "mu_ci": [float(pop["mu_ci"][0]), float(pop["mu_ci"][1])],
+           "logC_mean": float(np.mean([f["logC"] for f in fits])),
+           "framework_m": float(FRAMEWORK_M),
+           "loso_median_r2": float(loso["median_r2"]),
+           "loso_frac_pos": float(loso["frac_pos"]),
+           "using_real": bool(using_real), "n_spec": int(len(specimens)),
+           "n_points": int(out["n_points"]),
+           "note": "real CFRP DCB mode-I; single (C,m) fails LOSO (bridging) -> "
+                   "use the population posterior (mu_m,sigma_m), not a point m."}
+    adir = os.path.join(HERE, "results", "composite_fatigue_4tu")
+    os.makedirs(adir, exist_ok=True)
+    json.dump(art, open(os.path.join(adir, "calibration.json"), "w"), indent=2)
+    out["artifact_path"] = os.path.join(adir, "calibration.json")
     if verbose:
         _report(out)
     return out

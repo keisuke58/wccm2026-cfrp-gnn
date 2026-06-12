@@ -1,0 +1,23 @@
+{
+  "mu_m": 16.660596011691585,
+  "sigma_m": 4.7898340837770395,
+  "loso_median_r2": -26.182679390264354,
+  "load": 0.1,
+  "P_grow": {
+    "small $a_0$=0.02": {
+      "representative $m{=}3$": 0.0,
+      "calibrated $m{=}17$ (point)": 0.0,
+      "calibrated $m\\sim N(17,5)$": 0.0025
+    },
+    "medium $a_0$=0.06": {
+      "representative $m{=}3$": 0.645,
+      "calibrated $m{=}17$ (point)": 0.0225,
+      "calibrated $m\\sim N(17,5)$": 0.0275
+    },
+    "large $a_0$=0.11": {
+      "representative $m{=}3$": 0.9975,
+      "calibrated $m{=}17$ (point)": 0.9775,
+      "calibrated $m\\sim N(17,5)$": 0.9775
+    }
+  }
+}
