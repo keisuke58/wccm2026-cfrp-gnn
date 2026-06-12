@@ -264,4 +264,274 @@
   Closing the life-side real-data gap is next.
 \end{frame}
 
+% ==================================================================
+\appendix
+
+\begin{frame}[standout]
+  Appendix / backup
+\end{frame}
+
+% --- A1 ---
+\begin{frame}{A1 --- Stage-0 anomaly benchmark (clean, fixed geometry)}
+  \centering\small
+  \begin{tabular}{@{}lcc@{}}
+    \toprule method & 2$\times$2 & 4$\times$4 \\ \midrule
+    per-node Mahalanobis & 0.999 & 0.995 \\
+    PCA residual         & 0.999 & 0.995 \\
+    PaDiM                & 0.964 & 0.944 \\
+    PatchCore            & 0.927 & 0.918 \\
+    STFPM                & 0.754 & 0.496 \\
+    graph autoencoder    & 0.663 & 0.700 \\
+    flow (RealNVP)       & 0.578 & 0.707 \\
+    diffusion (FM)       & 0.503 & 0.663 \\
+    harmonicity (0-shot) & 0.465 & 0.590 \\ \bottomrule
+  \end{tabular}\\[1mm]
+  \footnotesize node-level AUROC. Per-node statistics dominate on fixed geometry;
+  the defect sits below $0.1\sigma$ (a per-measurement SNR limit).
+\end{frame}
+
+% --- A2 ---
+\begin{frame}{A2 --- Decision rule and launch economics}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \centering\includegraphics[width=\textwidth]{cost_calibration.pdf}
+    \end{column}
+    \begin{column}{0.5\textwidth}\footnotesize
+      $a^\star=\arg\min_a \mathbb{E}_{p(\theta\mid x)}[C(a,\theta)]$, actions
+      \{OK, REPAIR, RETIRE\}.
+      \begin{itemize}
+        \item MC over refurb/loss $1/100$--$1/30$, retire/loss $0.1$--$0.4$
+        \item $\alpha=0.035\,[0.021,0.055]$, $\beta=0.53\,[0.28,0.93]$
+        \item REPAIR-vs-RETIRE flips at $P_{\text{grow}}\!\approx\!0.3$--$0.5$
+              (economics-fragile)
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% --- A3 ---
+\begin{frame}{A3 --- Stage-2 characterisation (FMPE) vs differentiable physics}
+  \centering\small
+  \begin{tabular}{@{}llccc@{}}
+    \toprule set & method & $c_x$ RMSE & size RMSE & 90\% cov.\ \\ \midrule
+    in-dist & FMPE      & 0.006 & 0.002 & 0.958 \\
+    in-dist & diff-phys & 0.001 & 0.003 & 1.000 \\
+    OOD     & FMPE      & \textbf{0.144} & \textbf{0.096} & \textbf{0.000} \\
+    OOD     & diff-phys & 0.002 & 0.001 & 0.958 \\ \bottomrule
+  \end{tabular}\\[1mm]
+  \footnotesize Forward physics generalises; amortised inference extrapolates
+  poorly $\Rightarrow$ hybrid Stage-2 (amortised in-dist, physics-grounded OOD).
+\end{frame}
+
+% --- A4 ---
+\begin{frame}{A4 --- Stage-3 prognosis: anisotropic phase-field}
+  \footnotesize
+  \[
+  \Psi(\mathbf u,d)=\!\int_\Omega\!\Big[g(d)\psi^{+}(\boldsymbol\varepsilon)
+  +\tfrac{G_c}{c_w}\Big(\tfrac{d^2}{\ell}+\ell\,\nabla d\!\cdot\!\mathbf A\nabla d\Big)\Big]d\Omega
+  \]
+  \begin{itemize}
+    \item $\mathbf A=\mathbf I+\beta\,\mathbf a\!\otimes\!\mathbf a$: fibre-aligned crack resistance;
+          interface $G_c^{\text{int}}/G_c^{\text{ply}}\!\approx\!0.3$--$0.6$ (DCB/ENF anchored).
+    \item Carrara-2020 fatigue history degrades $G_c$ across flights (no i.i.d.\ shortcut).
+    \item Pluggable: fairing skin-core debond ($G=\kappa\sigma^2a^2$, Paris);
+          SRB-3 burst; \emph{torsion} interlaminar CZM.
+  \end{itemize}
+\end{frame}
+
+% --- A5 ---
+\begin{frame}{A5 --- Fast surrogate + trust gate}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \centering\includegraphics[width=\textwidth]{crack_surrogate.pdf}\\
+      \footnotesize FNO: field rel-$L_2$ $3.5\%$, grow-flag $0.988$, \textbf{142$\times$} speed.
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \centering\includegraphics[width=\textwidth]{conformal_surrogate.pdf}\\
+      \footnotesize Split-conformal trust gate: flags $33\%$ of an OOD stream,
+      restores coverage $61\%\!\to\!88\%$.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% --- A6 ---
+\begin{frame}{A6 --- Structure-agnostic surrogate: details}
+  \begin{columns}[T]
+    \begin{column}{0.55\textwidth}
+      \centering\includegraphics[width=\textwidth]{structure_agnostic_loso.pdf}
+    \end{column}
+    \begin{column}{0.45\textwidth}\footnotesize
+      $1{,}499$ real-FEM states; descriptors [dmg, crit, aux, stiffness] + structure one-hot.
+      \begin{itemize}
+        \item per-structure $R^2$: interstage 0.91, fairing 0.94, SRB-3 0.93,
+              tank 0.71, drive shaft 0.91
+        \item shared rule: acc 0.86, dangerous-miss $1.1\%$
+        \item LOSO torsion: $R^2=-1.4$, dangerous-miss $17\%$ (load-mode boundary)
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% --- A7 ---
+\begin{frame}{A7 --- Torsion shaft: CGAX screen + 3-D explicit CZM}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}\footnotesize
+      \textbf{CGAX screen} ($\pm45$ tube, twist DOF):
+      \begin{itemize}
+        \item analytic check: wall shear $17.1$ vs $T/2\pi R^2t=16.8$ MPa
+        \item $144$-state groove sweep, $T_{cr}$ $0.31$--$7.76$ kN$\cdot$m
+        \item true torsional buckling is non-axisymmetric $\Rightarrow$ 3-D
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \centering\includegraphics[width=\textwidth]{shaft_explicit_debond.pdf}\\
+      \footnotesize 3-D explicit: KE/IE $1.3$--$3.6\%$ in loading (quasi-static),
+      peak $11.7$ kN$\cdot$m @ $1.7^\circ$, debond $0\!\to\!100\%$.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% --- A8 ---
+\begin{frame}{A8 --- SRB-3 acoustic-emission detection (real data)}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \centering\includegraphics[width=\textwidth]{srb3_motorcase.pdf}
+    \end{column}
+    \begin{column}{0.48\textwidth}\footnotesize
+      4TU CC0 AE, $\sim$$48$k Vallen hits:
+      \begin{itemize}
+        \item group-aware RF: per-hit AUROC $0.888$ / per-specimen $1.000$
+              (linear baseline $\sim$$0.52$)
+        \item amplitude--duration damage-mode clustering
+      \end{itemize}
+      \alert{Honest:} compression-pristine coupons also emit high-energy AE
+      $\Rightarrow$ the multivariate detector, not one cluster, is the read-out;
+      AE is a real-data \emph{proxy} for the motor-case front-end.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% --- A9 ---
+\begin{frame}{A9 --- Sim-to-real domain adaptation: details}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \centering\includegraphics[width=\textwidth]{tsa_sim2real.pdf}\\
+      \footnotesize Interstage TSA: proxy-$\mathcal A$ $2.0\!\to\!0.3$ ($97\%$ closed).
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \centering\includegraphics[width=\textwidth]{payload_da_longterm.pdf}\\
+      \footnotesize Fairing OGW: FPR $14\!\to\!5\%$ (quantile), CORAL $7\%$,
+      z-score $\to$ $30\%$; threshold set on source healthy (no target leak).
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% --- A10 ---
+\begin{frame}{A10 --- End-to-end decision UQ: error decomposition}
+  \begin{columns}[T]
+    \begin{column}{0.55\textwidth}
+      \centering\includegraphics[width=\textwidth]{decision_uq.pdf}
+    \end{column}
+    \begin{column}{0.45\textwidth}\footnotesize
+      Four decisions isolate each error (over 40 held-out scenarios):
+      \begin{itemize}
+        \item Stage-2 posterior: flip rate $25\%$ (dominant)
+        \item surrogate forward: $17.5\%$
+        \item partial cancellation $\to$ total $15\%$
+        \item all $16$ RETIRE cases caught (0\% dangerous-miss)
+      \end{itemize}
+      Oracle = exact FD physics (\synth).
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% --- A11 ---
+\begin{frame}{A11 --- Solver verification and robustness}
+  \begin{columns}[T]
+    \begin{column}{0.55\textwidth}
+      \centering\includegraphics[width=\textwidth]{physics_validation.pdf}
+    \end{column}
+    \begin{column}{0.45\textwidth}\footnotesize
+      \begin{itemize}
+        \item MMS: interior order $2.04$ (2-D), $2.05$ (3-D)
+        \item mesh convergence: $0.4\%$ at $n_x{=}60$
+        \item constant-peak proxy under-predicts life $3.4\times$ vs a variable
+              flight spectrum (S--N anchored)
+        \item Stage-0 holds AUROC $0.84$ at $\sigma{=}0.1$; chance near
+              $\sigma\!\approx\!0.7$--$1.0$
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% --- A12 ---
+\begin{frame}{A12 --- Stage-4 hierarchical fleet learning}
+  \begin{columns}[T]
+    \begin{column}{0.55\textwidth}
+      \centering\includegraphics[width=\textwidth]{fleet_learning.pdf}
+    \end{column}
+    \begin{column}{0.45\textwidth}\footnotesize
+      Conjugate-Gibbs partial pooling over a synthetic fleet ($N{=}20$, $F{=}30$):
+      \begin{itemize}
+        \item recovers $\varphi$: $\mathbb E[\mu]{=}{-}3.10$ (true $-3.0$),
+              $\mathbb E[\sigma]{=}0.44$ (true $0.45$)
+        \item prior SD sharpens $0.39\!\to\!0.10$
+        \item fleet-leader: stable clearance in $\mathbf{1.25}$ vs $\mathbf{2.75}$ inspections
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% --- A13 ---
+\begin{frame}{A13 --- Stage-5 multi-objective design (Pareto)}
+  \begin{columns}[T]
+    \begin{column}{0.55\textwidth}
+      \centering\includegraphics[width=\textwidth]{design_feedback_pareto.pdf}
+    \end{column}
+    \begin{column}{0.45\textwidth}\footnotesize
+      Growth vs.\ mass / axial-stiffness ($A_{11}$) / bending ($D_{11}$):
+      \begin{itemize}
+        \item single growth objective rails off-axis to the manufacturable cap
+        \item competing CLT objectives restore an interior optimum (knee $\sim$$40^\circ$)
+        \item optimal angle $75^\circ\!\to\!15^\circ$ as stiffness weight grows
+      \end{itemize}
+      (sensitivity to uncalibrated constants: main deck.)
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% --- A14 ---
+\begin{frame}{A14 --- Differentiable inversion (Keio bridge)}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \centering\includegraphics[width=\textwidth]{diff_inversion.pdf}
+    \end{column}
+    \begin{column}{0.5\textwidth}\footnotesize
+      JAX AT2 forward, FD-verified gradient ($3\times10^{-7}$); Laplace posterior
+      $\Sigma=\sigma^2(J^\top J+\Lambda)^{-1}$, no labelled pairs.
+      \begin{itemize}
+        \item amortised collapses OOD ($\sim$25$\times$, $0$ coverage)
+        \item differentiable-physics invariant
+        \item FNO-as-forward: MAP+Laplace $530\text{s}\!\to\!12\text{s}$ ($43\times$)
+      \end{itemize}
+      $\Rightarrow$ the cheap forward TMCMC needs (Keio Phase-3).
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% --- A15 ---
+\begin{frame}{A15 --- Data provenance and honesty}
+  \footnotesize
+  \begin{itemize}
+    \item \real: interstage TSA full-field (Kojima, CPB 2025 --- \alert{co-author /
+          consent gated}); fairing long-term + impact guided waves (OGW);
+          SRB-3 AE (4TU CC0); 4TU DCB fatigue.
+    \item \synth: phase-field forward (representative $G_c,\ell,\beta$, fatigue);
+          synthetic fleet; decision-UQ oracle = exact FD physics.
+    \item Reproducibility: $\sim$250 unit tests, one-command end-to-end run,
+          MMS / mesh / SNR / economic-sensitivity studies; figures script-generated.
+    \item \alert{Open gap:} no real life-test of the prognosis$\to$clearance$\to$fleet chain.
+  \end{itemize}
+\end{frame}
+
 \end{document}
