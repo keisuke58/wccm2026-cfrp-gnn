@@ -9,7 +9,7 @@ python run_all.py --fig      # + regenerate every figure under paper_figs/
 python run_all.py --quick    # skip the slow FD/FMPE modules
 ```
 
-**Status (2026-06-12): 23 modules, 601/601 checks pass** (581 unit tests +
+**Status (2026-06-12): 24 modules, 621/621 checks pass** (601 unit tests +
 20 `cost_calibration` checks). Near-term venue = JSCES 2027 (May);
 `nishioka_jsces2027.tex` carries the 3-structure story.
 
@@ -91,6 +91,7 @@ oracle decomposition + 95% bootstrap CI + dangerous-miss + Platt ECE recalibrati
 |---|---|---|
 | `system_baseline` | 76/76 | 3-structure framework vs naive: aggregate **18.11 cost / 0% dangerous-miss = rank #1** (next point-est 23.15/14.7%, oracle floor 15.18); per-structure 13.83 / 22.07 / 18.43, all 0% |
 | `cross_structure_fleet` | 16/16 | **3-level "fleet of fleets"** (Stage-4 deepened; learning-layer analogue of LOSO): a cold-start structure (3 vehicles × 4 flights) borrows from the other fleets → growth-rate posterior **×2.96 sharper** (and more accurate: \|err\| 0.32→0.12) than within-structure pooling; global M0 recovered −3.09 (true −3.0); a brand-new (0-vehicle) structure starts with a **×4.4 tighter** prior than uninformative |
+| `cross_structure_design` | 20/20 | **portfolio toughening-budget allocation** (Stage-5 cross-structure; chains Stage-4): optimal split of a shared budget = lowest total risk + **18% better worst-case** vs uniform, ≫ greedy-worst/no-budget (12.7 vs 33/55); **warm-start payoff** — using the cross-structure (vs within-structure) risk estimate **lowers allocation regret** (mean −0.07; at 2 cold flights 0.26→0.12), i.e. fleet-of-fleets learning concretely improves the design decision |
 | `design_feedback` | 37/37 | hierarchical-Bayes fleet sharpening (σ-ratio 2.75→1.25); multi-objective design optimum (off-axis 75°→15°) |
 
 ---

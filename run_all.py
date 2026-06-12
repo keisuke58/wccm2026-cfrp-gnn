@@ -63,6 +63,7 @@ GROUPS: list[tuple[str, list[tuple[str, bool]]]] = [
     ("Stage 4/5 — fleet learning + design + system baseline", [
         ("system_baseline", False),
         ("cross_structure_fleet", False),     # 3-level fleet of fleets
+        ("cross_structure_design", False),    # portfolio budget allocation
         ("design_feedback", False),
     ]),
 ]
