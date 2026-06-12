@@ -119,9 +119,22 @@ with explicit interlaminar cohesive zones. A circumferential groove concentrates
 the wall shear (peak $\tau_{z\theta}$ rising $17\!\to\!39$\,MPa as residual
 thickness falls to $40\%$), so the critical torque drops monotonically with damage
 --- the same damage-size$\to$critical-load signature as the other structures, now
-in shear. This interlaminar-CZM model is the concrete foundation of the
-phase-field prognosis programme that bridges to the Keio continuation
-(\S\ref{sec:bridge}).
+in shear (Fig.~\ref{fig:shaft}). This interlaminar-CZM model is the concrete
+foundation of the phase-field prognosis programme that bridges to the Keio
+continuation (\S\ref{sec:bridge}); under torsion a symmetric mid-plane interface
+is unloaded, so delamination requires a shear mismatch across the interface, and
+its growth is an unstable snap that an implicit solve cannot traverse --- the
+explicit 0$\to$100\% debond is shown in \S\ref{sec:bridge}
+(Fig.~\ref{fig:shaftexp}).
+\begin{figure}[t]\centering
+  \includegraphics[width=\linewidth]{shaft_torsion_3d.pdf}
+  \caption{CFRP drive shaft under torsion. (a) 3-D twist of the $[\pm45]$ tube
+  (deformation $\times8$; red = deformed generators turned helical, dotted =
+  undeformed); (b) wall cross-section $[+45/-45\,\|\,-45/+45]$ (radial scale
+  exaggerated) with the interlaminar interface and initial debond patch; (c)
+  torque--rotation of the 3-D $\pm45$ laminate with interlaminar cohesive zones.}
+  \label{fig:shaft}
+\end{figure}
 
 \paragraph{Structure-agnostic core, and the load-mode boundary.} The claim that
 the decision core is structure-agnostic is testable: across all five structures
@@ -468,7 +481,23 @@ prognosis demonstrated here on four structures, now under torsion, is therefore
 not only this paper's Stage~3: it is the computational-solid-mechanics foundation
 of the Keio phase-field $\times$ GNN-prognosis continuation, where a
 differentiable forward and fleet-scale Bayesian inversion close the loop on
-measured data.
+measured data. As a concrete instance, the torsion drive shaft's interlaminar
+debond grows by an unstable snap: across three viscous-regularisation levels an
+implicit static solve stalls at the same onset, whereas an explicit quasi-static
+solve (kinetic/internal energy $1$--$4\%$ through the loading ramp) captures the
+full $0\to100\%$ debond, with the torque peaking at the onset ($\sim$$1.7^\circ$
+twist) and dropping post-peak as the interface fails (Fig.~\ref{fig:shaftexp}).
+\begin{figure}[t]\centering
+  \includegraphics[width=\linewidth]{shaft_explicit_debond.pdf}
+  \caption{Full interlaminar debond growth in the torsion drive shaft
+  (3-D $\pm45$, Abaqus/Explicit). Top: cohesive damage (SDEG) on the unrolled
+  $\theta$--$z$ interface at four times --- pre-onset, onset, unstable snap, and
+  full debond (dashed box = initial debond). Bottom: (e) torque--rotation with the
+  post-peak drop; (f) kinetic/internal energy stays quasi-static ($<5\%$) through
+  loading while the debonded area runs $0\to100\%$ --- the snap is genuinely
+  dynamic, which is why the implicit static solve cannot pass it.}
+  \label{fig:shaftexp}
+\end{figure}
 
 \section{End-to-end decision reliability}
 Every stage above is calibrated in isolation; an operator, however, only sees
