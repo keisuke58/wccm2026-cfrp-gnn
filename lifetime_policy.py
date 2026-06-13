@@ -47,7 +47,8 @@ is the lifetime DECISION STRUCTURE and the two qualitative results (optimal
 stopping beats myopic clearance; resolving growth-rate uncertainty buys lifetime
 value), not certified retirement schedules. The MDP is fully observed in the
 crack state (inspection noise folded into the growth-rate belief, not a POMDP
-over a); a belief-state POMDP over a is future work.
+over a); the belief-state POMDP over a — with an explicit costly INSPECT action —
+is realised in `pomdp_inspection.py`.
 
 Usage
 -----

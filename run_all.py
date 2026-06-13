@@ -62,6 +62,7 @@ GROUPS: list[tuple[str, list[tuple[str, bool]]]] = [
         ("conformal_clearance", False),
         ("voi_inspection", False),
         ("lifetime_policy", False),           # sequential optimal-stopping
+        ("pomdp_inspection", False),          # belief-state POMDP (+inspect action)
     ]),
     ("Stage 4/5 — fleet learning + design + system baseline", [
         ("system_baseline", False),
