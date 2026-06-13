@@ -68,6 +68,7 @@ GROUPS: list[tuple[str, list[tuple[str, bool]]]] = [
         ("system_baseline", False),
         ("cross_structure_fleet", False),     # 3-level fleet of fleets
         ("cross_structure_design", False),    # portfolio budget allocation
+        ("qubo_maintenance", True),           # discrete fleet schedule as a QUBO (QA-ready)
         ("design_feedback", False),
     ]),
 ]
