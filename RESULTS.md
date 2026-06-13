@@ -93,6 +93,7 @@ Tier tags **[R]/[S]/[U]** are applied per row in the tables below.
 | module | tests | headline |
 |---|---|---|
 | `tsa_sim2real` | 15/15 | measured-vs-FEM DSPSS gap KS≈0.09; quantile DA closes **97%** |
+| `kojima_real_decision` | 21/21 | **FIRST labelled decision on REAL measured data**: convex-vs-concave defect on Kojima's 22 measured-DSPSS specimens (12+10). Headline uses ONLY **scale-invariant field-SHAPE features** (defect signature, loading-amplitude confound removed) → LOO-CV **AUROC 0.908 / acc 86% / F1 0.87, permutation-test p=0.005**; magnitude-confounded contrast 0.892 (so the SHAPE carries it). **OOD gate sees the real shift**: mean KS 0.091 > FEM-self-95% 0.069 → **77% of real specimens flagged OOD**. Honest: n=22, ONE application, convex-vs-concave (both defective, not healthy-vs-defect); single campaign, wide CI; data attributed to Kojima, method is the framework's own |
 | `domain_adapt` | 12/12 | none/standardize/CORAL/quantile aligners; MMD² + proxy-A-distance gap report |
 
 - **fairing OGW temperature DA (Payload):** quantile DA recovers FPR **14%→5%**
