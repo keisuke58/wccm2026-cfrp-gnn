@@ -56,6 +56,10 @@ Closing the life-side real-data gap is the priority and motivates the
 differentiable, calibrated forward of the continuation.
 \end{abstract}
 
+\noindent\textbf{Keywords:} structural health monitoring; carbon-fibre-reinforced
+polymer; reusable launch vehicles; graph neural networks; phase-field fracture;
+conformal prediction; simulation-based inference; sim-to-real domain adaptation
+
 \section{Introduction}
 Reusable launch vehicles change the structural-health-monitoring (SHM) question.
 A carbon-fibre-reinforced-polymer (CFRP) interstage, fairing or motor case that
@@ -778,11 +782,35 @@ the physics $|z|$ ties the best on AUROC and leads on AUPRC for the rare
 \end{figure}
 
 \section{Discussion}
-% - why simple beats deep on fixed geometry; when learning is still needed.
-% - reusable-vehicle framing: this formalises SpaceX-style condition-based,
-%   fleet-leader practice and makes it usable from the first article.
-% - limitations (honest): normalised load proxy; alpha_T not S-N anchored;
-%   AT2 strength ell-dependent (trends, not absolute); depth weakly observable.
+Several findings cut across the stack. On fixed geometry a simple per-node
+statistic dominates the learned anomaly detectors (Table~\ref{tab:zoo}): when the
+healthy manifold is a tight cloud and the \emph{same} structure is re-inspected
+every turnaround, distance-to-normal is hard to beat, and the learned models earn
+their place not at detection but at the semantic label (type/region/depth) and at
+transfer to new airframes and repairs. The decision core itself transfers across
+geometry and sensing modality but \emph{not} across an unseen load mode:
+structure-agnosticism holds for the cost-optimal thresholds and confidence maps,
+while the growth physics must be re-anchored per load mode. Cast this way, the
+framework formalises the condition-based, staged-certification, fleet-leader
+practice of operational reuse and makes it usable --- as a calibrated decision ---
+from the first article, rather than only after a fleet history accrues.
+
+The limitations are deliberate and stated throughout. The operational load is a
+normalised proxy; the fatigue degradation is not yet S--N-anchored; the AT2
+strength is length-scale-dependent (trends, not absolute values); and defect depth
+is only weakly observable from a surface field --- a physics limit of thermoelastic
+measurement, not a model failure. Consequently the life side is only partly
+real-data-grounded: the one calibrated life-side quantity, the Paris exponent from
+real DCB data, already flips a mid-size clearance, which both validates the seeding
+pathway and signals how much a fully calibrated life side would move the decision.
+The framework's distribution-free guarantees are likewise necessary but not
+sufficient under real environmental shift --- a season-calibrated conformal
+false-alarm guarantee collapses in winter and is restored only with explicit
+temperature compensation, and restoring false-alarm control alone does not recover
+the detection power the shift destroys. Closing the life-side real-data gap is
+therefore the priority, and it motivates the continuation: a differentiable,
+calibrated phase-field forward that supplies physics-grounded posteriors and
+gradients for the inverse problem, where amortised inference extrapolates poorly.
 
 \section{Conclusion}
 % one-paragraph wrap; outlook to Stage 4-5 (hierarchical fleet learning,
