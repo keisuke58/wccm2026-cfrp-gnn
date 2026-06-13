@@ -53,15 +53,57 @@ differentiable, calibrated forward of the continuation.
 \end{abstract}
 
 \section{Introduction}
-% - reusable vehicles change the SHM question: not "survive one flight" but
-%   "fly again? how many flights remain?" (cite SpaceX condition-based
-%   monitoring, staged 20->40 certification, fleet-leader practice).
-% - fixed-geometry, fixed-individual re-inspection is the operational norm.
-% - contributions list (4): (1) systematic anomaly benchmark + SNR limit on
-%   fixed-geometry stress fields; (2) calibrated FMPE defect characterisation
-%   with no new FEM; (3) anisotropic phase-field + Carrara fatigue prognosis
-%   seeded directly by the posterior; (4) the integrated decision layer
-%   (flight clearance with expected-cost thresholds).
+Reusable launch vehicles change the structural-health-monitoring (SHM) question.
+A carbon-fibre-reinforced-polymer (CFRP) interstage, fairing or motor case that
+flies, returns, and flies again is no longer asked merely ``did it survive?'' but
+``\emph{may it fly again, and for how many flights?}''. Operations are
+condition-based: the \emph{same} fixed structure and the \emph{same} individual
+airframe are re-inspected each turnaround, certification is staged as evidence
+accrues, and a fleet-leader airframe is flown ahead to retire risk for the rest of
+the fleet. SHM for reuse is therefore a sequential \emph{decision} problem ---
+clear, repair, or retire, and how many flights remain --- rather than a one-shot
+detection problem on an ever-new specimen.
+
+Machine-learning SHM for CFRP has advanced rapidly, but along a narrow front.
+Surface-stress and guided-wave models localise or classify damage from a single
+modality on a single, often simply shaped, structure, and are typically validated
+on clean finite-element data: inverse defect estimation from surface
+stress~\cite{kojima2022inverse}, transfer learning that bridges finite-element
+stress to measured infrared (thermoelastic) fields on simple
+coupons~\cite{kojima2024transfer}, physics-informed graph networks for damage
+localisation~\cite{authors2026interpretableb}, and mesh graph-network stress
+surrogates~\cite{pfaff2021learning,nishioka2025development}. These answer
+``\emph{where} is the damage?'' well; none answer the operational chain ---
+detect $\to$ characterise $\to$ prognose $\to$ \emph{clear} (OK/repair/retire)
+$\to$ fleet-learn $\to$ design --- as one calibrated decision, shared across
+structures and load modes, and honest about exactly what real measurements
+support. In particular, the closest predecessor~\cite{kojima2024transfer} closes
+the sim-to-real gap for \emph{single-defect prediction on simply shaped coupons};
+we instead build the full reuse \emph{decision} on top of such detectors and
+quantify, on real data, where its calibrated guarantees hold and where they break.
+
+This paper contributes: (1) a \textbf{structure-agnostic decision core} ---
+detect $\to$ classify $\to$ characterise $\to$ prognose $\to$ clear $\to$
+fleet-learn $\to$ design --- shared across five CFRP structures spanning four load
+modes, with only the detection front-end and the prognosis physics
+structure-specific, and an honest leave-one-load-mode-out test showing the core
+extrapolates across geometry but not to an unseen load mode; (2) \textbf{real-data
+grounding} of the detection/classification/characterisation stages (long-term
+guided waves with temperature domain adaptation, an impact wavefield, and acoustic
+emission), including a per-node anomaly statistic at AUROC $\approx0.99$ on fixed
+geometry against a nine-method benchmark, and a flow-matching posterior that
+recovers defect position/size/depth at nominal $90\%$ coverage with no new
+finite-element runs; (3) a \textbf{physics-grounded life side} --- an anisotropic
+phase-field forward with Carrara-type fatigue, seeded \emph{directly} by the
+characterisation posterior, whose Paris exponent is calibrated to real CFRP
+mode-I delamination data; and (4) an \textbf{integrated, calibrated decision
+layer} --- expected-cost flight clearance, distribution-free conformal coverage,
+value-of-information inspection, and a decision-level uncertainty audit scored
+against an exact physics oracle. Throughout we draw the sim-to-real boundary
+explicitly: detection, classification and characterisation are real-data-grounded,
+whereas the life side, fleet and design oracle remain partly representative ---
+the gap whose closing motivates the differentiable, calibrated forward of the
+continuation.
 \begin{figure}[t]\centering
   \includegraphics[width=\linewidth]{pipeline_overview.pdf}
   \caption{Stage~0--3 pipeline. Each stage answers one question and passes a
@@ -516,9 +558,9 @@ dataset are the priority next inputs.
 cross-structure real-data result is that an \emph{unsupervised} per-feature
 quantile matching aligns measured to FEM statistics where naive normalisation
 fails. On the \emph{interstage}, the stack ingests measured TSA-derived full-field
-DSPSS from a 22-specimen CFRP campaign and the quantile step closes $\sim$$97\%$
-of the FEM$\to$measured gap (proxy-$\mathcal{A}$ distance $2.0\!\to\!0.3$,
-Fig.~\ref{fig:tsa}). On the \emph{fairing}, the gap is a real long-term operational
+DSPSS from a 22-specimen CFRP campaign~\cite{kojima2024transfer} and the quantile
+step closes $\sim$$97\%$ of the FEM$\to$measured gap (proxy-$\mathcal{A}$ distance
+$2.0\!\to\!0.3$, Fig.~\ref{fig:tsa}). On the \emph{fairing}, the gap is a real long-term operational
 shift --- guided-wave records collected across seasons carry a temperature drift;
 the same quantile DA recovers the false-positive rate from $14\%$ to $5\%$, whereas
 $z$-score standardisation makes it \emph{worse} ($\to 30\%$). The measured
@@ -714,7 +756,9 @@ benchmark) and economic-sensitivity studies; figures are generated by the
 scripts under \texttt{paper\_figs/}.
 
 \bibliographystyle{elsarticle-num}
-% \bibliography{refs}   % Teichtmeister2017, QuintanasCorominas2019, BleyerAlessi2018,
-% PaggiReinoso2017, Carollo2017, Wu2017, Carrara2020, BuiHu2021, FMPE refs.
+\bibliography{references_gnn}
+% TODO full citation pass: method anchors (phase-field Carrara2020/Miehe/
+% Teichtmeister2017, FMPE/simulation-based inference, conformal Vovk/Angelopoulos)
+% are not yet in references_gnn.bib and need adding + \cite in §Stage-2/3/conformal.
 
 \end{document}
