@@ -40,6 +40,7 @@ GROUPS: list[tuple[str, list[tuple[str, bool]]]] = [
     ("Stage 2 — characterisation / domain adaptation", [
         ("tsa_sim2real", False),
         ("kojima_real_decision", False),      # labelled convex/concave on REAL data
+        ("kojima_real_conformal", False),     # conformal coverage under real OOD
         ("domain_adapt", False),
     ]),
     ("Stage 3 — prognosis + validation", [
