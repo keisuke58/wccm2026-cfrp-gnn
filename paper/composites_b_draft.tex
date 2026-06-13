@@ -39,7 +39,10 @@ Detection, classification and damage characterisation are grounded in real data
 (long-term guided waves with temperature domain adaptation, an impact wavefield,
 and acoustic emission); a per-node anomaly statistic reaches AUROC $\approx0.99$ on
 fixed geometry (nine-method benchmark) and a flow-matching posterior recovers
-defect position/size/depth at nominal $90\%$ coverage. \emph{The life side is only partly
+defect position/size/depth at nominal $90\%$ coverage. The clearance call carries
+a distribution-free conformal guarantee, which we stress-test on the real seasonal
+shift: a season-calibrated false-alarm rate breaks to $\sim$$68\%$ in winter and is
+restored by a temperature-conditional recalibration. \emph{The life side is only partly
 real-data-grounded}: its fatigue Paris \emph{exponent} is calibrated to real CFRP
 mode-I DCB data (4TU; $m\!\approx\!17$, not the representative $3$; flips a
 mid-size-debond clearance from RETIRE to OK), but absolute growth rates, the
@@ -582,7 +585,8 @@ and we use it to stress-test the framework's distribution-free clearance guarant
 A split-conformal false-alarm threshold calibrated on spring-healthy data holds in
 distribution (empirical FPR $\approx\alpha$), but the seasonal shift breaks
 exchangeability and the guarantee collapses: at a nominal $5\%$, the \emph{winter}
-false-alarm rate rises to $\sim$$68\%$. Two corrections restore control to
+false-alarm rate rises to $\sim$$68\%$ (Fig.~\ref{fig:ogwconformal}). Two
+corrections restore control to
 $\approx\alpha$ across seasons --- the unsupervised per-feature quantile DA (FPR
 $14\%\!\to\!5\%$, whereas $z$-score standardisation makes it \emph{worse},
 $\to30\%$) and a temperature-conditional (Mondrian) conformal
@@ -594,6 +598,19 @@ power needs feature-level DA, not just a recalibrated threshold. The OGW fairing
 thus the framework's real-data confirmation that the conformal clearance guarantee
 is deployable only \emph{with} an explicit environmental correction. The measured
 interstage data are used under co-authorship with the TSA campaign's owner.
+\begin{figure}[t]\centering
+  \includegraphics[width=\linewidth]{ogw_conformal_detection.png}
+  \caption{Conformal clearance guarantee under the real seasonal shift (fairing,
+  OGW long-term). (a) a spring-calibrated split-conformal false-alarm threshold
+  holds in distribution but the winter shift inflates the false-alarm rate to
+  $\sim$$68\%$ at a nominal $5\%$; a temperature-conditional (Mondrian) threshold
+  restores $\approx\alpha$ across seasons. (b) the spring healthy-score
+  calibration. (c) the honest cost: under the strong winter shift, restoring
+  false-alarm control by recalibration alone collapses cold-damage recall --- the
+  shift degrades separability, so feature-level domain adaptation, not
+  recalibration, recovers detection power.}
+  \label{fig:ogwconformal}
+\end{figure}
 \begin{figure}[t]\centering
   \includegraphics[width=\linewidth]{tsa_sim2real.pdf}
   \caption{Sim-to-real on the interstage. Measured TSA-derived DSPSS vs.\ FEM, and
