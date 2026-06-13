@@ -159,8 +159,8 @@ and one prognosis model and reusing the rest.
 \end{table}
 
 \paragraph{The interstage (primary data structure).} The quantitative backbone is
-a perforated CFRP interstage: full-field thermoelastic stress (DSPSS first stress
-invariant) on a $13\,942$-node mesh with $1{\times}1/2{\times}2/4{\times}4$ hole
+a perforated CFRP interstage: full-field thermoelastic stress~\cite{dulieubarton1998development,pitarresi2003review}
+(DSPSS first stress invariant) on a $13\,942$-node mesh with $1{\times}1/2{\times}2/4{\times}4$ hole
 defects and label masks. Per-sample $z$-score normalisation needs no healthy
 reference, so the detector deploys on a single measured field. This structure
 carries the FEM training set, the measured TSA campaign (\S\ref{sec:bridge}), and
@@ -276,8 +276,8 @@ per-measurement SNR limit addressable by frame averaging
   \end{tabular}
 \end{table}
 \paragraph{Structure-specific Stage-1 front-ends.} \emph{Interstage} ---
-surface-stress (DSPSS) graph neural network (cite~A): a mesh-physics GNN reaches
-macro-F1 $0.76$ vs.\ $0.61$ for a plain GAT, and an OOD study shows the operational
+surface-stress (DSPSS) graph neural network~\cite{nishioka2025development}: a
+mesh-physics GNN reaches macro-F1 $0.76$ vs.\ $0.61$ for a plain GAT~\cite{velickovic2018graph}, and an OOD study shows the operational
 split cleanly --- \emph{detection generalises to unseen defect sizes while precise
 localisation collapses}, a distinction invisible to macro-F1 and exposed only by
 defect-only F1 with separated detection/localisation metrics. \emph{Fairing} ---
@@ -315,8 +315,17 @@ confound. (An earlier single-month binary probe, where temperature-only matched
 the majority baseline, was an artefact of that restricted setting.)
 
 \section{Stage 2 --- calibrated defect characterisation (FMPE)}
-% Conditional flow matching learns q(theta|x); PCA(64) field embedding; trained
-% on the EXISTING FEM set (~20k pairs), zero new simulations.
+Given a detected anomaly, Stage~2 returns a \emph{calibrated posterior} over the
+defect parameters $\theta=(c_x,c_y,\text{layer},\text{size})$ rather than a point
+estimate. We use flow-matching posterior estimation
+(FMPE)~\cite{dax2023flow}, a simulation-based inference
+method~\cite{cranmer2020frontier} that trains a conditional continuous normalising
+flow by flow matching~\cite{lipman2023flow} to approximate $q(\theta\mid x)$ from a
+PCA-64 embedding of the field $x$; it is trained on the \emph{existing} FEM set
+($\sim$20k pairs) with zero new simulations. On held-out fields the posterior is
+well calibrated (Table~\ref{tab:fmpe}): position and size reach near-nominal
+$90\%$ coverage, while depth is only weakly identifiable --- a physics limit of
+surface thermoelastic measurement, reported honestly.
 \begin{table}[h]\centering\small
   \caption{FMPE posterior on held-out test fields.}
   \label{tab:fmpe}
@@ -334,10 +343,16 @@ the majority baseline, was an artefact of that restricted setting.)
 % identifiable: a physics limit of surface thermoelastic measurement (honest).
 
 \section{Stage 3 --- phase-field prognosis and flight clearance}
-% Energy functional with structural tensor A = I + beta a (x) a; multi-ply
-% bands; interface Gc reduction (DCB/ENF anchored, pure-PF surrogate of
-% Paggi-Reinoso CZM); Carrara-2020 fatigue history alpha-bar degrading Gc.
-% seed_defect(theta) consumes the FMPE posterior directly.
+The characterisation posterior seeds a physics-based growth model. We adopt a
+variational phase-field fracture forward~\cite{bourdin2008variational,miehe2010thermodynamically}
+in its AT2 form, extended to laminate anisotropy through a structural tensor
+$\mathbf{A}=\mathbf{I}+\beta\,\mathbf{a}\otimes\mathbf{a}$~\cite{teichtmeister2017phase}
+with ply-wise interfacial-toughness bands (a pure phase-field surrogate of a
+cohesive-zone interface), and accumulate fatigue through a Carrara-type history
+variable that degrades the fracture toughness over load
+cycles~\cite{carrara2020framework}. The Stage-2 posterior enters \emph{directly}
+as the seed defect $\theta$, so characterisation uncertainty propagates into the
+survival curve and the clearance call.
 \begin{figure}[t]\centering
   \includegraphics[width=0.9\linewidth]{e2e_stage0to3.png}
   \caption{End-to-end on one held-out field: anomaly map, FMPE posterior,
@@ -398,7 +413,8 @@ section) tractable at interactive speed.
 
 \paragraph{Knowing when to trust the surrogate.} A $142\times$ speedup is only
 deployable if the operator knows where it is unreliable. We wrap the surrogate
-in split-conformal prediction (nonconformity = absolute residual in the
+in split-conformal prediction~\cite{vovk2005algorithmic,lei2018distribution,angelopoulos2023conformal}
+(nonconformity = absolute residual in the
 $\log$-$\text{rel\_growth}$ space where the FNO is honest). In distribution the
 marginal $90\%$ guarantee holds ($95\%$ band: $95.0\%$ empirical); out of
 distribution it degrades exactly as the theory predicts under covariate shift
@@ -411,7 +427,7 @@ physics where not.
 
 \section{Stage 4 --- hierarchical fleet learning}
 A reusable fleet generates a stream of per-inspection posteriors across many
-vehicles and flights. We close the loop with a hierarchical Bayesian model:
+vehicles and flights. We close the loop with a hierarchical Bayesian model~\cite{gelman2013bayesian}:
 a global fleet prior $\varphi=(\mu_\varphi,\sigma_\varphi)$ governs per-vehicle
 log-growth-rates $s_v=\log r_v \sim \mathcal{N}(\mu_\varphi,\sigma_\varphi^2)$,
 and each inspection's Stage-2 posterior enters as a Gaussian likelihood on
@@ -556,7 +572,7 @@ dataset are the priority next inputs.
 
 \paragraph{Sim-to-real domain adaptation, on both real-data structures.} The
 cross-structure real-data result is that an \emph{unsupervised} per-feature
-quantile matching aligns measured to FEM statistics where naive normalisation
+quantile matching~\cite{sun2016return} aligns measured to FEM statistics where naive normalisation
 fails. On the \emph{interstage}, the stack ingests measured TSA-derived full-field
 DSPSS from a 22-specimen CFRP campaign~\cite{kojima2024transfer} and the quantile
 step closes $\sim$$97\%$ of the FEM$\to$measured gap (proxy-$\mathcal{A}$ distance
@@ -756,9 +772,6 @@ benchmark) and economic-sensitivity studies; figures are generated by the
 scripts under \texttt{paper\_figs/}.
 
 \bibliographystyle{elsarticle-num}
-\bibliography{references_gnn}
-% TODO full citation pass: method anchors (phase-field Carrara2020/Miehe/
-% Teichtmeister2017, FMPE/simulation-based inference, conformal Vovk/Angelopoulos)
-% are not yet in references_gnn.bib and need adding + \cite in §Stage-2/3/conformal.
+\bibliography{references_gnn,refs_submission,refs_methods}
 
 \end{document}
