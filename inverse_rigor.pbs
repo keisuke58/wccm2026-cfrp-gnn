@@ -1,0 +1,16 @@
+#!/bin/bash
+#PBS -N inv_rigor
+#PBS -q default
+#PBS -l nodes=1:ppn=8
+#PBS -l walltime=02:00:00
+#PBS -j oe
+#PBS -o /home/nishioka/git/wccm2026-cfrp-gnn/inverse_rigor.pbs.log
+set -e
+cd /home/nishioka/git/wccm2026-cfrp-gnn
+# Pin threads for deterministic, reproducible torch numerics (BLAS nondeterminism
+# was the source of the host-to-host point-estimate drift). This frontale run is canonical.
+export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
+PY=/home/nishioka/IKM_Hiwi/.venv_jax/bin/python
+echo "[$(date '+%F %T')] inverse_rigor on $(hostname), threads=1"
+$PY inverse_rigor.py
+echo "[$(date '+%F %T')] done"
