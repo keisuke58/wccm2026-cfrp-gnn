@@ -157,7 +157,7 @@ and one prognosis model and reusing the rest.
   \begin{tabular}{@{}lllll@{}}
     \toprule
     structure & load mode & detection front-end & prognosis physics & data \\ \midrule
-    interstage      & membrane        & surface-stress GNN (A) & phase-field delam.\ & FEM + meas.\ TSA \\
+    interstage      & membrane        & surface-stress GNN (A) & phase-field delam.\ & FEM + prosthetic TSA \\
     fairing         & transv./bending & guided-wave GNN        & skin--core debond   & FEM + real OGW \\
     SRB-3 case      & pressure burst  & acoustic emission      & burst (Paris)       & FEM + real AE \\
     \textbf{drive shaft} & \textbf{torsion} & shared $|z|$ (future) & \textbf{interlam.\ CZM$\to$PF} & \textbf{CZM-FEM (144)} \\
@@ -171,8 +171,10 @@ a perforated CFRP interstage: full-field thermoelastic stress~\cite{dulieubarton
 (DSPSS first stress invariant) on a $13\,942$-node mesh with $1{\times}1/2{\times}2/4{\times}4$ hole
 defects and label masks. Per-sample $z$-score normalisation needs no healthy
 reference, so the detector deploys on a single measured field. This structure
-carries the FEM training set, the measured TSA campaign (\S\ref{sec:bridge}), and
-the phase-field prognosis (Stage~3).
+carries the FEM training set and the phase-field prognosis (Stage~3); its
+surface-stress (DSPSS) modality is validated for sim-to-real against a real CFRP
+\emph{prosthetic} TSA campaign --- the same physical quantity on simply shaped
+specimens (\S\ref{sec:bridge}), not measurements of the interstage itself.
 
 \paragraph{The torsion drive shaft (the new load mode, the Keio foundation).} An
 H3-class CFRP drive shaft / torque tube is the first structure whose primary load
@@ -566,7 +568,7 @@ exists for this article, so the clearance, fleet and design results below use th
 representative phase-field forward and a synthetic fleet. The honest headline is
 that detection/classification/characterisation are real-data-grounded and the
 \emph{life}-side of the stack is not yet --- the single largest gap, and the
-reason the Kojima TSA full-field campaign (interstage) and a real fatigue
+reason the Kojima TSA full-field campaign (CFRP prosthetic specimens) and a real fatigue
 dataset are the priority next inputs.
 \begin{figure}[t]\centering
   \includegraphics[width=\linewidth]{fairing_real_e2e.pdf}
@@ -582,8 +584,9 @@ dataset are the priority next inputs.
 \paragraph{Sim-to-real domain adaptation, on both real-data structures.} The
 cross-structure real-data result is that an \emph{unsupervised} per-feature
 quantile matching~\cite{sun2016return} aligns measured to FEM statistics where naive normalisation
-fails. On the \emph{interstage}, the stack ingests measured TSA-derived full-field
-DSPSS from a 22-specimen CFRP campaign~\cite{kojima2024transfer} and the quantile
+fails. For the \emph{surface-stress modality} (interstage application, validated on
+prosthetic specimens), the stack ingests measured TSA-derived full-field
+DSPSS from a 22-specimen CFRP \emph{prosthetic} campaign~\cite{kojima2024transfer} and the quantile
 step closes $\sim$$97\%$ of the FEM$\to$measured gap (proxy-$\mathcal{A}$ distance
 $2.0\!\to\!0.3$, Fig.~\ref{fig:tsa}). On the \emph{fairing}, the gap is a real long-term operational
 shift --- guided-wave records collected across seasons carry a temperature drift ---
@@ -603,7 +606,7 @@ the detector's \emph{separability}, not only its calibration; recovering detecti
 power needs feature-level DA, not just a recalibrated threshold. The OGW fairing is
 thus the framework's real-data confirmation that the conformal clearance guarantee
 is deployable only \emph{with} an explicit environmental correction. The measured
-interstage data are used under co-authorship with the TSA campaign's owner.
+CFRP prosthetic TSA data are used under co-authorship with the campaign's owner.
 \begin{figure}[t]\centering
   \includegraphics[width=\linewidth]{ogw_conformal_detection.png}
   \caption{Conformal clearance guarantee under the real seasonal shift (fairing,
@@ -619,7 +622,8 @@ interstage data are used under co-authorship with the TSA campaign's owner.
 \end{figure}
 \begin{figure}[t]\centering
   \includegraphics[width=\linewidth]{tsa_sim2real.pdf}
-  \caption{Sim-to-real on the interstage. Measured TSA-derived DSPSS vs.\ FEM, and
+  \caption{Sim-to-real of the surface-stress modality on real CFRP prosthetic
+  specimens. Measured TSA-derived DSPSS vs.\ FEM, and
   the proxy-$\mathcal{A}$ distance before/after unsupervised quantile domain
   adaptation ($2.0\!\to\!0.3$, $\sim$$97\%$ of the gap closed).}
   \label{fig:tsa}
@@ -816,7 +820,7 @@ gradients for the inverse problem, where amortised inference extrapolates poorly
 % one-paragraph wrap; outlook to Stage 4-5 (hierarchical fleet learning,
 % design feedback) and sim-to-real with measured full-field data.
 \paragraph{Towards measured data.} The sim-to-real bridge is under way: the stack
-ingests measured TSA-derived full-field DSPSS from a 22-specimen CFRP campaign,
+ingests measured TSA-derived full-field DSPSS from a 22-specimen CFRP prosthetic campaign,
 and an unsupervised domain-adaptation step (per-feature quantile matching) closes
 $\sim$$97\%$ of the FEM$\to$measured distribution gap (proxy-$\mathcal{A}$
 distance $2.0\!\to\!0.3$); a labelled measured-data detection benchmark awaits

@@ -19,7 +19,7 @@ spanning three sensing modalities**:
 
 | structure | sensing modality | Stage-3 prognosis physics | real data |
 |---|---|---|---|
-| perforated interstage | surface stress (DSPSS) GNN | anisotropic AT2 phase-field delamination | Kojima TSA (measured) |
+| perforated interstage | surface stress (DSPSS) GNN | anisotropic AT2 phase-field delamination | Kojima **prosthetic** TSA (measured sim2real proxy, same DSPSS quantity — NOT interstage measurements) |
 | H3 satellite fairing | guided-wave GNN | honeycomb skin-core debond (ERR+Paris) | OGW long-term (measured) |
 | SRB-3 motor case | acoustic emission (AE) | filament-wound internal-pressure burst | 4TU AE .pridb (measured, CC0) |
 
@@ -33,8 +33,9 @@ validated capability.** Every result falls into exactly one of three tiers:
 - **[R] real data, externally meaningful** — only the DETECTION front-ends touch
   real measurements: SRB-3 AE pristine-vs-damaged (4TU, real AE), the FEM-coupon
   detection harness, OGW temperature DA. *Even these validate detection, not
-  prognosis.* The interstage **measured** detection AUROC is still BLOCKED (Kojima
-  masks); the AE is a compression-coupon **proxy**, not the motor case itself.
+  prognosis.* The surface-stress **measured** detection AUROC (Kojima **prosthetic**
+  data — sim2real proxy for the interstage, NOT interstage measurements) is still
+  BLOCKED (Kojima masks); the AE is a compression-coupon **proxy**, not the motor case itself.
 - **[S] self-consistency, NOT ground truth** — every "oracle", oracle-decomposition
   clearance accuracy, decision-UQ, LOSO transfer, conformal, system_baseline number
   uses the SAME FEM/surrogate model as both the predictor and the "truth." These are
@@ -50,7 +51,7 @@ validated capability.** Every result falls into exactly one of three tiers:
 **The core gap (concede openly):** no result has been compared to the real failure
 of the actual interstage / fairing / SRB-3, nor to a real CFRP fracture/fatigue
 coupon. Highest-leverage fixes, in order: (1) one structure end-to-end on real
-measured data (interstage Kojima — external dependency); (2) calibrate ONE prognosis
+measured data (interstage surface-stress modality via Kojima **prosthetic** TSA — external dependency); (2) calibrate ONE prognosis
 case against a real run-to-failure coupon dataset (NASA PCoE composite is on disk,
 real RUL validation NOT yet done — only loaded for detection). Depth > breadth:
 better to validate one thread than to add another breadth module.
@@ -64,7 +65,7 @@ unsupported (~6× too shallow)**, and a single global law fails to generalise
 the Stage-3 prognosis. (The earlier `nasa_rul_validation` RUL attempt via raw
 strain was an honest negative — that proxy is a dead-end; the Paris route via
 clean tabular fracture data is the one that worked.) Remaining: real run-to-failure
-of the actual structures, and the interstage Kojima measured end-to-end (fix 1).
+of the actual structures, and the surface-stress (Kojima **prosthetic**) measured end-to-end (fix 1).
 
 Tier tags **[R]/[S]/[U]** are applied per row in the tables below.
 
@@ -78,8 +79,8 @@ Tier tags **[R]/[S]/[U]** are applied per row in the tables below.
 ## Stage 1 — detection front-ends (3 structures, 3 modalities)
 | module | tests | headline |
 |---|---|---|
-| `kojima_real_case` | 14/14 | real measured TSA DSPSS field-anomaly detector |
-| `interstage_measured_detection` | 6/6 | harness proven on FEM coupon **AUROC 0.851**; measured AUROC BLOCKED on Kojima masks |
+| `kojima_real_case` | 14/14 | real measured **prosthetic** TSA DSPSS field-anomaly detector (sim2real proxy, not interstage) |
+| `interstage_measured_detection` | 6/6 | harness proven on FEM coupon **AUROC 0.851**; measured AUROC (Kojima **prosthetic** data) BLOCKED on Kojima masks |
 | `baselines_comparison` | 43/43 | physics \|z\| detector: AUROC #2 / **AUPRC #1** vs ML baselines |
 | `srb3_motorcase` | 23/23 | **real AE** (4TU CC0, ~48k hits) pristine-vs-damaged RF **per-hit AUROC 0.888 / per-specimen 1.000** (linear ~0.52); + amplitude–duration damage-mode clusters |
 
