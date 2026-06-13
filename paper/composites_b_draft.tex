@@ -577,9 +577,22 @@ fails. On the \emph{interstage}, the stack ingests measured TSA-derived full-fie
 DSPSS from a 22-specimen CFRP campaign~\cite{kojima2024transfer} and the quantile
 step closes $\sim$$97\%$ of the FEM$\to$measured gap (proxy-$\mathcal{A}$ distance
 $2.0\!\to\!0.3$, Fig.~\ref{fig:tsa}). On the \emph{fairing}, the gap is a real long-term operational
-shift --- guided-wave records collected across seasons carry a temperature drift;
-the same quantile DA recovers the false-positive rate from $14\%$ to $5\%$, whereas
-$z$-score standardisation makes it \emph{worse} ($\to 30\%$). The measured
+shift --- guided-wave records collected across seasons carry a temperature drift ---
+and we use it to stress-test the framework's distribution-free clearance guarantee.
+A split-conformal false-alarm threshold calibrated on spring-healthy data holds in
+distribution (empirical FPR $\approx\alpha$), but the seasonal shift breaks
+exchangeability and the guarantee collapses: at a nominal $5\%$, the \emph{winter}
+false-alarm rate rises to $\sim$$68\%$. Two corrections restore control to
+$\approx\alpha$ across seasons --- the unsupervised per-feature quantile DA (FPR
+$14\%\!\to\!5\%$, whereas $z$-score standardisation makes it \emph{worse},
+$\to30\%$) and a temperature-conditional (Mondrian) conformal
+threshold~\cite{vovk2005algorithmic}. Honestly, though, under the strong winter
+shift restoring \emph{false-alarm} control by recalibration alone costs
+\emph{detection} --- cold-damage recall collapses --- because the shift degrades
+the detector's \emph{separability}, not only its calibration; recovering detection
+power needs feature-level DA, not just a recalibrated threshold. The OGW fairing is
+thus the framework's real-data confirmation that the conformal clearance guarantee
+is deployable only \emph{with} an explicit environmental correction. The measured
 interstage data are used under co-authorship with the TSA campaign's owner.
 \begin{figure}[t]\centering
   \includegraphics[width=\linewidth]{tsa_sim2real.pdf}
