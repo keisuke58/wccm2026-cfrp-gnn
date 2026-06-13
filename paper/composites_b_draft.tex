@@ -17,7 +17,8 @@
 \title{A Structure-Agnostic Structural-Health-Monitoring Decision Framework for
 Reusable CFRP Spacecraft Structures: from Real-Data Detection to
 Physics-Grounded Life Prognosis}
-\author{K.\ Nishioka \and \textit{(co-authors TBD)}}
+\author{Keisuke Nishioka \and Yuta Kojima \and Sosuke Asano \and Toshiya Saito
+\and Masahito Washiya \and Kosuke Kawakami \and Mayu Muramatsu}
 \date{Draft --- \today}
 
 \begin{document}
@@ -245,7 +246,8 @@ top of a shared geometry-agnostic screen.
 $s_i=|x_i-\mu_i|/\sigma_i$ (from $N{=}2000$ healthy fields; node-level AUROC vs.\
 the defect mask) is the structure-agnostic anomaly screen any fixed-geometry field
 inherits --- including the drive shaft and tank. Benchmarked against eight
-alternatives (PaDiM, PatchCore, STFPM, graph autoencoder, flow-matching diffusion,
+alternatives (PaDiM~\cite{defard2021padim}, PatchCore~\cite{roth2022towards},
+STFPM~\cite{wang2021student}, graph autoencoder, flow-matching diffusion,
 a zero-shot harmonicity probe; Table~\ref{tab:zoo}, Fig.~\ref{fig:zoo}), per-node
 statistics dominate: on fixed geometry the healthy manifold is a tight cloud
 around one template, so the per-node Gaussian is the correct inductive bias, and
@@ -284,9 +286,9 @@ mesh-physics GNN reaches macro-F1 $0.76$ vs.\ $0.61$ for a plain GAT~\cite{velic
 split cleanly --- \emph{detection generalises to unseen defect sizes while precise
 localisation collapses}, a distinction invisible to macro-F1 and exposed only by
 defect-only F1 with separated detection/localisation metrics. \emph{Fairing} ---
-guided-wave GNN (LGSTA node-classification F1 $0.86$, SAGE $0.79$); its type signal
+guided-wave~\cite{su2006guided} GNN (LGSTA node-classification F1 $0.86$, SAGE $0.79$); its type signal
 is verified to be a genuine damage cue rather than a season/temperature confound
-(\S\ref{sec:stage1}). \emph{SRB-3 motor case} --- acoustic emission on real
+(\S\ref{sec:stage1}). \emph{SRB-3 motor case} --- acoustic emission~\cite{saeedifar2020damage} on real
 experimental data ($\sim$$48$k Vallen hits): a group-aware pristine-vs-damaged
 classifier reaches per-hit AUROC $0.888$ / per-specimen $1.000$ (linear baseline
 $\sim$$0.52$), with amplitude--duration damage-mode clustering reported honestly
@@ -370,7 +372,7 @@ survival curve and the clearance call.
 
 \paragraph{Real-data fatigue calibration --- the life side consumes real fracture
 data.} The Paris exponent that governs debond growth is calibrated to real CFRP
-mode-I DCB data (4TU, $37$ specimens, $\sim$$1{,}270$ points): a Normal--Normal
+mode-I DCB data~\cite{yao2015mode} (4TU, $37$ specimens, $\sim$$1{,}270$ points): a Normal--Normal
 hierarchy gives a population posterior $m\!\approx\!17$ (95\% CI $15$--$18$), far
 steeper than the representative $m\!\approx\!3$, and a single $(C,m)$ \emph{fails}
 leave-one-specimen-out ($R^2<0$) --- the signature of fibre bridging (an R-curve),
