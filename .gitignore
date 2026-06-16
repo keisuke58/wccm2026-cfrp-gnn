@@ -28,3 +28,14 @@ training_pid_*
 !results/*.png
 data/srb3_ae/
 data/composite_fatigue_4tu/
+
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.blg
+*.fls
+*.fdb_latexmk
+*.nav
+*.snm
+*.toc
+*.out

@@ -178,3 +178,36 @@ The 4TU `.pridb` AE files (~27 MB) are git-ignored (`data/srb3_ae/`); they are
 public-domain (CC0), re-downloadable from 4TU article 21621381. Compression AE is
 used as a real-data **proxy** for the motor-case AE front-end (same hit-feature
 physics — matrix crack / fibre break / delamination — not a pressure-vessel burst test).
+
+## Two-pillar flight clearance — No-Growth × residual strength (CAI) — 2026-06-14
+`nogrowth_cai_clearance.py` (12/12 tests, registered in run_all, fig
+`paper_figs/nogrowth_cai_clearance.{pdf,png}`). Research-driven upgrade from a deep-research pass
+(adversarially verified, primary NASA/MIL sources).
+
+**Why.** Composite structure is certified on TWO pillars, not one: **No-Growth** (defects must not
+grow harmfully under service load) AND a **two-load residual-strength** rule — with Barely-Visible
+Impact Damage (BVID) the structure must still carry **ULTIMATE** load, with visible damage **LIMIT**
+load (MIL-HDBK-17-3F / CMH-17-3 [S1]; CAI = the standard residual-strength metric, ASTM D7136/D7137
+[S4]; BVID is the design driver — low-velocity impact is near-invisible yet slashes compressive
+residual strength). `decision_uq.py` already implements the No-Growth pillar exactly (P_grow from the
+FD phase-field over load scatter → α,β), **but had only that pillar**. A defect that does NOT grow yet
+has eaten too much residual strength is a certification FAIL a growth-only monitor silently passes.
+
+**What.** Added the missing **residual-strength (CAI) pillar** and take the **more-severe of the two**:
+- `residual_strength_ratio(θ)` — CAI knockdown R = σ_res/σ_ultimate via the standard
+  impact-damage-as-equivalent-open-hole practice (transparent soft-inclusion form, REPRESENTATIVE
+  labelled params `CAI_PARAMS`, calibrated so the seeded defect range 1–4 elements spans the full
+  ladder: smallest R≈1.0 retains ultimate, largest R≈0.60 below limit).
+- two-load gates R_ULT=1.0 (retains ultimate), R_LIM=1/1.5=0.667 (retains limit, FoS 1.5).
+- `clearance(θ, P_grow, α, β)` = `more_severe(no_growth, strength)` + which pillar drove it.
+
+**Result (42 scenarios, size×load, exact FD phase-field for P_grow).** The CAI pillar **escalated the
+call in 18/42 = 43%** of scenarios, and **all 18 are cases the growth-only monitor cleared as OK but
+the two-pillar deems NOT OK** — the certification gap the single-axis decision misses. Growth-only's
+~21 OK calls collapse to 3 under two-pillar (rest → REPAIR/RETIRE). This aligns Stage 3's output with
+how composites are *actually* certified (residual strength, not just crack growth).
+
+**Honest limits.** CAI params are representative (open-hole-compression knockdown order), not a fit to
+proprietary CAI data — calibrate to a coupon set per material before any quantitative claim. The
+seeded-defect size range (1–4 elements) is narrow; the curve is illustrative of the ladder, not a
+material allowable. Depth dependence (sub-surface buckling) dropped for now (future refinement).

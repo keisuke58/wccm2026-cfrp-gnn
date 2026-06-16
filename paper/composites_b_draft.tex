@@ -52,7 +52,13 @@ representative/synthetic. Consequently
 the end-to-end decision accuracy ($85\%$, zero dangerous misses) is measured against
 a synthetic finite-difference physics oracle rather than real life tests, and the
 design optimum is a robust trade-off \emph{mechanism} but not a calibrated value.
-Closing the life-side real-data gap is the priority and motivates the
+A first step closes part of this gap: the life clock's \emph{identifiability} is
+real-data-validated --- a data-driven health index carries no usable remaining-life
+signal ($90$--$160\%$ point-RUL error on real run-to-failure distributed strain),
+whereas a physical Paris/phase-field clock is identifiable on real crack growth
+(Virkler 2024-T3, $m{=}2.92$; $16.7\%$ remaining-life error at mid-life, $0.9\%$ near
+failure) --- the life-side limit is the \emph{signal}, not the estimator.
+Closing the remaining life-side real-data gap is the priority and motivates the
 differentiable, calibrated forward of the continuation.
 \end{abstract}
 
@@ -399,6 +405,39 @@ absolute Paris rate $C$ remains representative, so this calibrates the life-side
   clears it. Single $(C,m)$ fails leave-one-specimen-out, so the population
   posterior is propagated rather than a point estimate.}
   \label{fig:fatlink}
+\end{figure}
+
+\paragraph{Does a remaining-life clock exist? --- identifiability, validated on real crack growth.}
+Before trusting any RUL number we ask whether the signal carries one. On the real
+ReMAP distributed-fibre run-to-failure data a \emph{data-driven} load-shedding health
+index has \textbf{no usable clock}: leave-the-future-out point-RUL has a bias floor of
+$90$--$160\%$ of total life even at infinite SNR (the index is non-linear/plateaus),
+and no reframing --- relative life-fraction, staging, warm-start --- rescues it. A
+\emph{physical} degradation law does. Fitting the Paris/phase-field clock on the crack
+observed to a life-fraction $\lambda$ and integrating to failure, the remaining-life
+error is identifiable and sharpens with observation, \textbf{confirmed on real crack
+growth}: on Virkler 2024-T3~\cite{virkler1979statistical} ($25$ specimens, the
+textbook exponent emerges, $m{=}2.92$) the median error is $16.7\%$ of life at
+mid-life ($\lambda{=}0.5$) and $0.9\%$ near failure (Fig.~\ref{fig:virkler}); on the
+real CFRP DCB delamination~\cite{yao2015mode} above
+it is identifiable per specimen but coarser, because fibre bridging breaks the single
+$\mathrm{d}a/\mathrm{d}N$--$\Delta G$ law (the $m\!\approx\!17$/single-law-failure
+signature); a fitted single-R-curve bridging correction does \emph{not} restore a
+cross-specimen law on the real data (pooled $R^2$ $0.05\!\to\!0.08$, cold-start RUL
+unchanged at $\sim$$50\%$ mid-life), so composite delamination prognosis remains
+\emph{per-specimen} --- it needs the specimen's own early history, not a population law. The \emph{same} estimator that fails on the data-driven index ($90$--$160\%$)
+succeeds on the physical clock ($\le17\%$): the life-side limitation is the
+\textbf{signal}, not the method --- precise prognosis requires a physical degradation
+model, which is exactly the phase-field route here.
+\begin{figure}[t]\centering
+  \includegraphics[width=\linewidth]{virkler_validation.pdf}
+  \caption{The physical life-clock is identifiable on \emph{real} crack growth
+  (Virkler 2024-T3, $25$ specimens): (left) measured $a(N)$; (centre) $\mathrm{d}a/
+  \mathrm{d}N$--$\Delta K$ recovers the textbook Paris law $m{=}2.92$; (right)
+  leave-the-future-out remaining-life error sharpens with observation
+  ($16.7\%\!\to\!0.9\%$ of life), far below the data-driven index's flat $90$--$160\%$
+  floor.}
+  \label{fig:virkler}
 \end{figure}
 
 \paragraph{Fast forward surrogate.} The FD growth solve ($\approx1.8$\,s/call) is

@@ -55,6 +55,7 @@ GROUPS: list[tuple[str, list[tuple[str, bool]]]] = [
     ]),
     ("Stage 3/clear — decision UQ (3 structures, symmetric)", [
         ("decision_uq", True),
+        ("nogrowth_cai_clearance", True),     # two-pillar: No-Growth × residual strength (CAI)
         ("fairing_pipeline", False),
         ("srb3_decision_uq", False),
         ("cost_calibration", False),

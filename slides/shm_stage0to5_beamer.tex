@@ -180,6 +180,43 @@ learned models bootstrap \emph{new} airframes and repairs.
 \end{frame}
 
 % ─────────────────────────────────────────────
+\begin{frame}{Does it transfer \emph{across structures}? --- 7 real structures, 3 boundaries}
+\begin{columns}[T]
+\column{0.52\textwidth}
+{\small Same geometry-only Tier-B descriptor, \textbf{leave-one-structure-out} over 7 real
+structures (5 modalities: DSPSS / DIC / guided-wave / DFOS / vibration).}
+\vspace{1mm}\\
+\scriptsize
+\begin{tabular}{lcc}
+\toprule
+held-out structure & single cue & learned \\
+\midrule
+DIC panel (crack)            & $+0.71$ & $+0.66$ \\
+omega-stringer (debond)      & $+0.50$ & $+0.50$ \\
+COPV membrane (burst)        & $-0.83$ & \textcolor{okgreen}{$+0.85$} \\
+interstage (1-node defect)   & $+0.00$ & \textcolor{alertred}{$-0.02$} \\
+stiffened panel (load-shed)  & $-0.02$ & $-0.15$ \\
+Hawk \emph{vibration} (mass) & $-0.25$ & \textcolor{alertred}{$-0.75$} \\
+dense guided-wave (hole)     & $+0.38$ & \textcolor{alertred}{$-0.04$} \\
+\bottomrule
+\end{tabular}
+\column{0.46\textwidth}
+\begin{block}{Learning crosses \emph{topology}}
+\small The COPV membrane inversion ($-0.83\!\to\!+0.85$, perm.\ $p{<}0.001$) was an artefact of the
+naive cue --- a richer descriptor reads the higher-order distribution shape.
+\end{block}
+\begin{alertblock}{Three boundaries survive learning}
+\scriptsize
+\textbf{scale} --- a 1-node defect is invisible to any global descriptor; only the reference-based
+\textbf{Mahalanobis} node residual recovers it (\textbf{node-AUROC 0.9999}).\\[1pt]
+\textbf{modality sign} --- vibration mass-loading \emph{smooths} the field $\Rightarrow$ strongly
+informative but sign-inverted ($-0.75$).\\[1pt]
+\textbf{weak scatterer} --- a small guided-wave hole is too diffuse to transfer ($\rho\!\approx\!0$).
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+% ─────────────────────────────────────────────
 \begin{frame}{Stage 2 --- calibrated Bayesian defect characterisation (FMPE)}
 Flow-matching posterior estimation, trained on the \emph{existing} FEM set
 (20k pairs, zero new simulations):

@@ -5,6 +5,8 @@
 
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
+\usepackage{newtxtext, newtxmath}   % Times-family text + math
+\usepackage{microtype}
 \usepackage{booktabs}
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
@@ -336,6 +338,21 @@
     \item Carrara-2020 fatigue history degrades $G_c$ across flights (no i.i.d.\ shortcut).
     \item Pluggable: fairing skin-core debond ($G=\kappa\sigma^2a^2$, Paris);
           SRB-3 burst; \emph{torsion} interlaminar CZM.
+  \end{itemize}
+\end{frame}
+
+% --- A4b ---
+\begin{frame}{A4b --- Does a remaining-life clock exist? (real-data validated)}
+  \centering\includegraphics[width=0.95\textwidth]{virkler_validation.pdf}\\[2pt]
+  \begin{itemize}\footnotesize
+    \item \textbf{Data-driven} health index: \emph{no} usable clock --- point-RUL bias floor
+          $90$--$160\%$ of life (real ReMAP DFOS); no reframing rescues it.
+    \item \textbf{Physical} Paris/phase-field clock: identifiable, validated on \emph{real} crack
+          growth --- Virkler 2024-T3 ($m{=}2.92$), RUL error $16.7\%\!\to\!0.9\%$ as $\lambda$ grows.
+    \item Real CFRP DCB: identifiable per-specimen but coarser --- fibre bridging breaks the single
+          $\mathrm{d}a/\mathrm{d}N$--$\Delta G$ law ($m\!\approx\!17$).
+    \item Same estimator: fails on the data index, works on the physics clock $\Rightarrow$ the
+          life-side limit is the \textbf{signal}, not the method.
   \end{itemize}
 \end{frame}
 
