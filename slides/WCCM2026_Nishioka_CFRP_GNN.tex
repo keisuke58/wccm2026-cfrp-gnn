@@ -297,6 +297,43 @@ local attention.
 \end{frame}
 
 % ---------------------------------------------------------------------
+\begin{frame}{Detect first, then localize --- screening comes for free}
+\note{One quick but important point before the network. Detection and localization are different jobs. Detection --- is there a defect, and roughly where --- needs no learning at all. Because every specimen shares one mesh geometry, the healthy fields form a point cloud around a single template, so the same per-node z-score we already use as input doubles as an unsupervised detector: score each node by how many standard deviations it sits from the healthy mean, with mean and std estimated from two thousand defect-free fields. On clean data this per-node statistic reaches node-level AUROC of about one --- it actually beats every learned anomaly detector we tried, including a diffusion model. The one caveat is signal-to-noise, but it is more forgiving than folklore suggests: on a labelled coupon the detector still scores about 0.84 AUROC at noise one-tenth of the field standard deviation, and only falls to chance near seven-tenths to one times the field std --- so the often-quoted collapse at sigma equals 0.1 is wrong. Lock-in infrared thermography, where noise falls as one over root-K frames, only adds margin. So screening is cheap. The GNN earns its keep on the genuinely hard part: the semantic nineteen-class region-by-layer identification under noise --- which is the rest of this talk.}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Two different jobs.} \emph{Detection} (is there / where?) needs
+\textbf{no learning}: every specimen shares one mesh, so healthy fields are a
+point cloud around \emph{one} template.
+
+\vspace{0.5em}
+The \emph{same} per-node z-score we feed the GNN doubles as an unsupervised
+screen:
+\[
+  s_i = \frac{|x_i-\mu_i|}{\sigma_i},\qquad
+  (\mu_i,\sigma_i)\ \text{from } N{=}2000\ \text{healthy fields.}
+\]
+Node-level, label-free, $\sim$30 lines, CPU-minutes.
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{block}{Node AUROC (clean)}
+\best{Per-node Mahalanobis / PCA: $0.999\,/\,0.995$} (2$\times$2 / 4$\times$4).\\[2pt]
+{\scriptsize Learned baselines: PaDiM $0.96$, PatchCore $0.93$,
+STFPM $0.75$, diffusion $0.50$--$0.66$.}
+\end{block}
+\begin{alertblock}{SNR: robust, not fragile}
+Verified on a labelled coupon: detection holds (AUROC ${\sim}0.84$) at noise
+$\sigma{=}0.1$ of field std, failing only near $\sigma{\approx}0.7$--$1.0$ ---
+not the folklore ``$0.1$ collapse.'' Lock-in IR ($\sigma\!\propto\!1/\sqrt{K}$)
+adds margin.
+\end{alertblock}
+\end{column}
+\end{columns}
+\vspace{0.3em}
+$\Rightarrow$ detection is cheap; the GNN is for the hard part ---
+\textbf{semantic 19-class (region $\times$ layer) localization} under noise.
+\end{frame}
+
+% ---------------------------------------------------------------------
 \begin{frame}{Graph representation \& GAT model}
 \note{We represent each surface element as a node, with features being its coordinates and the normalized stress. Edges are the fixed mesh connectivity, reused across all specimens. We use a graph attention network: three GAT layers, sixty-four to two-hundred-fifty-six channels, multi-head, with batch-norm, dropout and residual connections. Attention lets each node weight its neighbours adaptively, which suits the highly non-uniform stress field.}
 \begin{columns}[T]
@@ -619,6 +656,32 @@ centre; its depth and width encode the insertion layer (ply-angle dependence).
 \vspace{0.4em}
 These quantify in-plane localization ($R$), depth/layer accuracy ($P_{\mathrm{gauss}}$),
 and their combination (TDPS), complementing the class-level macro-F1.
+\end{frame}
+
+% ---------------------------------------------------------------------
+\begin{frame}{Appendix: what the Stage-0 screen keys on (one case)}
+\note{Backup for a likely question --- what does the per-node screen actually respond to. On real 4x4-defect specimens we decompose a case. Two robust facts. First, where: the defect nodes rank in the top about zero-point-two percent by score, per-case AUROC about 0.998, aggregated over two hundred specimens, not cherry-picked. Second, which way: ninety-eight to one hundred percent of the defect-node deviations are negative --- the screen keys on a local stress valley, which is exactly the thermoelastic signature of a sub-surface defect. The honest caveats: the absolute z magnitudes are inflated because the per-node sigma is tiny on a z-scored field, so I only quote rank and sign, never N-sigma; and top-K precision is below one because the hole-edge concentration also deviates strongly --- which is precisely why we difference-normalize the input before precise localization.}
+\begin{columns}[T]
+\begin{column}{0.6\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{../paper_figs/stage0_case_study.pdf}
+\end{column}
+\begin{column}{0.4\textwidth}\small
+Real 4$\times$4 specimens, per-node $s_i=|x_i-\mu_i|/\sigma_i$:
+\begin{itemize}\small
+  \item \textbf{Where:} defect nodes rank \textbf{top $\sim$0.2\%};
+        per-case \best{AUROC $0.998$} (200 specimens).
+  \item \textbf{Which way:} \textbf{98--100\% negative} deviation
+        $\Rightarrow$ a \emph{stress valley} (thermoelastic signature).
+\end{itemize}
+\begin{block}{Honest limits}
+\scriptsize
+$|z|$ magnitudes inflated ($\sigma_i\!\sim\!10^{-3}$) --- quote rank/sign, not
+``$N\sigma$''. precision@K $<1$: the hole edge also deviates $\Rightarrow$ the
+reason we \emph{difference-normalize} before precise localization.
+\end{block}
+\end{column}
+\end{columns}
 \end{frame}
 
 \end{document}
