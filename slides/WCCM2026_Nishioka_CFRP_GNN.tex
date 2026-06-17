@@ -81,7 +81,7 @@
   \setbeameroption{show notes on second screen=right}
 \fi
 
-\graphicspath{{figures_paper/}{../results/}}
+\graphicspath{{figures_paper/}{../results/}{figures/}}
 \newcommand{\best}[1]{{\color{okgreen}\textbf{#1}}}
 
 \title{Development of a Defect Estimation Method for CFRP Interstage
@@ -115,6 +115,8 @@ Structures with Holes using Finite Element Analysis and Graph Neural Networks}
 % ---------------------------------------------------------------------
 \begin{frame}{Contributions}
 \note{State the three contributions up front, then dive in.}
+\begin{columns}[T]
+\begin{column}{0.56\textwidth}
 \begin{enumerate}
   \item A \textbf{graph attention network} localizing 3-D delamination in
         \emph{perforated} CFRP interstages directly from FEM surface stress (DSPSS).
@@ -123,6 +125,13 @@ Structures with Holes using Finite Element Analysis and Graph Neural Networks}
   \item \textbf{Noise-robust} training (structured noise $+$ defect-free negatives)
         --- a step toward experimental infrared-stress data.
 \end{enumerate}
+\end{column}
+\begin{column}{0.44\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{framework_overview.pdf}\\
+  {\scriptsize FEM-DSPSS $\to$ graph $\to$ GAT $\to$ 3-D defect location.}
+\end{column}
+\end{columns}
 \end{frame}
 
 % ---------------------------------------------------------------------
@@ -178,10 +187,19 @@ sub-surface defects are inferred.
 % ---------------------------------------------------------------------
 \begin{frame}{Previous study and purpose}
 \note{Kojima et al. gave a CNN proof-of-concept on non-perforated CFRP. Our setting is harder: perforated interstage, full 3-D location (region times layer), and extreme imbalance. Formally we learn a node classifier on the mesh graph, minimizing focal loss; class zero is defect-free, classes one to eighteen encode region times layer.}
+\begin{columns}[T]
+\begin{column}{0.6\textwidth}
 \textbf{Prior work.} Kojima \textit{et al.}~\cite{kojima,kojima2024_transfer} --- a CNN
 \emph{proof-of-concept} on \emph{non-perforated} CFRP from FEM DSPSS.\\[2pt]
 \textbf{This work --- harder setting:} \emph{perforated} interstage $\times$ \emph{3-D}
 location (region $\times$ layer) $\times$ extreme imbalance ($<3\%$ defect nodes).
+\end{column}
+\begin{column}{0.4\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{kojima_real.pdf}\\
+  {\scriptsize Prior surface-stress lineage (Kojima \textit{et al.}).}
+\end{column}
+\end{columns}
 
 \vspace{0.5em}
 \textbf{Problem} --- node classification on the mesh graph $\mathcal G=(\mathcal V,\mathcal E)$,
@@ -541,7 +559,8 @@ attenuated noise in $x$, and global white noise.
 % ---------------------------------------------------------------------
 \begin{frame}{Outlook \quad {\small[ongoing, beyond the published paper]}}
 \note{Going forward: first, sim-to-real --- applying this noise-robust model to actual infrared stress measurements. Second, and still preliminary, we are extending from attention GNNs to mesh-physics GNNs such as MeshGraphNet and some layered variants; early results are encouraging and under evaluation with our co-authors. And third, transferring the approach to payload-fairing structural health monitoring. I will stop here. Thank you --- I am happy to take questions.}
-\begin{itemize}
+\small
+\begin{itemize}\itemsep2pt
   \item \textbf{Sim-to-real:} apply the noise-robust model to \emph{experimental}
         infrared-stress (TSA) measurements.
   \item \textbf{Architecture study (preliminary):} extending from attention
@@ -550,7 +569,19 @@ attenuated noise in $x$, and global white noise.
   \item \textbf{Application:} transfer to other perforated / bonded CFRP structures ---
         rocket motor cases, aircraft wing boxes, satellite panels, payload-fairing SHM.
 \end{itemize}
-\vspace{0.3em}
+\vspace{0.2em}
+\begin{columns}[T]
+\begin{column}{0.32\textwidth}\centering
+  \includegraphics[height=2.2cm]{arch_sweep.pdf}\\{\scriptsize Architecture study}
+\end{column}
+\begin{column}{0.32\textwidth}\centering
+  \includegraphics[height=2.2cm]{tsa_sim2real.pdf}\\{\scriptsize Sim-to-real (TSA)}
+\end{column}
+\begin{column}{0.32\textwidth}\centering
+  \includegraphics[height=2.2cm]{fairing_3d.png}\\{\scriptsize Payload-fairing SHM}
+\end{column}
+\end{columns}
+\vspace{0.2em}
 {\footnotesize\itshape Preliminary; not part of the published results.}
 \end{frame}
 

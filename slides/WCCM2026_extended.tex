@@ -41,7 +41,7 @@
 \setbeamercolor{example text}{fg=okgreen}
 \metroset{progressbar=frametitle, block=fill}
 
-\graphicspath{{../results/}{../figures/}}
+\graphicspath{{figures/}{figures_paper/}{../results/}{../figures/}}
 
 \newcommand{\best}[1]{{\color{okgreen}\textbf{#1}}}
 \newcommand{\bad}[1]{{\color{alertred}#1}}
@@ -86,7 +86,7 @@ application; the others are PDE-solver / structure-preserving methodology.}
 \end{column}
 \begin{column}{0.45\textwidth}
   \centering
-  \includegraphics[width=\linewidth]{pred_vs_true_class_labels_20260115_143343.png}\\
+  \includegraphics[width=\linewidth]{pred_vs_true.png}\\
   {\scriptsize Predicted vs.\ true node labels on the perforated specimen.}
 \end{column}
 \end{columns}
@@ -153,9 +153,14 @@ isolating the defect signal from hole stress concentration.
 Class-0 prior $\approx 0.998$. Predicting ``defect-free'' everywhere gives
 $99.8\%$ accuracy yet \bad{macro-F1 $\approx 0$}.
 \end{exampleblock}
-\vspace{0.3em}
+\vspace{0.2em}
 $\Rightarrow$ report \textbf{macro-F1}; engineer the training distribution,
 not only the loss.
+\vspace{0.3em}
+\begin{center}
+\includegraphics[width=0.92\linewidth]{gnn_graph_model.png}\\
+{\scriptsize Surface mesh $\to$ node/edge graph.}
+\end{center}
 \end{column}
 \end{columns}
 \end{frame}
@@ -201,21 +206,31 @@ GNNs~\cite{satorras2021equivariant} considered as future structure-aware option.
 \begin{frame}{Architecture sweep under the balanced recipe}
 \centering
 Identical recipe, 120 epochs, balanced 5000:5000, group-purged eval.
-\vspace{0.5em}
+\vspace{0.4em}
 
+\begin{columns}[T]
+\begin{column}{0.56\textwidth}
+\small
 \begin{tabular}{lcl}
 \toprule
 Architecture & macro-F1 & note \\
 \midrule
-\best{MeshGraphNet}~\cite{pfaff2021learning} & \best{0.764} & Encode-Process-Decode, edge update \\
+\best{MeshGraphNet}~\cite{pfaff2021learning} & \best{0.764} & Encode-Process-Decode \\
 GATv2~\cite{brody2022how}             & 0.694 & dynamic attention \\
-GAT~\cite{velickovic2018graph}        & 0.674 & Frontiers baseline ($\sim$0.61 published) \\
+GAT~\cite{velickovic2018graph}        & 0.674 & Frontiers baseline \\
 GraphSAGE                             & 0.663 & max-aggregation \\
 PNA                                   & 0.613 & multi-aggregator \\
 \bottomrule
 \end{tabular}
+\end{column}
+\begin{column}{0.44\textwidth}
+\centering
+\includegraphics[width=\linewidth]{arch_sweep.pdf}\\
+{\scriptsize macro-F1 by architecture (balanced recipe).}
+\end{column}
+\end{columns}
 
-\vspace{0.6em}
+\vspace{0.5em}
 \begin{block}{Takeaway}
 Under the balanced recipe, the \textbf{mesh-physics architecture} wins —
 beating the legacy GAT recipe (0.70) and the published baseline (0.61).
@@ -297,12 +312,12 @@ Cross the \textbf{0.80} macro-F1 line with a physically-motivated variant.
 \begin{columns}[T]
 \begin{column}{0.5\textwidth}
   \centering
-  \includegraphics[width=\linewidth]{f1score_class_20260115_143343.png}\\
+  \includegraphics[width=\linewidth]{f1_per_class.png}\\
   {\scriptsize Per-class F1.}
 \end{column}
 \begin{column}{0.5\textwidth}
   \centering
-  \includegraphics[width=\linewidth]{confusion_matrix_20260115_143343.png}\\
+  \includegraphics[width=\linewidth]{confusion.png}\\
   {\scriptsize Confusion matrix (top classes).}
 \end{column}
 \end{columns}
