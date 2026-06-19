@@ -115,9 +115,47 @@ A: Preliminary and not part of the published results, so I'll be brief: a mesh-p
 decode architecture that updates edge features along the mesh appears to improve over the attention-only
 GAT under a balanced training recipe. We are validating it with our co-authors before claiming numbers.
 
+## F. Stage-0 detection / Mahalanobis screening (new — narrated in the talk)
+
+**Q: If a per-node z-score detects defects at AUROC ≈ 1.0 with no learning, why do you need the GNN at all?**
+A: Detection and localization are different jobs. The screen answers "is there a defect, and roughly
+where" — a binary/coarse question that the shared mesh geometry makes trivial. The GNN does the hard
+part: the 19-class *region × layer* semantic identification (which ply, which in-plane region) under
+noise. The screen can't tell you the insertion layer; that's the whole point of the talk.
+
+**Q: You claim the per-node statistic beats a diffusion model and every learned anomaly detector. On what, exactly?**
+A: Node-level AUROC on clean fields: Mahalanobis/PCA reach 0.999/0.995 (2×2 / 4×4). The reason is
+structural, not a tuning win — every specimen shares one FEM mesh, so healthy fields are a tight point
+cloud around a single template and a simple Gaussian distance is near-optimal. A learned detector has
+nothing extra to exploit on clean data; it only helps if the healthy manifold is complex, which here it
+isn't. So I frame it as "the cheap baseline is the right tool for detection," not "deep learning failed."
+
+**Q: You say the σ=0.1 collapse is "wrong" — that contradicts the literature. What's your evidence?**
+A: On a *labelled coupon* the detector still scores ≈0.84 AUROC at noise = 0.1× the field std, and only
+falls to chance near 0.7–1.0× the field std. The often-quoted collapse assumes noise comparable to the
+*defect signal*, not to the field; on our scale 0.1 is mild. And lock-in IR thermography averages noise
+down as 1/√K frames, so practice has even more margin. I'm careful to call this a coupon-level result,
+not a universal claim.
+
+**Q: How big are the z-scores / how many sigma is a defect?**
+A: I deliberately don't quote N-sigma. On a z-scored field the per-node σ is tiny, which inflates the
+absolute magnitudes, so the number would be misleading. I only quote **rank** (defect nodes in the top
+~0.2%, per-case AUROC ≈0.998 over 200 specimens) and **sign** (98–100% of defect deviations are
+negative — a local stress *valley*, the thermoelastic signature of a sub-surface defect). There's a
+backup appendix slide on exactly this.
+
+**Q: Then why difference-normalize the input before the GNN, if the raw z-score already detects?**
+A: Top-K precision of the raw screen is <1 because the hole-edge stress concentration also deviates
+strongly. Differencing removes that static hole field so the GNN sees the residual defect signal — good
+enough for go/no-go screening, not for precise per-layer localization.
+
 ---
 
 ### One-liners to keep ready
+- "Detection is free and needs no learning; the GNN earns its keep on the 19-class layer-by-region localization."
+- "The screen beats a diffusion model on clean data because one shared mesh makes healthy fields a single tight template — the simple baseline is the right tool."
+- "I quote rank and sign, never N-sigma — z-scored fields inflate the magnitudes."
+- "σ=0.1 collapse assumes noise on the defect-signal scale; on the field scale we hold ~0.84 AUROC, and lock-in IR averages noise as 1/√K."
 - "Operationally, the false-negative rate (<3%) matters more than the 61% macro-F1."
 - "Physics enters through the FEA data and the thermoelastic DSPSS feature; structure-preserving GNNs are our future-work bridge to the methods in this session."
 - "Difference normalization removes the static hole field; the residual defect signal is what the GNN learns."

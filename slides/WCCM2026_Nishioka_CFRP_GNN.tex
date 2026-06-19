@@ -715,4 +715,37 @@ reason we \emph{difference-normalize} before precise localization.
 \end{columns}
 \end{frame}
 
+% ---------------------------------------------------------------------
+\begin{frame}{Appendix: why difference-normalization works (real-data evidence)}
+\note{Backup quantifying why differencing is necessary, from the actual generated dataset rather than assertion. Across 420 real defect cases the global peak von Mises is essentially fixed by the hole at 4715 MPa, coefficient of variation 0.22 percent --- it does not move with defect count, layer, or position, so a raw peak/global statistic cannot detect anything. After subtracting the same-mesh defect-free reference, the static hole field cancels: 99 percent of elements fall below 1 MPa, the hole-edge element differences to about 0.1 MPa, and the defect survives as a single sharp spike of 985 MPa --- an effective signal-to-noise ratio near 300 to 1. That isolated spike is exactly what the per-node z-score / Mahalanobis screen turns into AUROC about one.}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}\small
+\textbf{Raw field is hole-locked} (N=420 defect cases):
+\begin{itemize}\small
+  \item peak Mises $=$ \best{4715.5 MPa}, \best{CV $=0.22\%$}
+  \item independent of defect count (1$\times$1/2$\times$2/4$\times$4), layer, location
+  \item $\Rightarrow$ raw peak / global stats \textbf{cannot detect}
+\end{itemize}
+\vspace{0.3em}
+\textbf{Difference field} (damaged $-$ same-mesh reference, 141{,}792 elem):
+\begin{itemize}\small
+  \item hole-edge diff $\approx$ \best{0.1 MPa} (static field cancels)
+  \item \best{99\%} of elements $<1$ MPa; $\sigma_{\mathrm{bg}}\!=\!3$ MPa
+  \item defect $=$ single \best{985 MPa} spike $\Rightarrow$ SNR $\approx$ \best{300:1}
+\end{itemize}
+\begin{block}{}\scriptsize
+This is the quantitative basis for the difference + z-score input and the
+Stage-0 AUROC$\approx$1.0 --- measured on the generated FEM dataset, not assumed.
+\end{block}
+\end{column}
+\begin{column}{0.5\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{perforated_difference_field.png}\\
+  {\scriptsize Difference Mises: hole cancels ($\sim$0), defect is the lone spike.}\\[0.3em]
+  \includegraphics[width=0.92\linewidth]{perforated_population_stats.png}\\
+  {\scriptsize 420 cases: peak hole-fixed (left); local defect signal (right).}
+\end{column}
+\end{columns}
+\end{frame}
+
 \end{document}

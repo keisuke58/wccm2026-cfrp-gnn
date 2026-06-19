@@ -287,23 +287,29 @@ likely to cross macro-F1 $0.80$.
 \end{frame}
 
 % ---------------------------------------------------------------------
-\begin{frame}{Variant results \quad {\small[runs in progress]}}
+\begin{frame}{Variant results}
 \centering
 \begin{tabular}{lcl}
 \toprule
-Variant & macro-F1 & vs.\ MeshGraphNet (0.764) \\
+Variant & macro-F1 & vs.\ MeshGraphNet (0.761) \\
 \midrule
-MeshGraphNet (baseline) & 0.764 & --- \\
-MeshGraphKAN     & \texttt{TBD} & \\
-Hybrid-MGN       & \texttt{TBD} & \\
-BiStride-MGN     & \texttt{TBD} & \\
-MGN-Transformer  & \texttt{TBD} & \\
+\best{Hybrid-MGN}       & \best{0.792} & \textbf{+0.031} (new in-dist SOTA) \\
+MeshGraphNet (baseline) & 0.761 & --- \\
+BiStride-MGN     & 0.741 & $-0.020$ \\
+MGN-Transformer  & 0.552 & $-0.209$ \\
+MeshGraphKAN     & \texttt{TBD} & not yet run \\
 \bottomrule
 \end{tabular}
-\vspace{0.7em}
+\vspace{0.4em}\\
+{\scriptsize In-distribution eval (train on 2$\times$2/4$\times$4/8$\times$8 sizes, group-purged).}
+\vspace{0.6em}
 
-\begin{block}{Target}
-Cross the \textbf{0.80} macro-F1 line with a physically-motivated variant.
+\begin{block}{Outcome (honest)}
+Front/back cross-ply ``world'' edges (\textbf{Hybrid-MGN}) set a new
+in-distribution SOTA at \textbf{0.792} --- best of all architectures, but
+\emph{just short} of the 0.80 macro-F1 line. The cap is \textbf{adjacent-layer
+confusion}, not architecture: exact 19-class accuracy already reaches
+\textbf{0.85}.
 \end{block}
 \end{frame}
 
@@ -328,9 +334,14 @@ Cross the \textbf{0.80} macro-F1 line with a physically-motivated variant.
 \begin{itemize}
   \item The \textbf{data recipe} (noise-aug difference $+$ NDF negatives $+$ balancing)
         is dominant: $0.08 \to 0.70$.
-  \item Under the balanced recipe, \textbf{MeshGraphNet}~\cite{pfaff2021learning}
-        is the best architecture (\best{0.764}), beating the published GAT baseline (0.61).
-  \item Two \textbf{novel layered-NDT variants} (Fourier-KAN, front/back Hybrid) target $>0.80$.
+  \item Mesh-physics GNNs dominate attention GNNs (MeshGraphNet ${\sim}0.76$ vs.\
+        published GAT $0.61$); adding front/back cross-ply ``world'' edges
+        (\textbf{Hybrid-MGN}) lifts in-distribution to \best{0.792} --- new SOTA,
+        just short of $0.80$ (capped by adjacent-layer confusion, not architecture).
+  \item \textbf{Size-OOD (unseen 1$\times$1):} detection \emph{generalizes}
+        (defect-node recall up to $0.96$) but fine 19-class localization
+        \emph{collapses} (defect-only F1 ${\approx}0$) --- a data/representation
+        gap, invisible to macro-F1, identical across all architectures.
 \end{itemize}
 \vspace{0.4em}
 \begin{block}{Future work}

@@ -39,3 +39,6 @@ data/composite_fatigue_4tu/
 *.snm
 *.toc
 *.out
+
+# narration videos (large, regenerable via tools/talk)
+*.mp4
