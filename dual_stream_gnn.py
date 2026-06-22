@@ -208,7 +208,9 @@ def build_model(arch: str, device: torch.device) -> torch.nn.Module:
     """
     cls_name = _ARCH_MAP.get(arch, "HybridMeshGraphNetModel")
     cls = getattr(T, cls_name)
-    model = cls(hidden_channels=256, num_classes=19, dropout=0.1,
+    # hidden_channels=64 → hidden=64*4=256 (same hidden dim as default MeshGraphNet,
+    # fits on one 24GB RTX 4090 at batch_size=8 with 13942 nodes).
+    model = cls(hidden_channels=64, num_classes=19, dropout=0.1,
                 edge_drop_prob=0.0, in_channels=5, num_blocks=10)
     return model.to(device)
 
