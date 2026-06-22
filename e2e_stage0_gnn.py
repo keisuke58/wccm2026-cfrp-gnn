@@ -92,12 +92,20 @@ def _load_field(fpath: str) -> np.ndarray:
 
 
 def _load_label(lbl_dir: str, fpath: str) -> np.ndarray | None:
-    """Load 19-class node label for a specimen."""
+    """Load 19-class node label for a specimen.
+
+    Labels may be stored as:
+      (N, 19) one-hot  → take argmax over axis=1 to get (N,) class indices
+      (N,)   int       → use directly
+    """
     base = os.path.splitext(os.path.basename(fpath))[0]
     for cand in (f"{base}_19label.npy", f"{base}.npy"):
         lf = os.path.join(lbl_dir, cand)
         if os.path.exists(lf):
-            return np.load(lf)
+            lbl = np.load(lf)
+            if lbl.ndim == 2:               # (N, 19) one-hot
+                lbl = lbl.argmax(axis=1)    # → (N,) class indices 0–18
+            return lbl.astype(np.int64)
     return None
 
 
@@ -212,14 +220,14 @@ def stage1_infer(model: torch.nn.Module, specs: list[Specimen],
     from torch_geometric.loader import DataLoader as GeoLoader
     from torch_geometric.data import Data
     graphs = [_build_graph(s, xq, yq, zq, edge_index) for s in specs]
-    preds = []
+    all_preds = []
     for b in GeoLoader(graphs, batch_size=16, shuffle=False):
         b = b.to(DEV)
         out = model(b).argmax(1).cpu().numpy()
-        # split batch back into per-specimen arrays
-        sizes = [N_NODES] * (b.num_graphs)
-        for chunk in np.split(out, np.cumsum(sizes)[:-1]):
-            preds.append(chunk)
+        all_preds.append(out)
+    # concatenated predictions, then split by specimen (each has N_NODES nodes)
+    flat = np.concatenate(all_preds)
+    preds = [flat[i * N_NODES:(i + 1) * N_NODES] for i in range(len(specs))]
     return preds
 
 
