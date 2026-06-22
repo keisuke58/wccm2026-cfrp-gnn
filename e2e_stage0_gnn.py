@@ -182,7 +182,8 @@ def _load_mesh():
 
 def _build_graph(spec: Specimen, xq, yq, zq, edge_index) -> "torch_geometric.data.Data":
     from torch_geometric.data import Data
-    x_feat = np.stack([spec.field, xq, yq, zq], axis=1).astype(np.float32)
+    # Feature order must match train.py: [xq, yq, zq, DSPSS_field]
+    x_feat = np.stack([xq, yq, zq, spec.field], axis=1).astype(np.float32)
     return Data(
         x=torch.tensor(x_feat),
         edge_index=edge_index,
@@ -296,22 +297,30 @@ def run(arch: str = "hybridmgn", n_def: int = 1418, n_ref: int = 800,
     print(f"          threshold (q={THR_Q:.3f}): {thr:.4f}", flush=True)
 
     def_results = [stage0_detect(s, mu, sd, thr) for s in def_specs]
+    # Also evaluate on held-out 1x1 specimens (small defects — these are TRUE defectives,
+    # not truly healthy; their detection rate shows cross-size generalization, not FPR)
     hlt_results = [stage0_detect(s, mu, sd, thr) for s in healthy_eval]
 
     def_detected = [r["detected"] for r in def_results]
     hlt_detected = [r["detected"] for r in hlt_results]
 
-    sm = specimen_level_metrics(
-        def_detected + hlt_detected,
-        [True] * len(def_specs) + [False] * len(healthy_eval),
-    )
+    # Specimen-level: defective test set only
+    n_det = sum(def_detected)
+    n_miss = len(def_specs) - n_det
+    recall = n_det / len(def_specs) if def_specs else float("nan")
+
+    # 1×1 small-defect detection rate (cross-size generalisation, NOT FPR)
+    s1_det_rate = sum(hlt_detected) / len(hlt_results) if hlt_results else float("nan")
+
     aurocs = [r["auroc"] for r in def_results if r["auroc"] is not None]
     mean_auroc = float(np.mean(aurocs)) if aurocs else float("nan")
 
+    sm = {"recall": recall, "tp": n_det, "fn": n_miss}
+
     print(f"\n  Stage-0 specimen-level:")
-    print(f"    recall (defect detected)  : {sm['recall']:.4f}  ({sm['tp']}/{sm['tp']+sm['fn']})")
-    print(f"    FPR   (healthy flagged)   : {sm['fpr']:.4f}  ({sm['fp']}/{sm['fp']+sm['tn']})")
-    print(f"    mean node-level AUROC     : {mean_auroc:.4f}")
+    print(f"    recall (2×2/4×4/8×8 defects): {recall:.4f}  ({n_det}/{len(def_specs)})")
+    print(f"    1×1 small-defect detect rate : {s1_det_rate:.4f}  (cross-size, not FPR)")
+    print(f"    mean node-level AUROC        : {mean_auroc:.4f}")
 
     # ── Stage 1 — GNN on Stage-0-detected specimens only ────────────────────
     detected_specs = [s for s, d in zip(def_specs, def_detected) if d]
@@ -354,10 +363,10 @@ def run(arch: str = "hybridmgn", n_def: int = 1418, n_ref: int = 800,
 
     print(f"\n  Combined / system-level:")
     print(f"    Stage-0 recall            : {sm['recall']:.4f}")
-    print(f"    Conditional localization  : {float(np.mean(correct_loc)):.4f}")
+    print(f"    Conditional loc. (any-hit): {float(np.mean(correct_loc)):.4f}")
     print(f"    System recall (S0×S1)     : {system_recall:.4f}")
-    print(f"    System FN rate (S0 miss)  : {fn_rate:.4f}")
-    print(f"    Missed specimens (S0)     : {len(missed_specs)}/{len(def_specs)}")
+    print(f"    System FN rate (S0 miss)  : {fn_rate:.4f}  ({sm['fn']}/{len(def_specs)} missed)")
+
 
     # Reference: GNN alone (no Stage-0 gate)
     print(f"\n[Reference] GNN-alone macro-F1 on same test set ...", flush=True)
