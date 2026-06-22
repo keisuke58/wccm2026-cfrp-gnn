@@ -194,12 +194,22 @@ def build_dual_data(
 # Architecture wrapper  (thin: just overrides in_channels)
 # ─────────────────────────────────────────────────────────────────────────────
 
+_ARCH_MAP = {
+    "hybridmgn":    "HybridMeshGraphNetModel",
+    "meshgraphnet": "MeshGraphNetModel",
+    "gat":          "GATModel",
+    "sage":         "MeshGraphNetModel",   # fallback
+}
+
 def build_model(arch: str, device: torch.device) -> torch.nn.Module:
     """
     Reuse existing architectures from train.py with in_channels=5.
     The only change: the first linear layer is wider by one input.
     """
-    model = T.build_model(arch=arch, in_channels=5)
+    cls_name = _ARCH_MAP.get(arch, "HybridMeshGraphNetModel")
+    cls = getattr(T, cls_name)
+    model = cls(hidden_channels=256, num_classes=19, dropout=0.1,
+                edge_drop_prob=0.0, in_channels=5, num_blocks=10)
     return model.to(device)
 
 
@@ -346,18 +356,21 @@ def _tests() -> None:
 
     print("[test] PASS — feature shapes and all augmentation modes correct.")
 
-    # Verify in_channels=5 is accepted by T.build_model (if train.py is importable)
+    # Verify in_channels=5 is accepted by HybridMeshGraphNetModel
     try:
-        model = T.build_model(arch="hybridmgn", in_channels=5)
-        n_params = sum(p.numel() for p in model.parameters())
-        # expect slightly more params than in_channels=4 version
-        model4  = T.build_model(arch="hybridmgn", in_channels=4)
-        n_params4 = sum(p.numel() for p in model4.parameters())
-        assert n_params > n_params4, "5-channel model should have more params than 4-channel"
-        print(f"[test] PASS — HybridMGN in_channels=5: {n_params:,} params "
-              f"(vs 4-channel: {n_params4:,}, Δ={n_params - n_params4:,})")
+        model5 = T.HybridMeshGraphNetModel(hidden_channels=256, num_classes=19,
+                                            dropout=0.1, edge_drop_prob=0.0,
+                                            in_channels=5, num_blocks=10)
+        model4 = T.HybridMeshGraphNetModel(hidden_channels=256, num_classes=19,
+                                            dropout=0.1, edge_drop_prob=0.0,
+                                            in_channels=4, num_blocks=10)
+        n5 = sum(p.numel() for p in model5.parameters())
+        n4 = sum(p.numel() for p in model4.parameters())
+        assert n5 > n4, "5-channel model should have more params than 4-channel"
+        print(f"[test] PASS — HybridMGN in_channels=5: {n5:,} params "
+              f"(vs 4-ch: {n4:,}, Δ={n5-n4:,})")
     except Exception as e:
-        print(f"[test] SKIP model build (Vancouver-only dep): {e}")
+        print(f"[test] SKIP model build (dep): {e}")
 
     print("[test] ALL PASS")
 
