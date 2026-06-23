@@ -309,12 +309,12 @@ def load_13k(split: str, **kw) -> List[Data]:
     cx = np.load(DIR_COORD_13k / "normalized_x_2layer.npy")[:N_NODES_13k]
     cy = np.load(DIR_COORD_13k / "normalized_y_2layer.npy")[:N_NODES_13k]
     cz = np.load(DIR_COORD_13k / "normalized_z_2layer.npy")[:N_NODES_13k]
+    kw.setdefault("label_mode", "full")
     return load_mesh_data(
         coord_npy=(cx, cy, cz),
         dspss_dir=DIR_DIFF_13k / split,
         label_dir=DIR_LBL_13k,
         raw_dir=DIR_RAW_13k / split,
-        label_mode="full",
         split_name=f"13k/{split}",
         **kw,
     )
@@ -332,11 +332,11 @@ def load_mixed400(split: str, **kw) -> List[Data]:
             "Expected npz with keys 'x','y','z' of shape (15206,)."
         )
     c = np.load(coord_file)
+    kw.setdefault("label_mode", "binary")
     return load_mesh_data(
         coord_npy=(c["x"], c["y"], c["z"]),
         dspss_dir=DIR_MIXED400 / split,
         label_dir=DIR_MIXED400 / "labels" if (DIR_MIXED400 / "labels").is_dir() else None,
-        label_mode="binary",
         split_name=f"mixed400/{split}",
         **kw,
     )
@@ -354,11 +354,11 @@ def load_czm96(split: str, **kw) -> List[Data]:
             "Expected npz with keys 'x','y','z' of shape (193866,)."
         )
     c = np.load(coord_file)
+    kw.setdefault("label_mode", "binary")
     return load_mesh_data(
         coord_npy=(c["x"], c["y"], c["z"]),
         dspss_dir=DIR_CZM96 / split,
         label_dir=DIR_CZM96 / "labels" if (DIR_CZM96 / "labels").is_dir() else None,
-        label_mode="binary",
         split_name=f"czm96/{split}",
         **kw,
     )
