@@ -219,6 +219,38 @@ def build_model(arch: str, device: torch.device) -> torch.nn.Module:
 # Training loop (minimal — delegates metrics to train.py helpers)
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _build_criterion(args, train_data, device):
+    """
+    Loss function factory.
+    --loss focal      : FocalLossLogSoftmax + class weights (recommended for imbalance)
+    --loss logit_adj  : LogitAdjust Loss (strong alternative, less collapse risk)
+    --loss ce         : plain CrossEntropyLoss + class weights
+    """
+    # Gather all node labels from training set to compute class prior
+    all_labels = np.concatenate([d.y.numpy() for d in train_data]).astype(np.int64)
+    class_weights = T.compute_class_weights(
+        all_labels,
+        fix_class0_weight=args.fix_class0_weight,
+        class0_weight=args.class0_weight,
+    ).to(device)
+
+    counts = np.bincount(all_labels, minlength=19).astype(np.float64)
+    prior  = torch.tensor(counts / counts.sum(), dtype=torch.float, device=device)
+
+    print(f"[dual] loss={args.loss}  gamma={args.gamma}  "
+          f"fix_class0={args.fix_class0_weight}  class0_w={args.class0_weight}")
+    print(f"[dual] class weights (min={class_weights.min():.3f}, "
+          f"max={class_weights.max():.3f}, class0={class_weights[0]:.3f})")
+
+    ltype = args.loss.lower()
+    if ltype == "focal":
+        return T.FocalLossLogSoftmax(weights=class_weights, gamma=args.gamma)
+    if ltype == "logit_adj":
+        return T.LogitAdjustLoss(class_prior=prior, tau=args.tau)
+    # fallback: weighted cross-entropy
+    return torch.nn.CrossEntropyLoss(weight=class_weights)
+
+
 def train_dual(args: argparse.Namespace) -> None:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"[dual] device={device}  arch={args.arch}")
@@ -238,7 +270,7 @@ def train_dual(args: argparse.Namespace) -> None:
     model     = build_model(args.arch, device)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
-    criterion = torch.nn.CrossEntropyLoss()
+    criterion = _build_criterion(args, train_data, device)
 
     best_f1   = 0.0
     CK_OUT.mkdir(parents=True, exist_ok=True)
@@ -406,6 +438,21 @@ def _parse() -> argparse.Namespace:
                     help="Checkpoint path for --eval mode")
     ap.add_argument("--no_baseline",  action="store_true",
                     help="Zero the diff channel at eval (simulate no-baseline scenario)")
+
+    # ── loss function ──────────────────────────────────────────────────────────
+    ap.add_argument("--loss",          default="focal",
+                    choices=["focal", "logit_adj", "ce"],
+                    help="Loss function: focal (recommended), logit_adj, or ce")
+    ap.add_argument("--gamma",         type=float, default=3.0,
+                    help="Focal loss gamma (higher → harder examples get more weight)")
+    ap.add_argument("--tau",           type=float, default=1.0,
+                    help="LogitAdjust tau (strength of prior adjustment, 1.0-2.0)")
+    ap.add_argument("--fix_class0_weight", action="store_true", default=True,
+                    help="Fix class-0 weight to class0_weight (prevents collapse to all-0)")
+    ap.add_argument("--no_fix_class0_weight", dest="fix_class0_weight", action="store_false")
+    ap.add_argument("--class0_weight", type=float, default=1.0,
+                    help="Anchor weight for class-0 (other classes scaled relative to this)")
+
     return ap.parse_args()
 
 
