@@ -23,6 +23,7 @@ Knobs: PI_K=4  PI_EPOCHS=70  PI_LAM=5e-3               (override ensemble size /
 from __future__ import annotations
 
 import os
+import time
 
 import numpy as np
 import torch
@@ -103,14 +104,27 @@ def eval_ensemble(models, test, ei):
     }
 
 
+def train_ensemble(tag, train, ei, seed0, lam, K, epochs):
+    """Train K members, printing per-model wall time for live progress."""
+    models = []
+    for j in range(K):
+        t0 = time.time()
+        models.append(train_one(train, ei, seed0 + j, lam_phys=lam, epochs=epochs))
+        print(f"  [{tag}] model {j + 1}/{K} trained in {time.time() - t0:.1f}s", flush=True)
+    return models
+
+
 def main():
     smoke = os.environ.get("PI_SMOKE") == "1"
     K = 1 if smoke else int(os.environ.get("PI_K", 4))
     epochs = 2 if smoke else int(os.environ.get("PI_EPOCHS", 70))
     lam = float(os.environ.get("PI_LAM", 5e-3))
+    threads = int(os.environ.get("PI_THREADS", "0"))
+    if threads > 0:
+        torch.set_num_threads(threads)
 
     print(f"Loading cache + training ensembles (K={K}, epochs={epochs}, lambda_phys={lam}, "
-          f"smoke={smoke})...")
+          f"threads={threads or 'default'}, smoke={smoke})...", flush=True)
     samples, edges, n_seed, (nx, ny) = load_cached()
     ei = torch.tensor(edges)
     test_ids = set(range(n_seed - 8, n_seed))
@@ -118,10 +132,10 @@ def main():
     test = [s for s in samples if s[2] in test_ids]
     if smoke:
         train, test = train[:4], test[:2]
-    print(f"train={len(train)} test={len(test)} grid={nx}x{ny}")
+    print(f"train={len(train)} test={len(test)} grid={nx}x{ny}", flush=True)
 
-    base = [train_one(train, ei, seed=100 + j, lam_phys=0.0, epochs=epochs) for j in range(K)]
-    phys = [train_one(train, ei, seed=200 + j, lam_phys=lam, epochs=epochs) for j in range(K)]
+    base = train_ensemble("base", train, ei, 100, 0.0, K, epochs)
+    phys = train_ensemble("phys", train, ei, 200, lam, K, epochs)
 
     rb = eval_ensemble(base, test, ei)
     rp = eval_ensemble(phys, test, ei)
