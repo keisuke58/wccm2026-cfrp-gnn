@@ -71,6 +71,8 @@ torchrun --nproc_per_node=4 train.py --use_onecycle --batch_size 128 --hidden_ch
 bash scripts/run_ablation.sh
 ```
 
+> **CPU実行のヒント**: 位相場エミュレータ／UQ系（`uq_*.py`, `pi_*.py`, `conformal_*.py`）はCPU実行。小グラフ（~1.3k節点）ではtorchの過剰スレッドがthrashingするため `PI_THREADS=4`（または `torch.set_num_threads(4)`）推奨 — 無指定だと~11スレッド競合で同一ジョブが80分→<1分と桁違いに変わる。
+
 ### データ配置（サーバー側・既定パス）
 - 差分zscore: `/home/nishioka/GNN/GNN_hole_2026/all_sub_hole_defect_zscore/{train,val,test}/Defect_L*.npy`
 - ラベル: `/home/nishioka/GNN/GNN_hole_2026/all_19class_label/`
