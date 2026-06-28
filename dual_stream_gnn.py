@@ -269,12 +269,23 @@ def train_dual(args: argparse.Namespace) -> None:
 
     model     = build_model(args.arch, device)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
+    # warmup → cosine: warmup_epochs で lr を 0 → lr に線形増加、その後 cosine decay
+    if args.warmup_epochs > 0:
+        warmup = torch.optim.lr_scheduler.LinearLR(
+            optimizer, start_factor=1e-3, end_factor=1.0, total_iters=args.warmup_epochs)
+        cosine = torch.optim.lr_scheduler.CosineAnnealingLR(
+            optimizer, T_max=args.epochs - args.warmup_epochs)
+        scheduler = torch.optim.lr_scheduler.SequentialLR(
+            optimizer, schedulers=[warmup, cosine], milestones=[args.warmup_epochs])
+    else:
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
     criterion = _build_criterion(args, train_data, device)
 
     best_f1   = 0.0
     CK_OUT.mkdir(parents=True, exist_ok=True)
-    ckpt_path = CK_OUT / f"{args.arch}_dual_best.pth"
+    run_tag   = f"{args.arch}_{args.loss}_g{args.gamma}"
+    ckpt_path = CK_OUT / f"{run_tag}_best.pth"
+    print(f"[dual] warmup={args.warmup_epochs}  ckpt={ckpt_path.name}")
 
     for epoch in range(1, args.epochs + 1):
         model.train()
@@ -295,7 +306,7 @@ def train_dual(args: argparse.Namespace) -> None:
             if f1 > best_f1:
                 best_f1 = f1
                 torch.save(model.state_dict(), ckpt_path)
-                print(f"    → saved  {ckpt_path}  (best={best_f1:.4f})")
+                print(f"    → saved  {ckpt_path.name}  (best={best_f1:.4f})")
 
     print(f"[dual] training done.  best_val_F1={best_f1:.4f}")
 
@@ -452,6 +463,8 @@ def _parse() -> argparse.Namespace:
     ap.add_argument("--no_fix_class0_weight", dest="fix_class0_weight", action="store_false")
     ap.add_argument("--class0_weight", type=float, default=1.0,
                     help="Anchor weight for class-0 (other classes scaled relative to this)")
+    ap.add_argument("--warmup_epochs", type=int, default=0,
+                    help="Linear LR warmup epochs before cosine decay (recommended: 10-20 with focal)")
 
     return ap.parse_args()
 
