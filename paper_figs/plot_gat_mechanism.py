@@ -116,40 +116,74 @@ gsC.text(0.5, 1.02, r"(C) Multi-head update  $h_i'$",
          ha="center", va="bottom", fontsize=12.5, fontweight="bold", color="#12315e")
 
 # ============================================================================
-# Panel A — local neighbourhood with attention-weighted edges
+# Panel A — a patch of the CFRP FE mesh: unstructured grid of nodes, the
+# centre node i and its 1-hop neighbours, edges weighted by attention.
 # ============================================================================
-center = np.array([0.50, 0.50])
-# neighbours placed around the centre
-ang = np.deg2rad([90, 150, 205, 250, 300, 20])
-rad = np.array([0.33, 0.30, 0.34, 0.31, 0.33, 0.30])
-neigh = center + np.c_[rad * np.cos(ang), rad * np.sin(ang)]
-# illustrative (normalised) attention weights over the neighbours
-alpha = np.array([0.09, 0.14, 0.11, 0.34, 0.22, 0.10])
-alpha = alpha / alpha.sum()
+from matplotlib.tri import Triangulation
+from matplotlib.collections import LineCollection
 
-# edges (thickness ~ alpha)
-for j, (p, a) in enumerate(zip(neigh, alpha)):
-    lw = 1.0 + 9.0 * a
-    col = C_ACCENT if a >= alpha.max() - 1e-9 else C_LINE
-    gsA.plot([center[0], p[0]], [center[1], p[1]], color=col, lw=lw,
-             solid_capstyle="round", zorder=1)
+rng = np.random.default_rng(7)
+nx, ny = 7, 6
+gx, gy = np.meshgrid(np.linspace(0.10, 0.90, nx), np.linspace(0.16, 0.86, ny))
+# jitter interior nodes so the grid reads as an unstructured FE mesh
+jit = 0.028
+interior = (gx > 0.10 + 1e-3) & (gx < 0.90 - 1e-3) & (gy > 0.16 + 1e-3) & (gy < 0.86 - 1e-3)
+gx = gx + jit * rng.standard_normal(gx.shape) * interior
+gy = gy + jit * rng.standard_normal(gy.shape) * interior
+px, py = gx.ravel(), gy.ravel()
 
-# neighbour nodes + alpha labels
-for j, (p, a) in enumerate(zip(neigh, alpha)):
-    gsA.add_patch(Circle(p, 0.052, fc=C_NEIGH, ec="white", lw=1.6, zorder=3))
-    gsA.text(p[0], p[1], rf"$j_{j+1}$", ha="center", va="center",
-             color="white", fontsize=9.5, zorder=4)
-    # alpha annotation along the edge
-    mid = center + 0.62 * (p - center)
-    off = 0.055 * np.array([np.cos(ang[j] + np.pi / 2), np.sin(ang[j] + np.pi / 2)])
-    lab = C_ACCENT if a >= alpha.max() - 1e-9 else C_GREY
-    gsA.text(mid[0] + off[0], mid[1] + off[1], rf"$\alpha_{{i{j+1}}}$",
-             ha="center", va="center", fontsize=8.6, color=lab, zorder=5)
+# a smooth scalar field (evokes the DSPSS stress feature) for node colour
+field = (np.exp(-((px - 0.5) ** 2 + (py - 0.52) ** 2) / 0.05)
+         + 0.4 * np.exp(-((px - 0.72) ** 2 + (py - 0.30) ** 2) / 0.03))
 
-# centre node
-gsA.add_patch(Circle(center, 0.066, fc=C_CENTER, ec="white", lw=2.0, zorder=5))
-gsA.text(center[0], center[1], r"$i$", ha="center", va="center",
-         color="white", fontsize=13, fontweight="bold", zorder=6)
+tri = Triangulation(px, py)
+# unique undirected edges from the triangulation
+edges = set()
+for a, b, c in tri.triangles:
+    for u, v in ((a, b), (b, c), (c, a)):
+        edges.add((min(u, v), max(u, v)))
+edges = np.array(sorted(edges))
+
+# faint mesh edges (background)
+seg = np.stack([np.c_[px[edges[:, 0]], py[edges[:, 0]]],
+                np.c_[px[edges[:, 1]], py[edges[:, 1]]]], axis=1)
+gsA.add_collection(LineCollection(seg, colors="#c7d6ea", linewidths=0.8, zorder=1))
+
+# faint field colouring of all nodes (context)
+gsA.scatter(px, py, c=field, cmap="Blues", s=42, edgecolors="white",
+            linewidths=0.7, zorder=2, vmin=field.min(), vmax=field.max() * 1.05)
+
+# choose centre node i (closest to grid centre) and its 1-hop neighbours
+ci = int(np.argmin((px - 0.5) ** 2 + (py - 0.52) ** 2))
+nbr = sorted({v for (u, v) in edges if u == ci} | {u for (u, v) in edges if v == ci})
+# illustrative normalised attention weights over the neighbours
+araw = rng.uniform(0.4, 1.0, size=len(nbr)); araw[len(nbr) // 2] = 1.7  # one dominant
+alpha = araw / araw.sum()
+
+# attention-weighted edges from i to each neighbour (thickness + colour)
+for a, jn in zip(alpha, nbr):
+    lw = 1.2 + 10.0 * a
+    col = C_ACCENT if a >= alpha.max() - 1e-9 else C_NEIGH
+    gsA.plot([px[ci], px[jn]], [py[ci], py[jn]], color=col, lw=lw,
+             solid_capstyle="round", zorder=3, alpha=0.95)
+
+# neighbour nodes
+for jj, (a, jn) in enumerate(zip(alpha, nbr)):
+    gsA.add_patch(Circle((px[jn], py[jn]), 0.028, fc=C_NEIGH, ec="white",
+                         lw=1.5, zorder=5))
+    gsA.text(px[jn], py[jn], r"$j$", ha="center", va="center",
+             color="white", fontsize=8.5, zorder=6)
+# highlight the dominant-attention edge label
+jmax = int(np.argmax(alpha)); jn = nbr[jmax]
+mid = np.array([(px[ci] + px[jn]) / 2, (py[ci] + py[jn]) / 2])
+gsA.text(mid[0] + 0.02, mid[1] + 0.03, r"$\alpha_{ij}$", ha="center", va="center",
+         fontsize=10, color=C_ACCENT, zorder=7, fontweight="bold")
+
+# centre node i
+gsA.add_patch(Circle((px[ci], py[ci]), 0.040, fc=C_CENTER, ec="white",
+                     lw=2.0, zorder=6))
+gsA.text(px[ci], py[ci], r"$i$", ha="center", va="center",
+         color="white", fontsize=12, fontweight="bold", zorder=7)
 
 gsA.text(0.5, 0.045,
          "node = mesh vertex   feature $h=[x,y,z,\\mathrm{DSPSS}]$\n"
