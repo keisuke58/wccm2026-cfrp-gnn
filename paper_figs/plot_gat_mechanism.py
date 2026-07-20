@@ -104,11 +104,13 @@ def _arrow(ax, p0, p1, color=C_GREY, lw=1.6, style="-|>", ms=9, ls="-", rad=0.0)
 
 # ── figure / panels ─────────────────────────────────────────────────────────
 fig = plt.figure(figsize=(13.0, 4.9))
-gsA = fig.add_axes([0.008, 0.065, 0.306, 0.845]); gsA.axis("off")
-gsB = fig.add_axes([0.340, 0.065, 0.340, 0.845]); gsB.axis("off")
-gsC = fig.add_axes([0.703, 0.065, 0.292, 0.845]); gsC.axis("off")
+gsA = fig.add_axes([0.008, 0.065, 0.306, 0.845])
+gsB = fig.add_axes([0.340, 0.065, 0.340, 0.845])
+gsC = fig.add_axes([0.703, 0.065, 0.292, 0.845])
 for ax in (gsA, gsB, gsC):
-    ax.set_xlim(0, 1); ax.set_ylim(0, 1)
+    ax.axis("off")
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
 
 # panel titles
 gsA.text(0.5, 1.005, r"(A) Mesh neighbourhood $\mathcal{N}(i)$",
@@ -166,7 +168,7 @@ for a, jn in zip(alpha, nbr):
              solid_capstyle="round", zorder=3, alpha=0.95)
 
 # neighbour nodes
-for a, jn in zip(alpha, nbr):
+for jn in nbr:
     gsA.add_patch(Circle((px[jn], py[jn]), 0.030, fc=C_NEIGH, ec="white",
                          lw=1.6, zorder=5))
     gsA.text(px[jn], py[jn], r"$j$", ha="center", va="center",
@@ -253,8 +255,10 @@ _arrow(gsC, (0.5, 0.192), (0.5, 0.128), color=C_CENTER, lw=2.0)
 
 # ── connecting flow arrows between panels ────────────────────────────────────
 # A -> B  and  B -> C  (drawn in figure coordinates)
-figax = fig.add_axes([0, 0, 1, 1]); figax.axis("off")
-figax.set_xlim(0, 1); figax.set_ylim(0, 1)
+figax = fig.add_axes([0, 0, 1, 1])
+figax.axis("off")
+figax.set_xlim(0, 1)
+figax.set_ylim(0, 1)
 _arrow(figax, (0.305, 0.52), (0.345, 0.52), color=C_GREY, lw=2.2, ms=13)
 _arrow(figax, (0.665, 0.30), (0.705, 0.55), color=C_ACCENT, lw=2.2, ms=13, rad=0.12)
 figax.text(0.325, 0.55, "gather", ha="center", fontsize=8.2, color=C_GREY, style="italic")
