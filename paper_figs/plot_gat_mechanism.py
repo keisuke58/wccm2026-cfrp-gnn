@@ -103,19 +103,19 @@ def _arrow(ax, p0, p1, color=C_GREY, lw=1.6, style="-|>", ms=9, ls="-", rad=0.0)
 
 
 # ── figure / panels ─────────────────────────────────────────────────────────
-fig = plt.figure(figsize=(13.4, 5.6))
-gsA = fig.add_axes([0.010, 0.07, 0.30, 0.80]); gsA.axis("off")
-gsB = fig.add_axes([0.335, 0.07, 0.34, 0.80]); gsB.axis("off")
-gsC = fig.add_axes([0.700, 0.07, 0.295, 0.80]); gsC.axis("off")
+fig = plt.figure(figsize=(13.0, 4.9))
+gsA = fig.add_axes([0.008, 0.065, 0.306, 0.845]); gsA.axis("off")
+gsB = fig.add_axes([0.340, 0.065, 0.340, 0.845]); gsB.axis("off")
+gsC = fig.add_axes([0.703, 0.065, 0.292, 0.845]); gsC.axis("off")
 for ax in (gsA, gsB, gsC):
     ax.set_xlim(0, 1); ax.set_ylim(0, 1)
 
 # panel titles
-gsA.text(0.5, 1.02, r"(A) Mesh neighbourhood $\mathcal{N}(i)$",
+gsA.text(0.5, 1.005, r"(A) Mesh neighbourhood $\mathcal{N}(i)$",
          ha="center", va="bottom", fontsize=12.5, fontweight="bold", color="#12315e")
-gsB.text(0.5, 1.02, r"(B) Attention coefficient  $\alpha_{ij}$",
+gsB.text(0.5, 1.005, r"(B) Attention coefficient  $\alpha_{ij}$",
          ha="center", va="bottom", fontsize=12.5, fontweight="bold", color="#12315e")
-gsC.text(0.5, 1.02, r"(C) Multi-head update  $h_i'$",
+gsC.text(0.5, 1.005, r"(C) Multi-head update  $h_i'$",
          ha="center", va="bottom", fontsize=12.5, fontweight="bold", color="#12315e")
 
 # ============================================================================
@@ -126,8 +126,8 @@ from matplotlib.collections import LineCollection
 
 rng = np.random.default_rng(7)
 nx, ny = 7, 6
-xs = np.linspace(0.10, 0.90, nx)
-ys = np.linspace(0.15, 0.87, ny)
+xs = np.linspace(0.08, 0.92, nx)
+ys = np.linspace(0.14, 0.94, ny)
 gx, gy = np.meshgrid(xs, ys)                     # regular square grid (no jitter)
 px, py = gx.ravel(), gy.ravel()
 idx = np.arange(nx * ny).reshape(ny, nx)         # (row, col) -> flat index
@@ -262,8 +262,8 @@ figax.text(0.688, 0.40, r"$\alpha_{ij}$", ha="center", fontsize=9.5, color=C_ACC
 
 # suptitle / caption
 fig.suptitle("Graph Attention (GAT) layer — message passing with learned edge weights",
-             fontsize=14.5, fontweight="bold", color="#0f2647", y=0.985)
-fig.text(0.5, 0.005,
+             fontsize=14.5, fontweight="bold", color="#0f2647", y=0.995)
+fig.text(0.5, 0.012,
          "As used in GATModel (train.py): GATConv/GATv2Conv, heads=4, concat=True, "
          "3 stacked layers with residual projection + BatchNorm.",
          ha="center", va="bottom", fontsize=8.6, color=C_GREY)
