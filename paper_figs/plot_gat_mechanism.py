@@ -63,10 +63,13 @@ except Exception:
     pass
 
 matplotlib.rcParams.update({
-    "font.family": "sans-serif",
-    "font.sans-serif": ["DejaVu Sans", "Arial", "Helvetica"],
+    "font.family": "serif",
+    # Times New Roman if installed; Liberation Serif / Nimbus Roman are
+    # metric-compatible drop-ins with the same glyph shapes.
+    "font.serif": ["Times New Roman", "Times", "Liberation Serif",
+                   "Nimbus Roman", "DejaVu Serif"],
     "font.size": 11,
-    "mathtext.fontset": "dejavusans",
+    "mathtext.fontset": "stix",  # Times-like math to match Times New Roman text
     "savefig.dpi": 300,
     "figure.facecolor": "white",
     "axes.facecolor": "white",
@@ -116,74 +119,69 @@ gsC.text(0.5, 1.02, r"(C) Multi-head update  $h_i'$",
          ha="center", va="bottom", fontsize=12.5, fontweight="bold", color="#12315e")
 
 # ============================================================================
-# Panel A — a patch of the CFRP FE mesh: unstructured grid of nodes, the
-# centre node i and its 1-hop neighbours, edges weighted by attention.
+# Panel A — a patch of the CFRP mesh as a STRUCTURED QUADRILATERAL grid.
+# The centre node i and its 4 grid neighbours; edges weighted by attention.
 # ============================================================================
-from matplotlib.tri import Triangulation
 from matplotlib.collections import LineCollection
 
 rng = np.random.default_rng(7)
 nx, ny = 7, 6
-gx, gy = np.meshgrid(np.linspace(0.10, 0.90, nx), np.linspace(0.16, 0.86, ny))
-# jitter interior nodes so the grid reads as an unstructured FE mesh
-jit = 0.028
-interior = (gx > 0.10 + 1e-3) & (gx < 0.90 - 1e-3) & (gy > 0.16 + 1e-3) & (gy < 0.86 - 1e-3)
-gx = gx + jit * rng.standard_normal(gx.shape) * interior
-gy = gy + jit * rng.standard_normal(gy.shape) * interior
+xs = np.linspace(0.10, 0.90, nx)
+ys = np.linspace(0.15, 0.87, ny)
+gx, gy = np.meshgrid(xs, ys)                     # regular square grid (no jitter)
 px, py = gx.ravel(), gy.ravel()
+idx = np.arange(nx * ny).reshape(ny, nx)         # (row, col) -> flat index
 
 # a smooth scalar field (evokes the DSPSS stress feature) for node colour
-field = (np.exp(-((px - 0.5) ** 2 + (py - 0.52) ** 2) / 0.05)
-         + 0.4 * np.exp(-((px - 0.72) ** 2 + (py - 0.30) ** 2) / 0.03))
+field = (np.exp(-((px - 0.5) ** 2 + (py - 0.53) ** 2) / 0.05)
+         + 0.4 * np.exp(-((px - 0.72) ** 2 + (py - 0.28) ** 2) / 0.03))
 
-tri = Triangulation(px, py)
-# unique undirected edges from the triangulation
-edges = set()
-for a, b, c in tri.triangles:
-    for u, v in ((a, b), (b, c), (c, a)):
-        edges.add((min(u, v), max(u, v)))
-edges = np.array(sorted(edges))
+# quad-grid edges: horizontal + vertical bonds between adjacent nodes
+segs = []
+for r in range(ny):
+    for c in range(nx):
+        if c + 1 < nx:
+            segs.append([(xs[c], ys[r]), (xs[c + 1], ys[r])])
+        if r + 1 < ny:
+            segs.append([(xs[c], ys[r]), (xs[c], ys[r + 1])])
+gsA.add_collection(LineCollection(segs, colors="#c2d3ea", linewidths=1.0, zorder=1))
 
-# faint mesh edges (background)
-seg = np.stack([np.c_[px[edges[:, 0]], py[edges[:, 0]]],
-                np.c_[px[edges[:, 1]], py[edges[:, 1]]]], axis=1)
-gsA.add_collection(LineCollection(seg, colors="#c7d6ea", linewidths=0.8, zorder=1))
+# faint field colouring of all grid nodes (context)
+gsA.scatter(px, py, c=field, cmap="Blues", s=52, edgecolors="white",
+            linewidths=0.8, zorder=2, vmin=field.min(), vmax=field.max() * 1.05)
 
-# faint field colouring of all nodes (context)
-gsA.scatter(px, py, c=field, cmap="Blues", s=42, edgecolors="white",
-            linewidths=0.7, zorder=2, vmin=field.min(), vmax=field.max() * 1.05)
-
-# choose centre node i (closest to grid centre) and its 1-hop neighbours
-ci = int(np.argmin((px - 0.5) ** 2 + (py - 0.52) ** 2))
-nbr = sorted({v for (u, v) in edges if u == ci} | {u for (u, v) in edges if v == ci})
-# illustrative normalised attention weights over the neighbours
-araw = rng.uniform(0.4, 1.0, size=len(nbr)); araw[len(nbr) // 2] = 1.7  # one dominant
+# centre node i (interior of the grid) and its 4 orthogonal grid neighbours
+rc, cc = 3, 3
+ci = idx[rc, cc]
+nbr = [idx[rc - 1, cc], idx[rc + 1, cc], idx[rc, cc - 1], idx[rc, cc + 1]]
+# illustrative normalised attention weights over the 4 neighbours
+araw = np.array([0.6, 0.8, 0.5, 1.7])            # last (right) neighbour dominant
 alpha = araw / araw.sum()
 
 # attention-weighted edges from i to each neighbour (thickness + colour)
 for a, jn in zip(alpha, nbr):
-    lw = 1.2 + 10.0 * a
+    lw = 1.5 + 11.0 * a
     col = C_ACCENT if a >= alpha.max() - 1e-9 else C_NEIGH
     gsA.plot([px[ci], px[jn]], [py[ci], py[jn]], color=col, lw=lw,
              solid_capstyle="round", zorder=3, alpha=0.95)
 
 # neighbour nodes
-for jj, (a, jn) in enumerate(zip(alpha, nbr)):
-    gsA.add_patch(Circle((px[jn], py[jn]), 0.028, fc=C_NEIGH, ec="white",
-                         lw=1.5, zorder=5))
+for a, jn in zip(alpha, nbr):
+    gsA.add_patch(Circle((px[jn], py[jn]), 0.030, fc=C_NEIGH, ec="white",
+                         lw=1.6, zorder=5))
     gsA.text(px[jn], py[jn], r"$j$", ha="center", va="center",
-             color="white", fontsize=8.5, zorder=6)
+             color="white", fontsize=9, zorder=6)
 # highlight the dominant-attention edge label
-jmax = int(np.argmax(alpha)); jn = nbr[jmax]
+jn = nbr[int(np.argmax(alpha))]
 mid = np.array([(px[ci] + px[jn]) / 2, (py[ci] + py[jn]) / 2])
-gsA.text(mid[0] + 0.02, mid[1] + 0.03, r"$\alpha_{ij}$", ha="center", va="center",
-         fontsize=10, color=C_ACCENT, zorder=7, fontweight="bold")
+gsA.text(mid[0], mid[1] + 0.045, r"$\alpha_{ij}$", ha="center", va="center",
+         fontsize=11, color=C_ACCENT, zorder=7)
 
 # centre node i
-gsA.add_patch(Circle((px[ci], py[ci]), 0.040, fc=C_CENTER, ec="white",
+gsA.add_patch(Circle((px[ci], py[ci]), 0.042, fc=C_CENTER, ec="white",
                      lw=2.0, zorder=6))
 gsA.text(px[ci], py[ci], r"$i$", ha="center", va="center",
-         color="white", fontsize=12, fontweight="bold", zorder=7)
+         color="white", fontsize=12.5, zorder=7)
 
 gsA.text(0.5, 0.045,
          "node = mesh vertex   feature $h=[x,y,z,\\mathrm{DSPSS}]$\n"
