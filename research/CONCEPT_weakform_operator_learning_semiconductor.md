@@ -45,8 +45,9 @@ PI-DeepONet で置換**（背景整理: [`PI_DEEPONET_MC_ONLINE_LEARNING.md`](./
 | ② | [`bench_weak_vs_strong.py`](../bench_weak_vs_strong.py) | 弱形式が界面で本質的に優れる(NN非介在) | 弱形式 **O(h²)収束**(0.13→0.0093) vs 強形式 **~0.55で頭打ち** |
 | ③ | [`fe_newton_warmstart.py`](../fe_newton_warmstart.py) | C: 1D 非線形ポアソンのウォームスタート | Newton反復 cold **5.2** → warm **3.7**(適応で3.5) |
 | ④ | [`dd2d_newton_warmstart.py`](../dd2d_newton_warmstart.py) | C: 2D GAAスライスへ昇格 | Newton反復 cold **5.2** → warm **3.1**(~40%削減) |
+| ⑤ | [`cfet_stack_warmstart.py`](../cfet_stack_warmstart.py) | C: CFET 積層断面（多材料・n/p縦積み） | Newton反復 cold **4.8** → warm **3.0**(~38%削減) |
 
-図: `pi_deeponet_fem_gaa.png`, `bench_weak_vs_strong.png`, `fe_newton_warmstart.png`, `dd2d_newton_warmstart.png`。
+図: `pi_deeponet_fem_gaa.png`, `bench_weak_vs_strong.png`, `fe_newton_warmstart.png`, `dd2d_newton_warmstart.png`, `cfet_stack_warmstart.png`。
 全デモは自己完結・CPUで数分・seed固定で再現可能。
 
 **物語の流れ**: ①で「弱形式演算子学習＋オンライン適応」を提示 → ②で「なぜ弱形式か」を離散化
@@ -77,9 +78,9 @@ PI-DeepONet で置換**（背景整理: [`PI_DEEPONET_MC_ONLINE_LEARNING.md`](./
 
 ## 6. ロードマップ（次の軸）
 
-1. **CFET 積層断面への拡張（最有力の次の一手）**: n/pFET 縦積み＋誘電体壁の複雑断面。
-   弱形式FEM＋非構造メッシュ＋GNN branch と、Newton ウォームスタートの価値が最も効く領域。
-   ロードマップ: FinFET→GAA→Forksheet→**CFET**→2D-CFET→3Dモノリシック（構造の最前線）。
+1. ~~**CFET 積層断面への拡張**~~ → **⑤で実装済み**（多材料スタック上の Newton ウォームスタート,
+   cold 4.8→warm 3.0）。ロードマップ FinFET→GAA→Forksheet→**CFET**→2D-CFET→3Dモノリシック
+   の CFET 段に対応。次は真の縦ゲート形状＋非構造メッシュ、2D-CFET(2D材料チャネル)。
 2. **完全ドリフト拡散**: Scharfetter–Gummel の電流連続式を連立、大バイアス掃引での収束ロバスト性。
 3. **真の非構造メッシュ + AMR**: η 駆動の h-細分化と GNN branch のメッシュ非依存性の実証。
 4. **TSV/3D積層の熱機械応力(FEA×GNN)**: repo 本体(CFRP 応力 FEA×GNN)と最も親和。半導体の
