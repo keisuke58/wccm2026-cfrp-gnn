@@ -231,13 +231,16 @@ def galerkin_residual(u, S, Kt, Mt, rho_t, free_mask):
     return (r.norm() ** 2) / (b.norm() ** 2 + 1e-12)
 
 
-def error_indicator(u, S, Kt, Mt, rho_t, free_mask, dinv):
-    """A-posteriori FE error estimator via a Jacobi-preconditioned residual.
+def error_indicator(u, S, Kt, Mt, rho_t, free_mask):
+    """A-posteriori indicator: relative L2 norm of the weak-form (Galerkin) residual.
 
-    The raw Galerkin residual r = K(uS) - M rho over-weights high-frequency error
-    because K is a (stiffness) derivative operator. One Jacobi step delta = D^{-1} r
-    (D = diag K) approximates the true error K^{-1} r = phi_exact - phi_pred without a
-    solve, so ||delta|| / ||phi_pred|| tracks the relative solution error cheaply.
+    Returns ||K(uS) - M rho|| / ||M rho|| over the free DOFs — the same assembled FE
+    residual used as the physics loss, reused here as a cheap deploy-time monitor.
+    Because K is a (stiffness) derivative operator it over-weights high-frequency
+    error, so this raw-residual ratio runs larger than the actual solution error;
+    the online tolerance (--tol) is calibrated against this scale, not against rel-L2.
+    A tighter estimate (energy-norm ||e||_K, or a few CG iterations on the residual)
+    is the documented follow-up in research/FEM_OPERATOR_LEARNING_GAA_IDEA.md.
     """
     r = ((Kt @ (u * S)) - (Mt @ rho_t))[free_mask]
     b = (Mt @ rho_t)[free_mask]
@@ -269,7 +272,6 @@ def main():
     # torch tensors (dense; the demo mesh is small)
     Kt = torch.tensor(K.toarray(), dtype=torch.float32)
     Mt = torch.tensor(M.toarray(), dtype=torch.float32)
-    dinv = 1.0 / torch.diag(Kt).clamp_min(1e-8)          # Jacobi preconditioner for the estimator
     coords = torch.tensor(nodes, dtype=torch.float32)
     free_mask = torch.tensor(free, dtype=torch.bool)
     # hard Dirichlet: exact 0/1 nodal mask (phi = 0 on boundary nodes, unshrunk interior)
@@ -341,7 +343,7 @@ def main():
 
         with torch.no_grad():
             u = model(feat, edge_index, coords, dirichlet_mask)
-        ind = error_indicator(u, S, Kt, Mt, rho_t, free_mask, dinv)
+        ind = error_indicator(u, S, Kt, Mt, rho_t, free_mask)
         ind_hist.append(ind)
 
         fired = ind > args.tol

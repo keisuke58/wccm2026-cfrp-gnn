@@ -140,22 +140,23 @@ def main():
         strongB.append(rel_to_ref(ns, ps, tree, ref))
         print(f"[B] delta={d:.3f}  weak-FE {weakB[-1]:.4f}   strong-FD {strongB[-1]:.4f}")
 
-    # ---- spatial error map at one coarse+sharp case ----
-    tree, ref, ref_nodes = ref_tree(delta_A)
+    # ---- spatial error map at one coarse+sharp case (dense on the coarse mesh) ----
+    tree, ref, _ = ref_tree(delta_A)
+    nodes_B, tris_B, _ = build_mesh(n_B)
     nw, pw = fe_weak_solve(n_B, delta_A)
     ns, ps = fd_strong_solve(n_B, delta_A)
     _, iw = tree.query(nw)
     _, is_ = tree.query(ns)
-    err_w = np.zeros(len(ref_nodes)); err_w[iw] = np.abs(pw - ref[iw])
-    err_s = np.zeros(len(ref_nodes)); err_s[is_] = np.abs(ps - ref[is_])
+    err_w = np.abs(pw - ref[iw])    # length n_B**2, defined on nodes_B
+    err_s = np.abs(ps - ref[is_])   # length n_B**2, defined on nodes_B
 
     _plot(args.out, meshes, weakA, strongA, deltas, weakB, strongB,
-          args.n_ref, err_w, err_s, delta_A, n_B)
+          nodes_B, tris_B, err_w, err_s, delta_A, n_B)
     print(f"wrote {args.out}")
 
 
 def _plot(out, meshes, weakA, strongA, deltas, weakB, strongB,
-          n_ref, err_w, err_s, delta_A, n_B):
+          coarse_nodes, coarse_tris, err_w, err_s, delta_A, n_B):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -181,8 +182,7 @@ def _plot(out, meshes, weakA, strongA, deltas, weakB, strongB,
     ax[0, 1].set_title(f"B. sharpen interface (coarse mesh, n={n_B})")
     ax[0, 1].legend(); ax[0, 1].grid(True, which="both", alpha=0.3)
 
-    rn, rt, _ = build_mesh(n_ref)
-    triang = Triangulation(rn[:, 0], rn[:, 1], rt)
+    triang = Triangulation(coarse_nodes[:, 0], coarse_nodes[:, 1], coarse_tris)
     vmax = float(max(err_w.max(), err_s.max()))
     t = np.linspace(0, 2 * np.pi, 200)
     for a, err, lab in ((ax[1, 0], err_s, "strong-form (naive FD)"),
