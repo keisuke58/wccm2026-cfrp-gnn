@@ -46,7 +46,8 @@ PI-DeepONet で置換**（背景整理: [`PI_DEEPONET_MC_ONLINE_LEARNING.md`](./
 | ③ | [`fe_newton_warmstart.py`](../fe_newton_warmstart.py) | C: 1D 非線形ポアソンのウォームスタート | Newton反復 cold **5.2** → warm **3.7**(適応で3.5) |
 | ④ | [`dd2d_newton_warmstart.py`](../dd2d_newton_warmstart.py) | C: 2D GAAスライスへ昇格 | Newton反復 cold **5.2** → warm **3.1**(~40%削減) |
 | ⑤ | [`cfet_stack_warmstart.py`](../cfet_stack_warmstart.py) | C: CFET 積層断面（多材料・n/p縦積み） | Newton反復 cold **4.8** → warm **3.0**(~38%削減) |
-| ⑥ | [`tsv_thermal_stress.py`](../tsv_thermal_stress.py) | TSV 熱機械応力: FE熱弾性＋応力場サロゲート＋KOZ（repo の CFRP応力×GNN と直結） | 未知レイアウトで rel-L2 **0.128**, keep-out zone **IoU 0.819** |
+| ⑥ | [`tsv_thermal_stress.py`](../tsv_thermal_stress.py) | TSV 熱機械応力(2D): FE熱弾性＋応力場サロゲート＋KOZ（repo の CFRP応力×GNN と直結） | 未知レイアウトで rel-L2 **0.128**, keep-out zone **IoU 0.819** |
+| ⑦ | [`tsv_3d_stress.py`](../tsv_3d_stress.py) | TSV 3D＋**実弾性定数**（Si異方性 C11/C12/C44, Cu等方）: 3Dテトラ熱弾性 | 異方性Siで応力が**4回対称(cloverleaf)**、[110]/[100]比≠1 → **方向依存KOZ**（等方近似では出ない） |
 
 図: `pi_deeponet_fem_gaa.png`, `bench_weak_vs_strong.png`, `fe_newton_warmstart.png`, `dd2d_newton_warmstart.png`, `cfet_stack_warmstart.png`, `tsv_thermal_stress.png`。
 > ①〜⑤は半導体デバイス（前工程・電気物理）、⑥は 3D積層/パッケージ（後工程・熱機械）で、本リポジトリの
@@ -86,8 +87,9 @@ PI-DeepONet で置換**（背景整理: [`PI_DEEPONET_MC_ONLINE_LEARNING.md`](./
    の CFET 段に対応。次は真の縦ゲート形状＋非構造メッシュ、2D-CFET(2D材料チャネル)。
 2. **完全ドリフト拡散**: Scharfetter–Gummel の電流連続式を連立、大バイアス掃引での収束ロバスト性。
 3. **真の非構造メッシュ + AMR**: η 駆動の h-細分化と GNN branch のメッシュ非依存性の実証。
-4. ~~**TSV/3D積層の熱機械応力(FEA×GNN)**~~ → **⑥で実装済み**（FE熱弾性＋CNN応力場サロゲート＋
-   KOZ, rel-L2 0.128 / IoU 0.819）。次は非構造メッシュ・実弾性定数・3D、および repo の CFRP
+4. ~~**TSV/3D積層の熱機械応力(FEA×GNN)**~~ → **⑥(2D)・⑦(3D＋実弾性定数)で実装済み**
+   （⑥: CNN応力場サロゲート＋KOZ rel-L2 0.128/IoU 0.819。⑦: 3Dテトラ熱弾性、異方性Siで
+   4回対称=方向依存KOZ）。次は 3D 応力場のサロゲート化・非構造メッシュ、および repo の CFRP
    欠陥localization GNN と同一パイプラインでの KOZ 分類。
 
 ---
