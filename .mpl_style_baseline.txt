@@ -7,6 +7,7 @@ diffusion_anomaly.py
 eval/visualize_predictions.py
 expkit/plots.py
 inverse_rigor.py
+bench_weak_vs_strong.py
 keio_layup_surrogate.py
 pi_deeponet_fem_gaa.py
 slides/figure_sources/gen_clean_figs.py
