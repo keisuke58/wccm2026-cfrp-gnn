@@ -14,3 +14,4 @@ slides/figure_sources/gen_clean_figs.py
 slides/figure_sources/visualize_normalized_zscore_spatial.py
 stage3_fatigue_link.py
 train.py
+fe_newton_warmstart.py
