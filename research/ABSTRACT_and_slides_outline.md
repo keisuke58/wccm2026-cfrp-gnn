@@ -49,7 +49,7 @@ stalls at, and that a learned Newton warm-start cuts iteration count ~40% at unc
 4. **課題と着眼**: 強形式は材料界面（可変ε）でフラックス連続を破る。→ **弱形式(FEM)を核に**。
 5. **提案(A+D+B+C)**: A 弱形式損失 / D a-posteriori誤差トリガ / B GNN branch / C ウォームスタート。
    図: Branch(GNN)-Trunk(座標)-内積 の DeepONet 模式。
-6. **実証① 弱形式PI-DeepONet＋オンライン**: 厳密FE解 24/60(60%減)、トリガ率 57%→23%、
+6. **実証① 弱形式PI-DeepONet＋オンライン**: トリガされた厳密FE解 24/60(=デプロイ時コスト,60%減)、トリガ率 57%→23%、
    rel-L2 0.074。図: `pi_deeponet_fem_gaa.png`。
 7. **実証② 弱形式 vs 強形式ベンチ（新規性の一枚看板）**: 弱形式 O(h²)収束 vs 強形式 ~0.55頭打ち、
    誤差マップ。図: `bench_weak_vs_strong.png`。
@@ -89,4 +89,6 @@ stalls at, and that a learned Newton warm-start cuts iteration count ~40% at unc
 | 9 | `cfet_stack_warmstart.png` |
 
 > 注: 数値はいずれも既定実行の実測（seed固定）。pi_deeponet は GNN scatter による軽微な
-> run-to-run 変動あり（committed 図の値を採用）。
+> run-to-run 変動あり（committed 図の値を採用）。実証①の「24/60」は**トリガされた厳密FE解**
+> （＝デプロイ時コスト）であり、各ステップの rel-L2 検証用 FE 解は診断目的でデプロイ時には
+> 走らない別枠（非計上）。

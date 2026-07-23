@@ -259,6 +259,10 @@ def main():
     ap.add_argument("--adapt_iters", type=int, default=100, help="retrain steps per trigger")
     ap.add_argument("--out", type=str, default="pi_deeponet_fem_gaa.png")
     args = ap.parse_args()
+    if args.steps < 2:
+        ap.error("--steps must be at least 2 (needs first/second-half stats and snapshots)")
+    if args.pretrain > 0 and args.n_pretrain_rho < 1:
+        ap.error("--n_pretrain_rho must be at least 1 when --pretrain > 0")
 
     torch.manual_seed(SEED)
     rng = np.random.default_rng(SEED)
@@ -323,8 +327,9 @@ def main():
             print(f"[pretrain] {it+1}/{args.pretrain}  data+phys loss {loss.item():.3e}")
 
     # ---- online (MC-style) loop: moving/growing charge packet ----
-    # D: FE error estimator triggers the exact solve; oracle pairs go to a replay
-    # buffer and the net is retrained on the whole buffer (online operator learning).
+    # D: FE error estimator triggers the exact solve; each oracle pair goes to a replay
+    # buffer, and adaptation fits the current state plus one randomly sampled past pair
+    # per iteration (stochastic replay to retain earlier solves), not the whole buffer.
     for g in opt.param_groups:            # restore lr (cosine annealed it to ~0)
         g["lr"] = 5e-4
     replay = []  # list of (feat, rho_t, tgt_u)
@@ -368,7 +373,9 @@ def main():
                 u = model(feat, edge_index, coords, dirichlet_mask)
         triggers.append(int(fired))
 
-        # honest accuracy check against the exact FE solve every step
+        # DIAGNOSTIC ONLY: an extra exact FE solve every step to report rel-L2 vs ground
+        # truth. This is not part of the method and would NOT run in deployment (no ground
+        # truth there); it is separate from and not counted in the triggered-solve total.
         phi_pred = (u * S).detach().numpy()
         phi_ref = fe_solve(K, M, rho_np, free)
         rel = np.linalg.norm(phi_pred - phi_ref) / (np.linalg.norm(phi_ref) + 1e-12)
@@ -381,9 +388,10 @@ def main():
     half = args.steps // 2
     early = 100.0 * np.mean(triggers[:half])
     late = 100.0 * np.mean(triggers[half:])
+    n_trig = int(sum(triggers))
     print(f"\ntrigger rate: first half {early:.0f}%  ->  second half {late:.0f}%"
-          f"   |   mean rel-L2 {np.mean(errors):.3f}   ({len(replay)} exact solves / "
-          f"{args.steps} steps)")
+          f"   |   mean rel-L2 {np.mean(errors):.3f}   ({n_trig} TRIGGERED exact solves / "
+          f"{args.steps} steps = deployment cost; per-step diagnostic solves not counted)")
 
     _plot(args.out, nodes, tris, eps_node, snap, triggers, errors, ind_hist, args.tol, args.n)
     print(f"wrote {args.out}")

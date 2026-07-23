@@ -41,7 +41,7 @@ PI-DeepONet で置換**（背景整理: [`PI_DEEPONET_MC_ONLINE_LEARNING.md`](./
 
 | # | デモ | 主張 | 実測結果 |
 |---|---|---|---|
-| ① | [`pi_deeponet_fem_gaa.py`](../pi_deeponet_fem_gaa.py) | A+D+B: 弱形式PI-DeepONet＋オンライン適応 | 厳密FE解 **24/60**(60%削減), トリガ率 **57%→23%**, rel-L2 **0.074** |
+| ① | [`pi_deeponet_fem_gaa.py`](../pi_deeponet_fem_gaa.py) | A+D+B: 弱形式PI-DeepONet＋オンライン適応 | **トリガされた厳密FE解 24/60**(=デプロイ時コスト, 60%削減), トリガ率 **57%→23%**, rel-L2 **0.074** |
 | ② | [`bench_weak_vs_strong.py`](../bench_weak_vs_strong.py) | 弱形式が界面で本質的に優れる(NN非介在) | 弱形式 **O(h²)収束**(0.13→0.0093) vs 強形式 **~0.55で頭打ち** |
 | ③ | [`fe_newton_warmstart.py`](../fe_newton_warmstart.py) | C: 1D 非線形ポアソンのウォームスタート | Newton反復 cold **5.2** → warm **3.7**(適応で3.5) |
 | ④ | [`dd2d_newton_warmstart.py`](../dd2d_newton_warmstart.py) | C: 2D GAAスライスへ昇格 | Newton反復 cold **5.2** → warm **3.1**(~40%削減) |
