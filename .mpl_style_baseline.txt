@@ -17,3 +17,4 @@ train.py
 fe_newton_warmstart.py
 dd2d_newton_warmstart.py
 cfet_stack_warmstart.py
+tsv_thermal_stress.py
