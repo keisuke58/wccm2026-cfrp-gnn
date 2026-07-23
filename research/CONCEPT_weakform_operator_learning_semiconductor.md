@@ -47,7 +47,7 @@ PI-DeepONet で置換**（背景整理: [`PI_DEEPONET_MC_ONLINE_LEARNING.md`](./
 | ④ | [`dd2d_newton_warmstart.py`](../dd2d_newton_warmstart.py) | C: 2D GAAスライスへ昇格 | Newton反復 cold **5.2** → warm **3.1**(~40%削減) |
 | ⑤ | [`cfet_stack_warmstart.py`](../cfet_stack_warmstart.py) | C: CFET 積層断面（多材料・n/p縦積み） | Newton反復 cold **4.8** → warm **3.0**(~38%削減) |
 | ⑥ | [`tsv_thermal_stress.py`](../tsv_thermal_stress.py) | TSV 熱機械応力(2D): FE熱弾性＋応力場サロゲート＋KOZ（repo の CFRP応力×GNN と直結） | 未知レイアウトで rel-L2 **0.128**, keep-out zone **IoU 0.819** |
-| ⑦ | [`tsv_3d_stress.py`](../tsv_3d_stress.py) | TSV 3D＋**実弾性定数**（Si異方性 C11/C12/C44, Cu等方）: 3Dテトラ熱弾性 | 異方性Siで応力が**4回対称(cloverleaf)**、[110]/[100]比≠1 → **方向依存KOZ**（等方近似では出ない） |
+| ⑦ | [`tsv_3d_stress.py`](../tsv_3d_stress.py) | TSV 3D＋**実弾性定数**（Si異方性 C11/C12/C44, Cu等方）: 3Dテトラ熱弾性 | 異方性Siで応力が**4回対称(cloverleaf)**→**方向依存KOZ**（等方近似では出ない）。**解析解2検証を機械精度でPASS**（自由膨張→無応力, 完全拘束→−(C11+2C12)αΔT） |
 
 図: `pi_deeponet_fem_gaa.png`, `bench_weak_vs_strong.png`, `fe_newton_warmstart.png`, `dd2d_newton_warmstart.png`, `cfet_stack_warmstart.png`, `tsv_thermal_stress.png`。
 > ①〜⑤は半導体デバイス（前工程・電気物理）、⑥は 3D積層/パッケージ（後工程・熱機械）で、本リポジトリの
