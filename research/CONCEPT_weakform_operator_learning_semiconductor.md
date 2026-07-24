@@ -37,7 +37,7 @@ PI-DeepONet で置換**（背景整理: [`PI_DEEPONET_MC_ONLINE_LEARNING.md`](./
 
 ---
 
-## 3. 実証（10デモ・正直な結果）
+## 3. 実証（11デモ・正直な結果）
 
 | # | デモ | 主張 | 実測結果 |
 |---|---|---|---|
@@ -51,10 +51,12 @@ PI-DeepONet で置換**（背景整理: [`PI_DEEPONET_MC_ONLINE_LEARNING.md`](./
 | ⑧ | [`dd_full_1d.py`](../dd_full_1d.py) | **完全ドリフト拡散**（1D pnダイオード, Scharfetter–Gummel＋Gummel）＋バイアス継続ウォームスタート | **理想ダイオードI-V検証**（V=0でJ≈1e-11, 順バイアスで J∝(e^{V/Vt}−1)）。掃引の Gummel 反復 cold 203 → warm 184（~10%削減, 正直に控えめ＝反復は注入水準支配） |
 | ⑨ | [`dd_breakdown_continuation.py`](../dd_breakdown_continuation.py) | 高逆バイアス coupled DD: **継続法が"必須"**（cold は基底を外れて発散） | cold（平衡から直接）は **4Vt** までしか収束せず発散、**継続法は 45Vt 到達**。案C が「速い」でなく「収束/発散を分ける」領域を実証（衝突イオン化は安定重視で mild ~x2.1, 真のavalanche/Full-Newton連立は要スケーリングの重い拡張として明記） |
 | ⑩ | [`gaa_material_sweep_warmstart.py`](../gaa_material_sweep_warmstart.py) | C: **多材料 GAA スイープの償却**（円筒断面で Si/Ge/GeSn/InGaAs/MoS₂ ×バイアス掃引 = 実TCADワークロード, cf. Balaji+2026） | **45 自己整合FE解**の総 Newton 反復 cold **217 → warm 161（26%削減）**。バイアス継続＋**材料転写**（同一形状で ε/遮蔽のみ変更）で償却。円筒（曲面）断面ゆえ**弱形式FEの必然性**とも接続。材料依存電荷（小ギャップ Ge/GeSn ほど強遮蔽）も再現 |
+| ⑪ | [`gaa_operator_deeponet.py`](../gaa_operator_deeponet.py) | **A+B+C 統合**: ⑩を**学習演算子化**（DeepONet: (ε,κ,V_g)×(x,y)→u）。1発推論＋warm-start | **未知材料**(InGaAs, 学習に不使用)へ 1-shot **rel-L2 0.014**、**未知バイアス** 0.012（デプロイ時 Newton 不要）。予測を warm-start にすると厳密FE Newton が cold **5.2 → 2.8**（約半減, tol=1e-9ゆえ1反復には潰れない）。弱形式FEデータ(A)＋演算子学習(B)＋加速(C)を実ワークロードで一体化 |
 
-図: `pi_deeponet_fem_gaa.png`, `bench_weak_vs_strong.png`, `fe_newton_warmstart.png`, `dd2d_newton_warmstart.png`, `cfet_stack_warmstart.png`, `tsv_thermal_stress.png`, `tsv_3d_stress.png`, `dd_full_1d.png`, `dd_breakdown_continuation.png`, `gaa_material_sweep_warmstart.png`。
-> ①〜⑤⑧⑨⑩は半導体デバイス（電気物理; ①〜⑤⑩は平衡ポアソン、⑧⑨は非平衡・輸送の完全DD）、⑥⑦は
+図: `pi_deeponet_fem_gaa.png`, `bench_weak_vs_strong.png`, `fe_newton_warmstart.png`, `dd2d_newton_warmstart.png`, `cfet_stack_warmstart.png`, `tsv_thermal_stress.png`, `tsv_3d_stress.png`, `dd_full_1d.png`, `dd_breakdown_continuation.png`, `gaa_material_sweep_warmstart.png`, `gaa_operator_deeponet.png`。
+> ①〜⑤⑧⑨⑩⑪は半導体デバイス（電気物理; ①〜⑤⑩⑪は平衡ポアソン、⑧⑨は非平衡・輸送の完全DD）、⑥⑦は
 > 3D積層/パッケージ（後工程・熱機械）で、本リポジトリの CFRP 応力 FEA×GNN 中核に最も近い橋渡し。
+> 依存関係: ④⑤⑩⑪は `pi_deeponet_fem_gaa.py`/`gaa_material_sweep_warmstart.py` の FE 資産を再利用（他は単体）。
 各デモは CPU で数分・seed 固定で再現可能。`bench_weak_vs_strong.py` は同リポの
 `pi_deeponet_fem_gaa.py` の `build_mesh`/`assemble` を再利用（＝リポジトリ依存）。他デモは単体で自己完結。
 
@@ -96,7 +98,9 @@ PI-DeepONet で置換**（背景整理: [`PI_DEEPONET_MC_ONLINE_LEARNING.md`](./
    の CFET 段に対応。次は真の縦ゲート形状＋非構造メッシュ、2D-CFET(2D材料チャネル)。
    ~~**多材料チャネル比較の償却**~~ → **⑩で実装済み**（円筒 GAA 断面で Si/Ge/GeSn/InGaAs/MoS₂
    ×バイアス掃引 = 実TCADワークロード [Balaji+2026] を継続法で償却, 45解の総反復 217→161）。
-   次は演算子学習(材料をパラメータ入力に)で 1発推論化。
+   ~~**材料をパラメータ入力にした演算子学習で 1発推論化**~~ → **⑪で実装済み**（DeepONet で未知材料
+   InGaAs へ 1-shot rel-L2 0.014、warm-start で Newton 半減）。次は非対称ドーピング/角度依存で
+   trunk の表現力を要する場へ、および真の 2D 非構造メッシュでの GNN branch。
 2. ~~**完全ドリフト拡散**: Scharfetter–Gummel の電流連続式を連立~~ → **⑧(順バイアス理想ダイオード)・
    ⑨(高逆バイアス継続法必須)で実装済み**。次は **真の avalanche**（陰的/減衰 G）と **2D の Full Newton
    連立**（要変数スケーリング; 生の連立DDヤコビアンは悪条件）——⑨で必要性は実証済み。
