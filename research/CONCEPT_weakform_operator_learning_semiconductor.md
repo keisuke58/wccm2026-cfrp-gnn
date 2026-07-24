@@ -37,7 +37,7 @@ PI-DeepONet で置換**（背景整理: [`PI_DEEPONET_MC_ONLINE_LEARNING.md`](./
 
 ---
 
-## 3. 実証（5デモ・正直な結果）
+## 3. 実証（10デモ・正直な結果）
 
 | # | デモ | 主張 | 実測結果 |
 |---|---|---|---|
@@ -50,9 +50,10 @@ PI-DeepONet で置換**（背景整理: [`PI_DEEPONET_MC_ONLINE_LEARNING.md`](./
 | ⑦ | [`tsv_3d_stress.py`](../tsv_3d_stress.py) | TSV 3D＋**実弾性定数**（Si異方性 C11/C12/C44, Cu等方）: 3Dテトラ熱弾性 | 異方性Siで応力が**4回対称(cloverleaf)**→**方向依存KOZ**（等方近似では出ない）。**解析解2検証を機械精度でPASS**（自由膨張→無応力, 完全拘束→−(C11+2C12)αΔT） |
 | ⑧ | [`dd_full_1d.py`](../dd_full_1d.py) | **完全ドリフト拡散**（1D pnダイオード, Scharfetter–Gummel＋Gummel）＋バイアス継続ウォームスタート | **理想ダイオードI-V検証**（V=0でJ≈1e-11, 順バイアスで J∝(e^{V/Vt}−1)）。掃引の Gummel 反復 cold 203 → warm 184（~10%削減, 正直に控えめ＝反復は注入水準支配） |
 | ⑨ | [`dd_breakdown_continuation.py`](../dd_breakdown_continuation.py) | 高逆バイアス coupled DD: **継続法が"必須"**（cold は基底を外れて発散） | cold（平衡から直接）は **4Vt** までしか収束せず発散、**継続法は 45Vt 到達**。案C が「速い」でなく「収束/発散を分ける」領域を実証（衝突イオン化は安定重視で mild ~x2.1, 真のavalanche/Full-Newton連立は要スケーリングの重い拡張として明記） |
+| ⑩ | [`gaa_material_sweep_warmstart.py`](../gaa_material_sweep_warmstart.py) | C: **多材料 GAA スイープの償却**（円筒断面で Si/Ge/GeSn/InGaAs/MoS₂ ×バイアス掃引 = 実TCADワークロード, cf. Balaji+2026） | **45 自己整合FE解**の総 Newton 反復 cold **217 → warm 161（26%削減）**。バイアス継続＋**材料転写**（同一形状で ε/遮蔽のみ変更）で償却。円筒（曲面）断面ゆえ**弱形式FEの必然性**とも接続。材料依存電荷（小ギャップ Ge/GeSn ほど強遮蔽）も再現 |
 
-図: `pi_deeponet_fem_gaa.png`, `bench_weak_vs_strong.png`, `fe_newton_warmstart.png`, `dd2d_newton_warmstart.png`, `cfet_stack_warmstart.png`, `tsv_thermal_stress.png`。
-> ①〜⑤⑧⑨は半導体デバイス（電気物理; ①〜⑤は平衡ポアソン、⑧⑨は非平衡・輸送の完全DD）、⑥⑦は
+図: `pi_deeponet_fem_gaa.png`, `bench_weak_vs_strong.png`, `fe_newton_warmstart.png`, `dd2d_newton_warmstart.png`, `cfet_stack_warmstart.png`, `tsv_thermal_stress.png`, `tsv_3d_stress.png`, `dd_full_1d.png`, `dd_breakdown_continuation.png`, `gaa_material_sweep_warmstart.png`。
+> ①〜⑤⑧⑨⑩は半導体デバイス（電気物理; ①〜⑤⑩は平衡ポアソン、⑧⑨は非平衡・輸送の完全DD）、⑥⑦は
 > 3D積層/パッケージ（後工程・熱機械）で、本リポジトリの CFRP 応力 FEA×GNN 中核に最も近い橋渡し。
 各デモは CPU で数分・seed 固定で再現可能。`bench_weak_vs_strong.py` は同リポの
 `pi_deeponet_fem_gaa.py` の `build_mesh`/`assemble` を再利用（＝リポジトリ依存）。他デモは単体で自己完結。
@@ -93,6 +94,9 @@ PI-DeepONet で置換**（背景整理: [`PI_DEEPONET_MC_ONLINE_LEARNING.md`](./
 1. ~~**CFET 積層断面への拡張**~~ → **⑤で実装済み**（多材料スタック上の Newton ウォームスタート,
    cold 4.8→warm 3.0）。ロードマップ FinFET→GAA→Forksheet→**CFET**→2D-CFET→3Dモノリシック
    の CFET 段に対応。次は真の縦ゲート形状＋非構造メッシュ、2D-CFET(2D材料チャネル)。
+   ~~**多材料チャネル比較の償却**~~ → **⑩で実装済み**（円筒 GAA 断面で Si/Ge/GeSn/InGaAs/MoS₂
+   ×バイアス掃引 = 実TCADワークロード [Balaji+2026] を継続法で償却, 45解の総反復 217→161）。
+   次は演算子学習(材料をパラメータ入力に)で 1発推論化。
 2. ~~**完全ドリフト拡散**: Scharfetter–Gummel の電流連続式を連立~~ → **⑧(順バイアス理想ダイオード)・
    ⑨(高逆バイアス継続法必須)で実装済み**。次は **真の avalanche**（陰的/減衰 G）と **2D の Full Newton
    連立**（要変数スケーリング; 生の連立DDヤコビアンは悪条件）——⑨で必要性は実証済み。
@@ -112,6 +116,11 @@ PI-DeepONet で置換**（背景整理: [`PI_DEEPONET_MC_ONLINE_LEARNING.md`](./
 DDNet (PINN連立); PCGD (arXiv:2606.29272, 物理ガイド拡散×TCAD); ML による TCAD 収束加速。
 **元研究**: Otsuki & Mori, *Online Learning-Accelerated 3D MC for GAA*, WCCM-ECCOMAS 2026 STS415
 （会議発表段階、ジャーナル/プレプリント索引は未確認）。
+**適用先ワークロード(⑩の動機)**: S. Balaji, T.S. Balaji, P. Rathinakumar, S. Karthik,
+*Comparative TCAD investigation of gate-all-around nanowire MOSFETs with emerging channel materials*,
+**Next Materials 13 (2026) 102743** (doi:10.1016/j.nxmate.2026.102743, オープンアクセス)。Synopsys
+Sentaurus で GAA ナノワイヤの Si/Ge/GeSn/InGaAs/MoS₂ を同一形状・同一ゲートスタックで比較（ML 非使用）。
+＝「材料×バイアスの独立自己整合ソルブ多数」という、案C の継続法が償却する典型ワークロードの実例（⑩）。
 **GAA/CFET デバイス(動機)**: 2D-Bi₂O₂Se GAA (*Nat. Mater.* 2025, s41563-025-02117-w);
 2D トランジスタ ヒステリシス標準化 (*Nat. Commun.* 2025, s41467-025-65641-y);
 Samsung 3D Stacked FET (VLSI 2026); CFET ロードマップ (IMEC 系)。
