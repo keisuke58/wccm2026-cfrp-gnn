@@ -49,6 +49,7 @@ PI-DeepONet で置換**（背景整理: [`PI_DEEPONET_MC_ONLINE_LEARNING.md`](./
 | ⑥ | [`tsv_thermal_stress.py`](../tsv_thermal_stress.py) | TSV 熱機械応力(2D): FE熱弾性＋応力場サロゲート＋KOZ（repo の CFRP応力×GNN と直結） | 未知レイアウトで rel-L2 **0.128**, keep-out zone **IoU 0.819** |
 | ⑦ | [`tsv_3d_stress.py`](../tsv_3d_stress.py) | TSV 3D＋**実弾性定数**（Si異方性 C11/C12/C44, Cu等方）: 3Dテトラ熱弾性 | 異方性Siで応力が**4回対称(cloverleaf)**→**方向依存KOZ**（等方近似では出ない）。**解析解2検証を機械精度でPASS**（自由膨張→無応力, 完全拘束→−(C11+2C12)αΔT） |
 | ⑧ | [`dd_full_1d.py`](../dd_full_1d.py) | **完全ドリフト拡散**（1D pnダイオード, Scharfetter–Gummel＋Gummel）＋バイアス継続ウォームスタート | **理想ダイオードI-V検証**（V=0でJ≈1e-11, 順バイアスで J∝(e^{V/Vt}−1)）。掃引の Gummel 反復 cold 203 → warm 184（~10%削減, 正直に控えめ＝反復は注入水準支配） |
+| ⑨ | [`dd_breakdown_continuation.py`](../dd_breakdown_continuation.py) | 高逆バイアス coupled DD: **継続法が"必須"**（cold は基底を外れて発散） | cold（平衡から直接）は **4Vt** までしか収束せず発散、**継続法は 45Vt 到達**。案C が「速い」でなく「収束/発散を分ける」領域を実証（衝突イオン化は安定重視で mild ~x2.1, 真のavalanche/Full-Newton連立は要スケーリングの重い拡張として明記） |
 
 図: `pi_deeponet_fem_gaa.png`, `bench_weak_vs_strong.png`, `fe_newton_warmstart.png`, `dd2d_newton_warmstart.png`, `cfet_stack_warmstart.png`, `tsv_thermal_stress.png`。
 > ①〜⑤は半導体デバイス（前工程・電気物理）、⑥は 3D積層/パッケージ（後工程・熱機械）で、本リポジトリの
@@ -86,8 +87,9 @@ PI-DeepONet で置換**（背景整理: [`PI_DEEPONET_MC_ONLINE_LEARNING.md`](./
 1. ~~**CFET 積層断面への拡張**~~ → **⑤で実装済み**（多材料スタック上の Newton ウォームスタート,
    cold 4.8→warm 3.0）。ロードマップ FinFET→GAA→Forksheet→**CFET**→2D-CFET→3Dモノリシック
    の CFET 段に対応。次は真の縦ゲート形状＋非構造メッシュ、2D-CFET(2D材料チャネル)。
-2. ~~**完全ドリフト拡散**: Scharfetter–Gummel の電流連続式を連立~~ → **⑧で実装済み**（1D pnダイオード,
-   理想ダイオードI-V検証済み）。次は 2D DD・Full Newton 連立・降伏近傍（cold発散→継続法が必須になる領域）。
+2. ~~**完全ドリフト拡散**: Scharfetter–Gummel の電流連続式を連立~~ → **⑧(順バイアス理想ダイオード)・
+   ⑨(高逆バイアス継続法必須)で実装済み**。次は **真の avalanche**（陰的/減衰 G）と **2D の Full Newton
+   連立**（要変数スケーリング; 生の連立DDヤコビアンは悪条件）——⑨で必要性は実証済み。
 3. **真の非構造メッシュ + AMR**: η 駆動の h-細分化と GNN branch のメッシュ非依存性の実証。
 4. ~~**TSV/3D積層の熱機械応力(FEA×GNN)**~~ → **⑥(2D)・⑦(3D＋実弾性定数)で実装済み**
    （⑥: CNN応力場サロゲート＋KOZ rel-L2 0.128/IoU 0.819。⑦: 3Dテトラ熱弾性、異方性Siで
