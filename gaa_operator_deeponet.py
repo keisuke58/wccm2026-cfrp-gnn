@@ -108,9 +108,13 @@ def main():
             u, _, _ = newton(K, ML, kap, fdop, vg, free, gate, np.zeros(N))
             fields[(m, k)] = u
 
-    # ---- condition-parameter normalisation (branch input) ----
-    eps_all = np.array([mm[1] for mm in per_mat])
-    kap_all = np.log10(np.array([mm[2] for mm in per_mat]))
+    # ---- train / test split ----
+    train_mats = [0, 2, 3, 4]                       # hold out InGaAs (index 1)
+
+    # ---- condition-parameter normalisation (branch input; TRAIN materials only,
+    # so the held-out material's eps/kappa never leak into preprocessing) ----
+    eps_all = np.array([per_mat[m][1] for m in train_mats])
+    kap_all = np.log10(np.array([per_mat[m][2] for m in train_mats]))
     e_mu, e_sd = eps_all.mean(), eps_all.std()
     k_mu, k_sd = kap_all.mean(), kap_all.std()
 
@@ -118,9 +122,6 @@ def main():
         return [(per_mat[m][1] - e_mu) / e_sd,
                 (np.log10(per_mat[m][2]) - k_mu) / k_sd,
                 vg / args.vmax]
-
-    # ---- train / test split ----
-    train_mats = [0, 2, 3, 4]                       # hold out InGaAs (index 1)
     train_bk = list(range(0, args.nbias, 2))        # even bias indices
     test_bk = [k for k in range(args.nbias) if k not in train_bk]
     train = [(m, k) for m in train_mats for k in train_bk]

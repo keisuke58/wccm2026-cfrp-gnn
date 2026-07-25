@@ -30,7 +30,9 @@ PI-DeepONet で置換**（背景整理: [`PI_DEEPONET_MC_ONLINE_LEARNING.md`](./
 詳細設計: [`FEM_OPERATOR_LEARNING_GAA_IDEA.md`](./FEM_OPERATOR_LEARNING_GAA_IDEA.md)。
 
 4つの構成要素:
-- **A. 弱形式損失**: 物理損失を点ごとラプラシアン(強形式)でなく**組立済み FE 残差 K(ε)φ−Mρ**(Galerkin)に。
+- **A. 弱形式損失**: 物理損失を点ごとラプラシアン(強形式)でなく**組立済み FE 残差**(Galerkin)に。
+  線形ポアソンなら `K(ε)φ−Mρ`、非線形ポアソン/Poisson–Boltzmann(③〜⑤⑩⑪)は φ 依存のキャリア項が入り
+  残差は `K(ε)φ + κ·M·sinh(φ) − Mρ`(Dirichlet 境界で強制)。いずれも「組立済み FE 残差＝Galerkin」が核。
 - **D. FE a-posteriori 誤差評価**: 残差指標が「メッシュ細分化」と「オンライン追学習トリガ」を統一。
 - **B. GNN branch**: FE メッシュグラフを摂取し任意メッシュに対応(repo の mesh-agnostic GNN と地続き)。
 - **C. FEM=精度の権威, ネット=加速器**: Newton の初期値だけを与えるウォームスタート(置換でなく加速)。
@@ -51,12 +53,13 @@ PI-DeepONet で置換**（背景整理: [`PI_DEEPONET_MC_ONLINE_LEARNING.md`](./
 | ⑧ | [`dd_full_1d.py`](../dd_full_1d.py) | **完全ドリフト拡散**（1D pnダイオード, Scharfetter–Gummel＋Gummel）＋バイアス継続ウォームスタート | **理想ダイオードI-V検証**（V=0でJ≈1e-11, 順バイアスで J∝(e^{V/Vt}−1)）。掃引の Gummel 反復 cold 203 → warm 184（~10%削減, 正直に控えめ＝反復は注入水準支配） |
 | ⑨ | [`dd_breakdown_continuation.py`](../dd_breakdown_continuation.py) | 高逆バイアス coupled DD: **継続法が"必須"**（cold は基底を外れて発散） | cold（平衡から直接）は **4Vt** までしか収束せず発散、**継続法は 45Vt 到達**。案C が「速い」でなく「収束/発散を分ける」領域を実証（衝突イオン化は安定重視で mild ~x2.1, 真のavalanche/Full-Newton連立は要スケーリングの重い拡張として明記） |
 | ⑩ | [`gaa_material_sweep_warmstart.py`](../gaa_material_sweep_warmstart.py) | C: **多材料 GAA スイープの償却**（円筒断面で Si/Ge/GeSn/InGaAs/MoS₂ ×バイアス掃引 = 実TCADワークロード, cf. Balaji+2026） | **45 自己整合FE解**の総 Newton 反復 cold **217 → warm 161（26%削減）**。バイアス継続＋**材料転写**（同一形状で ε/遮蔽のみ変更）で償却。円筒（曲面）断面ゆえ**弱形式FEの必然性**とも接続。材料依存電荷（小ギャップ Ge/GeSn ほど強遮蔽）も再現 |
-| ⑪ | [`gaa_operator_deeponet.py`](../gaa_operator_deeponet.py) | **A+B+C 統合**: ⑩を**学習演算子化**（DeepONet: (ε,κ,V_g)×(x,y)→u）。1発推論＋warm-start | **未知材料**(InGaAs, 学習に不使用)へ 1-shot **rel-L2 0.014**、**未知バイアス** 0.012（デプロイ時 Newton 不要）。予測を warm-start にすると厳密FE Newton が cold **5.2 → 2.8**（約半減, tol=1e-9ゆえ1反復には潰れない）。弱形式FEデータ(A)＋演算子学習(B)＋加速(C)を実ワークロードで一体化 |
+| ⑪ | [`gaa_operator_deeponet.py`](../gaa_operator_deeponet.py) | **A+B+C 統合**: ⑩を**学習演算子化**（DeepONet: (ε,κ,V_g)×(x,y)→u）。1発推論＋warm-start | **未知材料**(InGaAs, 学習に不使用)へ 1-shot **rel-L2 0.015**、**未知バイアス** 0.013（デプロイ時 Newton 不要）。予測を warm-start にすると厳密FE Newton が cold **5.2 → 2.8**（約半減, tol=1e-9ゆえ1反復には潰れない）。正規化統計は学習材料のみで算出（未知材料の漏洩なし）。弱形式FEデータ(A)＋演算子学習(B)＋加速(C)を実ワークロードで一体化 |
 
 図: `pi_deeponet_fem_gaa.png`, `bench_weak_vs_strong.png`, `fe_newton_warmstart.png`, `dd2d_newton_warmstart.png`, `cfet_stack_warmstart.png`, `tsv_thermal_stress.png`, `tsv_3d_stress.png`, `dd_full_1d.png`, `dd_breakdown_continuation.png`, `gaa_material_sweep_warmstart.png`, `gaa_operator_deeponet.png`。
 > ①〜⑤⑧⑨⑩⑪は半導体デバイス（電気物理; ①〜⑤⑩⑪は平衡ポアソン、⑧⑨は非平衡・輸送の完全DD）、⑥⑦は
 > 3D積層/パッケージ（後工程・熱機械）で、本リポジトリの CFRP 応力 FEA×GNN 中核に最も近い橋渡し。
-> 依存関係: ④⑤⑩⑪は `pi_deeponet_fem_gaa.py`/`gaa_material_sweep_warmstart.py` の FE 資産を再利用（他は単体）。
+> 依存関係（実 import 準拠）: ②④⑤⑥は `pi_deeponet_fem_gaa.py` の FE 資産（`build_mesh`/`assemble`/`eps_map`）を、
+> ⑪は `gaa_material_sweep_warmstart.py`（メッシュ/組立/Newton）を再利用。①③⑦⑧⑨⑩は単体で自己完結。
 各デモは CPU で数分・seed 固定で再現可能。`bench_weak_vs_strong.py` は同リポの
 `pi_deeponet_fem_gaa.py` の `build_mesh`/`assemble` を再利用（＝リポジトリ依存）。他デモは単体で自己完結。
 
@@ -70,11 +73,12 @@ PI-DeepONet で置換**（背景整理: [`PI_DEEPONET_MC_ONLINE_LEARNING.md`](./
 （以下、丸数字のうち §1 の**分類**は「定番⑥」等、§3 の**デモ**は「デモ②」等と明示して区別する。）
 
 - **弱形式 × 演算子学習**: 定番②CNN格子/③PINN/④GNN がいずれも強形式・格子/点ごとなのに対し、
-  界面不連続 ε・非構造メッシュに頑健な**弱形式**を核にした点（**デモ②**が定量的裏付け）。
+  **界面不連続 ε に頑健な弱形式**を核にした点（**デモ②**が定量的裏付け。⑩は円筒＝曲面境界にも適用）。
+  真の非構造メッシュ＋AMR への一般化は §6 ロードマップの将来課題（本 PR では未実証）。
 - **オンライン適応 × a-posteriori 誤差**: FE 誤差指標が細分化とオンライン追学習を統一（**デモ①**）。
 - **ソルバ加速フレーム（定番⑥ウォームスタート）への接続**: 「ML で TCAD 収束を加速」の受けの良い
-  王道に、弱形式演算子の新規性を接続（**デモ③④⑤**、案C）。**精度は FEM が保証**し置換しない、
-  という安全な主張。
+  王道に、弱形式演算子の新規性を接続（**デモ③④⑤**＝Newton warm-start、**⑩**＝材料/バイアス継続、
+  **⑪**＝学習演算子 warm-start、案C）。**精度は FEM が保証**し置換しない、という安全な主張。
 
 ---
 
@@ -115,7 +119,9 @@ PI-DeepONet で置換**（背景整理: [`PI_DEEPONET_MC_ONLINE_LEARNING.md`](./
 ## 7. 関連研究・一次情報
 
 **演算子学習・弱形式**: Lu et al. DeepONet (*Nat. Mach. Intell.* 2021); Wang et al. PI-DeepONet
-(*Sci. Adv.* 2021); Patel et al. VarMiON (弱形式演算子); Kim et al. PaRO-DeepONet (arXiv:2504.19065)。
+(*Sci. Adv.* 2021); Patel et al. VarMiON (弱形式/変分演算子)。
+**隣接（PIC ポアソン）**: Kim et al. PaRO-DeepONet (arXiv:2504.19065, 粒子情報つき縮約演算子＝PIC 用で
+弱形式FEM半導体研究ではない。関連手法として併記)。
 **分野レビュー/定番**: *A Comprehensive Review of ML for Semiconductor Device Modeling* (2025);
 DDNet (PINN連立); PCGD (arXiv:2606.29272, 物理ガイド拡散×TCAD); ML による TCAD 収束加速。
 **元研究**: Otsuki & Mori, *Online Learning-Accelerated 3D MC for GAA*, WCCM-ECCOMAS 2026 STS415
