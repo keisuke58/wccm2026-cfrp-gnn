@@ -145,6 +145,8 @@ def main():
     ap.add_argument("--jdev", type=float, default=6.0, help="per-device current density")
     ap.add_argument("--nstep", type=int, default=30, help="power-continuation steps")
     ap.add_argument("--out", type=str, default="cfet_thermal_crosstalk_3d.png")
+    ap.add_argument("--view", type=str, default="cfet_thermal_crosstalk_3d_view.png",
+                    help="extra true-3D perspective render (volumetric temperature)")
     args = ap.parse_args()
 
     nodes, tets = build_tet_mesh(args.n)
@@ -199,6 +201,13 @@ def main():
     _plot(args.out, args.n, nodes, T_all, T_nA, theta_vert, theta_lat, self_nA,
           peak, Js, cold_it, warm_it, tc, tw, T0)
     print(f"wrote {args.out}")
+    if args.view:
+        devices = dict(nA=(0.12, 0.42, 0.30, 0.70, 0.20, 0.32),
+                       pA=(0.12, 0.42, 0.30, 0.70, 0.60, 0.72),
+                       nB=(0.58, 0.88, 0.30, 0.70, 0.20, 0.32),
+                       pB=(0.58, 0.88, 0.30, 0.70, 0.60, 0.72))
+        _plot3d(args.view, nodes, T_all, T_nA, devices, theta_vert, theta_lat, T0)
+        print(f"wrote {args.view}")
 
 
 def _plot(out, n, nodes, T_all, T_nA, theta_vert, theta_lat, self_nA, peak,
@@ -248,6 +257,60 @@ def _plot(out, n, nodes, T_all, T_nA, theta_vert, theta_lat, self_nA, peak,
                  fontsize=12)
     fig.tight_layout(rect=[0, 0, 1, 0.96])
     fig.savefig(out, dpi=130)
+
+
+def _box_edges(ax, b, color="#00bfff", lw=1.2):
+    """Wireframe of an axis-aligned box b=(x0,x1,y0,y1,z0,z1)."""
+    x0, x1, y0, y1, z0, z1 = b
+    corners = np.array([[x0, y0, z0], [x1, y0, z0], [x1, y1, z0], [x0, y1, z0],
+                        [x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]])
+    edges = [(0, 1), (1, 2), (2, 3), (3, 0), (4, 5), (5, 6), (6, 7), (7, 4),
+             (0, 4), (1, 5), (2, 6), (3, 7)]
+    for a, c in edges:
+        ax.plot(*zip(corners[a], corners[c]), color=color, lw=lw, alpha=0.9)
+
+
+def _plot3d(out, nodes, T_all, T_nA, devices, theta_vert, theta_lat, T0):
+    """True 3D perspective render: hot nodes as a volumetric scatter (colour = T),
+    device slabs as wireframe boxes, substrate sink plane at z=0."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 (registers 3d projection)
+
+    fig = plt.figure(figsize=(15, 7))
+
+    def render(ax, T, title, thr):
+        hot = T > T0 + thr
+        p = nodes[hot]; tv = T[hot]
+        rng = max(T_all.max() - T0, 1e-9)
+        sizes = 12 + 70 * (tv - T0) / rng          # hotter nodes render larger
+        sc = ax.scatter(p[:, 0], p[:, 1], p[:, 2], c=tv, cmap="inferno",
+                        s=sizes, alpha=0.72, vmin=T0, vmax=T_all.max(),
+                        edgecolors="none", depthshade=True)
+        for name, b in devices.items():
+            col = "#1f77b4" if name.startswith("n") else "#e377c2"
+            _box_edges(ax, b, color=col)
+        # substrate sink plane at z=0
+        xx, yy = np.meshgrid([0, 1], [0, 1])
+        ax.plot_surface(xx, yy, np.zeros_like(xx), color="#4444aa", alpha=0.12)
+        ax.set_xlabel("x"); ax.set_ylabel("y"); ax.set_zlabel("z (stack)")
+        ax.set_title(title, fontsize=11)
+        ax.set_box_aspect((1, 1, 1)); ax.view_init(elev=18, azim=-58)
+        ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.set_zlim(0, 1)
+        return sc
+
+    ax1 = fig.add_subplot(1, 2, 1, projection="3d")
+    render(ax1, T_all, "all devices on — two CFET stacks glow;\nsubstrate (z=0) stays cool",
+           0.10)
+    ax2 = fig.add_subplot(1, 2, 2, projection="3d")
+    sc = render(ax2, T_nA, f"only nFET_A on — heat climbs to pFET_A (θ_vert={theta_vert:.2f})\n"
+                           f"barely reaches cell B (θ_lat={theta_lat:.2f})", 0.04)
+    fig.colorbar(sc, ax=[ax1, ax2], shrink=0.6, label="temperature T", pad=0.02)
+    fig.suptitle("3D CFET self-heating — volumetric view: vertical (intra-cell) vs lateral "
+                 "(inter-cell) thermal crosstalk\n(blue=nFET, pink=pFET wireframes; "
+                 "hot nodes coloured by T)", fontsize=12)
+    fig.savefig(out, dpi=130, bbox_inches="tight")
 
 
 if __name__ == "__main__":
