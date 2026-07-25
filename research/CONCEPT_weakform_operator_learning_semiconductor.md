@@ -39,7 +39,7 @@ PI-DeepONet で置換**（背景整理: [`PI_DEEPONET_MC_ONLINE_LEARNING.md`](./
 
 ---
 
-## 3. 実証（16デモ・正直な結果）
+## 3. 実証（18デモ・正直な結果）
 
 | # | デモ | 主張 | 実測結果 |
 |---|---|---|---|
@@ -59,8 +59,10 @@ PI-DeepONet で置換**（背景整理: [`PI_DEEPONET_MC_ONLINE_LEARNING.md`](./
 | ⑭ | [`tsv_interface_fracture.py`](../tsv_interface_fracture.py) | **TSV Cu/Si 界面剥離**（熱応力駆動 phase-field, テーマBの種＝⑥⑦×⑬融合） | Cu via/Si の CTE ミスマッチ＋弱界面で、熱負荷継続により**界面リング状の損傷＝剥離**を再現。貯蔵エネルギーが剥離開始で急落。総 staggered 反復 cold 231 → warm 187（19%削減, 開始ステップが律速）。Post-5G 後工程(3D実装)信頼性に直結。熱スケールは例示（CTE比 Cu:Si は物理的） |
 | ⑮ | [`tsv_layout_gnn.py`](../tsv_layout_gnn.py) | **B の本丸**: レイアウト→剥離信頼性を **GNN で予測**（なぜGNN の定量裏付け, repo の CFRP×GNN 中核と同一枠） | 多 via レイアウトの**per-via 剥離リスク**を FE(線形熱弾性＋核形成基準)で正解化し、**距離をエッジ特徴に持つ MPNN**で予測。**test R² 0.60**。同容量の**構造無視 MLP（自ノード特徴のみ）は R² −1.95**＝relational gain **+2.55**。リスクは近傍相互作用支配ゆえ GNN が必須（線形近似・粗メッシュゆえ絶対値は控えめ, 種として） |
 | ⑯ | [`electrothermal_selfheating.py`](../electrothermal_selfheating.py) | **電気–熱 自己発熱**（非破壊 multiphysics, テーマGの種＝⑧⑨(電気)×⑥⑦(熱)の連成）: 弱形式FE 自己整合, S字I-V／継続法が決定的。文献: [`LITREVIEW_G_electrothermal.md`](./LITREVIEW_G_electrothermal.md) | 温度活性化伝導 σ(T)＋ジュール熱 J²/σ＋基板熱シンクの自己整合を弱形式 P1-FE＋減衰 Newton で解き、**S字I-V／負性微分抵抗(NDR)を再現**（V は J=0.47 で 0.162 まで上昇後**折り返す**）＝**電流継続法が決定的**（電圧制御はピークでスナップスルー、NDR枝は電圧不可達）。warm-start で総 Newton cold **660 → 252（62%削減）**、最高格子温度 1.45×T0。**データセット同梱**（sweep .csv 90行＋温度場 T(x) profiles .npz）。さらに [`electrothermal_dataset.py`](../electrothermal_dataset.py) が**設計空間データセット**を生成: 材料活性化 EA×放熱 HSINK×形状 KAPPA を**80点掃引**（各 60 電流ステップ, 約9600 自己整合FE解）、各点を **monotone / NDR-fold（＝電圧制御不安定）にラベル付け**して I-V・温度場・反復数を .csv/.npz 出力（**公開ベンチマークが無い領域の自作データセット**, cf. LITREVIEW §5-6）。σ(T)上昇ゆえ電流制御は自己安定＝真の熱暴走は電圧制御側の現象、を相図で明示。ML 不使用（テーマGは物理主役, 加速は継続法）。スケールは非次元・例示 |
+| ⑰ | [`cfet_thermal_crosstalk.py`](../cfet_thermal_crosstalk.py) | **2D CFET 熱クロストーク**（テーマGの2D化, 縦積みデバイス間の熱結合） | 2D 断面（P1三角形・弱形式）で n/pFET を縦積みし、基板シンク(y=0 Dirichlet)＋分布Robin損失＋σ(T)ジュール源を Newton 自己整合。**nFET 単独励起でも pFET が加熱**＝**クロストーク係数 θ(pFET←nFET)=0.24, θ(nFET←pFET)=0.21**。**縦積み(CFET)は side-by-side(planar) 比でクロストーク約1.8倍**（peak T は僅増；文献の CFET≈2×自己発熱[IEEE 9633122]は動機であり実測ではない）。電力継続 warm-start で Newton cold 262→119（55%減）。非等温2キャリアDD未実装（reduced Ohmic）, 例示スケール, ML不使用 |
+| ⑱ | [`dd_nonisothermal_1d.py`](../dd_nonisothermal_1d.py) | **非等温ドリフト拡散**（テーマGの物理深化＝reduced Ohmic からの昇格; Poisson+SG連続+格子熱の連成） | 1D 非等温 DD: Poisson＋Scharfetter–Gummel 連続(⑧の検証済み方式)を**格子熱方程式**と外側自己整合ループで連成。フォノン律速移動度 μ(T)=(T/T0)^−1.5 が発熱→移動度低下→電流劣化の帰還を作り、**自己発熱の電流ペナルティ（I_ON ロールオフ）を再現＝Vmax で 27.8% 低下**（isothermal 208 vs non-isothermal 150）、最高格子温度上昇 0.43、スロットル部にホットスポット。**V=0 で電流≈0・温度上昇≈0 を検証**。バイアス継続 warm-start で外側反復 cold 137→100（27%減）。1D・scaled・移動度のみT依存（BGN等省略）, ML不使用。**⑯ reduced モデルの物理的裏付け＝真の非等温DDの種** |
 
-図: `pi_deeponet_fem_gaa.png`, `bench_weak_vs_strong.png`, `fe_newton_warmstart.png`, `dd2d_newton_warmstart.png`, `cfet_stack_warmstart.png`, `tsv_thermal_stress.png`, `tsv_3d_stress.png`, `dd_full_1d.png`, `dd_breakdown_continuation.png`, `gaa_material_sweep_warmstart.png`, `gaa_operator_deeponet.png`, `gaa_wfm_vth.png`, `phasefield_fracture_warmstart.png`, `tsv_interface_fracture.png`, `tsv_layout_gnn.png`, `electrothermal_selfheating.png`, `electrothermal_dataset.png`。
+図: `pi_deeponet_fem_gaa.png`, `bench_weak_vs_strong.png`, `fe_newton_warmstart.png`, `dd2d_newton_warmstart.png`, `cfet_stack_warmstart.png`, `tsv_thermal_stress.png`, `tsv_3d_stress.png`, `dd_full_1d.png`, `dd_breakdown_continuation.png`, `gaa_material_sweep_warmstart.png`, `gaa_operator_deeponet.png`, `gaa_wfm_vth.png`, `phasefield_fracture_warmstart.png`, `tsv_interface_fracture.png`, `tsv_layout_gnn.png`, `electrothermal_selfheating.png`, `electrothermal_dataset.png`, `cfet_thermal_crosstalk.png`, `dd_nonisothermal_1d.png`。
 > ①〜⑤⑩⑪⑫は半導体デバイス（電気物理; ①〜⑤⑩⑪⑫は平衡ポアソン、⑧⑨は非平衡・輸送の完全DD）、⑥⑦は
 > 3D積層/パッケージ（後工程・熱機械）で、本リポジトリの CFRP 応力 FEA×GNN 中核に最も近い橋渡し。
 > 依存関係（実 import 準拠）: ②④⑤⑥は `pi_deeponet_fem_gaa.py` の FE 資産（`build_mesh`/`assemble`/`eps_map`）を、

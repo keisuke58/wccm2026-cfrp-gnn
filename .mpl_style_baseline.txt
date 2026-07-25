@@ -29,3 +29,5 @@ tsv_interface_fracture.py
 tsv_layout_gnn.py
 electrothermal_selfheating.py
 electrothermal_dataset.py
+cfet_thermal_crosstalk.py
+dd_nonisothermal_1d.py
