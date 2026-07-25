@@ -24,3 +24,4 @@ dd_breakdown_continuation.py
 gaa_material_sweep_warmstart.py
 gaa_operator_deeponet.py
 gaa_wfm_vth.py
+phasefield_fracture_warmstart.py
