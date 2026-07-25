@@ -31,3 +31,4 @@ electrothermal_selfheating.py
 electrothermal_dataset.py
 cfet_thermal_crosstalk.py
 dd_nonisothermal_1d.py
+cfet_thermal_crosstalk_3d.py

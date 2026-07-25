@@ -72,6 +72,8 @@
   （I_ON ロールオフ 27.8%）**を再現、V=0 で電流・温度上昇≈0 を検証、バイアス継続 warm-start で外側反復 27%減。
 - **2D化: `cfet_thermal_crosstalk.py`（⑰）** — 2D CFET 断面で n/pFET 縦積みの**熱クロストーク**（θ≈0.24）を再現、
   縦積みは planar 比クロストーク約1.8倍、電力継続 warm-start で Newton 55%減。
+- **3D化: `cfet_thermal_crosstalk_3d.py`（⑲）** — 線形四面体の3Dで2セル配置。**垂直(intra-cell)θ=0.15 vs 横(inter-cell)θ=0.07
+  ＝縦積みは横分離より約2.1倍強く熱結合**という3D固有の異方性を定量化、warm-start で Newton 52%減。
 - 次段: **非等温 2 キャリア DD の 2D 化**（⑰の2D熱×⑱の非等温DD, Full Newton・要変数スケーリング）、
   電気→熱→熱応力(B)接続、この自作データ(⑯-dataset)を教師にした演算子学習サロゲート。
 
