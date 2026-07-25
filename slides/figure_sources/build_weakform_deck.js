@@ -412,26 +412,59 @@ demoSlide({
     s.addText(r[1], { x: rxc + 0.2, y, w: rw - 0.4, h: rh, valign: "middle", fontFace: BODY,
       fontSize: 13, color: BLUE, margin: 0 });
   });
-  pageNum(s, 16);
+  pageNum(s, 14);
 }
 
-// ============================================================ 15. LIMITATIONS
+// ============================================================ 15. POST-5G PROJECT MAP
+{
+  const s = pres.addSlide();
+  kicker(s, "National context");
+  title(s, "Post-5G “B” national project ↔ our demos");
+  s.addShape(pres.ShapeType.roundRect, { x: 0.7, y: 1.55, w: 11.9, h: 0.55, rectRadius: 0.08,
+    fill: { color: NAVY }, line: { type: "none" } });
+  s.addText("METI / NEDO Post-5G · 先端半導体製造技術 (B)    —    ¥76.9 B budget · target 2030: ¥15 T domestic semiconductor sales",
+    { x: 0.95, y: 1.55, w: 11.4, h: 0.55, valign: "middle", fontFace: BODY, fontSize: 12.5,
+      bold: true, color: ICE, margin: 0 });
+  const rows = [
+    ["B-a1 前工程 · GAA nanosheet\nTEL / SCREEN / Canon + AIST pilot line", "GAA electrostatics  ①③④⑤⑩⑪⑫"],
+    ["B-b1/b2 後工程 · 3D packaging · WoW/CoW\nTSMC 3DIC / RaaS / Sony", "TSV thermo-mechanics  ⑥⑦  (+ CFRP×GNN)"],
+    ["new channel / interconnect · SiGe·Ge·2D, Cu→Ru", "multi-material sweep  ⑩⑪  (Balaji+2026)"],
+    ["B-d1 国際連携 · 2 nm logic (Rapidus)", "the target device  (context)"],
+  ];
+  const y0 = 2.4, rh = 1.0, gap = 0.16, lw = 6.2, rw = 4.9, rxc = 7.4;
+  rows.forEach((r, i) => {
+    const y = y0 + i * (rh + gap);
+    s.addShape(pres.ShapeType.roundRect, { x: 0.7, y, w: lw, h: rh, rectRadius: 0.07,
+      fill: { color: PANEL }, line: { type: "none" } });
+    s.addText(r[0], { x: 0.9, y, w: lw - 0.4, h: rh, valign: "middle", fontFace: BODY,
+      fontSize: 13, bold: true, color: INK, margin: 0 });
+    s.addShape(pres.ShapeType.line, { x: 0.7 + lw + 0.05, y: y + rh / 2, x2: rxc - 0.05, y2: y + rh / 2,
+      line: { color: TEAL, width: 2.5, endArrowType: "triangle" } });
+    s.addShape(pres.ShapeType.roundRect, { x: rxc, y, w: rw, h: rh, rectRadius: 0.07,
+      fill: { color: "E7F0F7" }, line: { color: TEAL, width: 1 } });
+    s.addText(r[1], { x: rxc + 0.2, y, w: rw - 0.4, h: rh, valign: "middle", fontFace: BODY,
+      fontSize: 13, color: BLUE, margin: 0 });
+  });
+  pageNum(s, 15);
+}
+
+// ============================================================ 16. LIMITATIONS
 {
   const s = pres.addSlide();
   kicker(s, "Honest limitations", AMBER);
   title(s, "What is — and is not — demonstrated");
   bullets(s, [
-    "All 11 are concept demos (CPU, minutes, seed-fixed).",
+    "All 12 are concept demos (CPU, minutes, seed-fixed).",
     "①'s error indicator is the raw relative Galerkin residual; the tolerance is calibrated, not a solution-error bound.",
     "Warm-start on robust monotone solves gives modest gains (~10–40%); the decisive case is ⑨ (converge vs diverge).",
     "1D full DD (⑧⑨) is implemented; coupled 2D/3D semiconductor DD (Full Newton, needs variable scaling) is future work.",
     "\"3D unimplemented\" refers to semiconductor DD only — 3D thermoelasticity (⑦) is implemented.",
     "⑩⑪ screening κ is an illustrative non-dimensional scale (ordering & trends are physical); ⑪'s disk is near radially symmetric.",
   ], 0.7, 1.95, 11.9, 4.6, 15.5);
-  pageNum(s, 17);
+  pageNum(s, 16);
 }
 
-// ============================================================ 14. ROADMAP
+// ============================================================ 17. ROADMAP
 {
   const s = pres.addSlide();
   kicker(s, "Roadmap");
@@ -453,10 +486,10 @@ demoSlide({
     s.addText(it[0], { x: x0 + 0.7, y, w: cw - 1.0, h: ch, valign: "middle", fontFace: BODY,
       fontSize: 15, color: INK, margin: 0 });
   });
-  pageNum(s, 16);
+  pageNum(s, 17);
 }
 
-// ============================================================ 15. SUMMARY
+// ============================================================ 18. SUMMARY
 {
   const s = pres.addSlide();
   s.background = { color: NAVY };
@@ -485,7 +518,7 @@ demoSlide({
     s.addText(c[1], { x: x + 0.72, y, w: cw - 0.85, h: ch, valign: "middle", fontFace: BODY,
       fontSize: 12.5, color: ICE, margin: 0 });
   });
-  pageNum(s, 17);
+  pageNum(s, 18);
 }
 
 pres.writeFile({ fileName: OUT }).then((f) => console.log("wrote", f));
