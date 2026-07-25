@@ -521,4 +521,31 @@ demoSlide({
   pageNum(s, 18);
 }
 
+// ============================================================ 19. APPENDIX: imec vs AIST/LSTC
+{
+  const s = pres.addSlide();
+  kicker(s, "Appendix — industry context");
+  title(s, "Operating models: imec vs 産総研/TIA vs LSTC/Rapidus");
+  const H = (t) => ({ text: t, options: { bold: true, color: WHITE, fill: { color: NAVY }, align: "center" } });
+  const B = (t) => ({ text: t, options: { bold: true, color: INK, fill: { color: PANEL } } });
+  const C = (t) => ({ text: t, options: { color: INK } });
+  const rows = [
+    [H("項目"), H("imec (BE)"), H("産総研 / TIA (JP)"), H("LSTC / Rapidus (JP)")],
+    [B("モデル"), C("IIAP：産業界の会費で回る中立ハブ"), C("共用ライン＋コンソーシアム＋国プロ"), C("束ね役 → 2nm 量産（imec/IBM 連携）")],
+    [B("資金"), C("会費主体・政府 ~15%（~€8–9 億/年）"), C("国費（運営費交付金）主体・~1,000 億/年"), C("国費（経産/NEDO）中心")],
+    [B("参加・IP"), C("出資に応じた階層アクセス"), C("会員制／助成は事業者帰属"), C("組合員・企業帰属")],
+    [B("強み"), C("中立・グローバル・意思決定が速い"), C("計量標準・材料・中立インフラ"), C("量産直結・海外連携")],
+    [B("弱み"), C("自国の産業化は間接的"), C("分散・スピード・処遇で見劣り"), C("新興・巨額の国費依存")],
+  ];
+  s.addTable(rows, {
+    x: 0.5, y: 1.9, w: 12.3, colW: [1.7, 3.55, 3.55, 3.5],
+    fontFace: BODY, fontSize: 11.5, valign: "middle", border: { type: "solid", color: "D6E0EA", pt: 1 },
+    rowH: 0.62, margin: 5,
+  });
+  s.addText("出典整理: research/SEMICON_NATIONAL_RD_ECOSYSTEM.md（数値は概算・要確認）。日本の座組は "
+    + "基礎/材料(NIMS)→共用試作(AIST/TIA)→束ね(LSTC)→量産(Rapidus) のバケツリレー。",
+    { x: 0.5, y: 6.55, w: 12.3, h: 0.6, fontFace: BODY, fontSize: 11, italic: true, color: MUTED, margin: 0 });
+  pageNum(s, 19);
+}
+
 pres.writeFile({ fileName: OUT }).then((f) => console.log("wrote", f));
