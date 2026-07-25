@@ -39,7 +39,7 @@ PI-DeepONet で置換**（背景整理: [`PI_DEEPONET_MC_ONLINE_LEARNING.md`](./
 
 ---
 
-## 3. 実証（13デモ・正直な結果）
+## 3. 実証（14デモ・正直な結果）
 
 | # | デモ | 主張 | 実測結果 |
 |---|---|---|---|
@@ -56,8 +56,9 @@ PI-DeepONet で置換**（背景整理: [`PI_DEEPONET_MC_ONLINE_LEARNING.md`](./
 | ⑪ | [`gaa_operator_deeponet.py`](../gaa_operator_deeponet.py) | **A+B+C 統合**: ⑩を**学習演算子化**（DeepONet: (ε,κ,V_g)×(x,y)→u）。1発推論＋warm-start | **未知材料**(InGaAs, 学習に不使用)へ 1-shot **rel-L2 0.015**、**未知バイアス** 0.013（デプロイ時 Newton 不要）。予測を warm-start にすると厳密FE Newton が cold **5.2 → 2.8**（約半減, tol=1e-9ゆえ1反復には潰れない）。正規化統計は学習材料のみで算出（未知材料の漏洩なし）。弱形式FEデータ(A)＋演算子学習(B)＋加速(C)を実ワークロードで一体化 |
 | ⑫ | [`gaa_wfm_vth.py`](../gaa_wfm_vth.py) | **WFM→Vth 静電**: 仕事関数金属（Endura-3 相当）で閾値電圧を調整。GAA 断面の非線形ポアソン | 5 種 WFM（Φ_m 4.2–5.0 eV）で Q–V_g を FE 求解→Vth 抽出。**ΔVth = ΔΦ_WFM（slope 1.00 V/eV）**を GAA 断面上で再現、Vth 設計窓 0.04–0.84 V。製造の WFM 成膜工程を計算可能な Vth に写像（理想フラットバンド模型・散乱/トラップ無し, スケールは例示）。パイロットライン対応: [`SEMICON_PILOT_LINE_GAA_PROCESS.md`](./SEMICON_PILOT_LINE_GAA_PROCESS.md) |
 | ⑬ | [`phasefield_fracture_warmstart.py`](../phasefield_fracture_warmstart.py) | **相場破壊(phase-field)の warm-start**（村松研＝破壊連成 への橋渡し, テーマAの種） | AT2 相場破壊 SENT（変位↔損傷の交互最小化, P1弱形式）＋荷重継続。**総 staggered 反復 cold 1046 → warm 532（49%削減）**。脆性伝播ステップは両者スパイク（staggered の既知の遅さ＝演算子学習加速の動機）、伝播後は warm ~3 vs cold ~30–70。荷重変位は線形→ピーク→脆性軟化を再現。テーマ提案: [`RESEARCH_THEMES_muramatsu.md`](./RESEARCH_THEMES_muramatsu.md) |
+| ⑭ | [`tsv_interface_fracture.py`](../tsv_interface_fracture.py) | **TSV Cu/Si 界面剥離**（熱応力駆動 phase-field, テーマBの種＝⑥⑦×⑬融合） | Cu via/Si の CTE ミスマッチ＋弱界面で、熱負荷継続により**界面リング状の損傷＝剥離**を再現。貯蔵エネルギーが剥離開始で急落。総 staggered 反復 cold 231 → warm 187（19%削減, 開始ステップが律速）。Post-5G 後工程(3D実装)信頼性に直結。熱スケールは例示（CTE比 Cu:Si は物理的） |
 
-図: `pi_deeponet_fem_gaa.png`, `bench_weak_vs_strong.png`, `fe_newton_warmstart.png`, `dd2d_newton_warmstart.png`, `cfet_stack_warmstart.png`, `tsv_thermal_stress.png`, `tsv_3d_stress.png`, `dd_full_1d.png`, `dd_breakdown_continuation.png`, `gaa_material_sweep_warmstart.png`, `gaa_operator_deeponet.png`, `gaa_wfm_vth.png`, `phasefield_fracture_warmstart.png`。
+図: `pi_deeponet_fem_gaa.png`, `bench_weak_vs_strong.png`, `fe_newton_warmstart.png`, `dd2d_newton_warmstart.png`, `cfet_stack_warmstart.png`, `tsv_thermal_stress.png`, `tsv_3d_stress.png`, `dd_full_1d.png`, `dd_breakdown_continuation.png`, `gaa_material_sweep_warmstart.png`, `gaa_operator_deeponet.png`, `gaa_wfm_vth.png`, `phasefield_fracture_warmstart.png`, `tsv_interface_fracture.png`。
 > ①〜⑤⑩⑪⑫は半導体デバイス（電気物理; ①〜⑤⑩⑪⑫は平衡ポアソン、⑧⑨は非平衡・輸送の完全DD）、⑥⑦は
 > 3D積層/パッケージ（後工程・熱機械）で、本リポジトリの CFRP 応力 FEA×GNN 中核に最も近い橋渡し。
 > 依存関係（実 import 準拠）: ②④⑤⑥は `pi_deeponet_fem_gaa.py` の FE 資産（`build_mesh`/`assemble`/`eps_map`）を、
