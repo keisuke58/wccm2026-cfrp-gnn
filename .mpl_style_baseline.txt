@@ -28,3 +28,4 @@ phasefield_fracture_warmstart.py
 tsv_interface_fracture.py
 tsv_layout_gnn.py
 electrothermal_selfheating.py
+electrothermal_dataset.py

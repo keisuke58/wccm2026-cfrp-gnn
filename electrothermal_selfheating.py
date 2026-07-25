@@ -50,12 +50,12 @@ NEWTON_TOL = 1e-9
 NEWTON_MAX = 80
 
 
-def sigma(T):
-    return np.exp(EA * (1.0 / T0 - 1.0 / T))          # sigma(T0)=1, rises with T
+def sigma(T, ea=EA, t0=T0):
+    return np.exp(ea * (1.0 / t0 - 1.0 / T))          # sigma(t0)=1, rises with T
 
 
-def dsigma(T):
-    return sigma(T) * EA / T ** 2
+def dsigma(T, ea=EA, t0=T0):
+    return sigma(T, ea, t0) * ea / T ** 2
 
 
 def assemble(n):
@@ -69,14 +69,16 @@ def assemble(n):
     return x, K, ml
 
 
-def solve_T(J, Kk, ml, T_init):
-    """Damped Newton for  -kappa T'' + h(T-T0) = J^2/sigma(T)  (distributed
-    substrate heat sink; no cold end-clamps, so the whole device can heat)."""
+def solve_T(J, Kk, ml, T_init, ea=EA, hsink=HSINK, t0=T0):
+    """Damped Newton for  -kappa T'' + h(T-t0) = J^2/sigma(T)  (distributed
+    substrate heat sink; no cold end-clamps, so the whole device can heat).
+    Physics params (ea activation, hsink substrate coupling, t0 ambient) are
+    overridable so a parameter-sweep dataset can reuse this same solver."""
     T = T_init.copy()
-    Hm = sp.diags(HSINK * ml)
+    Hm = sp.diags(hsink * ml)
 
     def resid(TT):
-        return Kk @ TT + HSINK * ml * (TT - T0) - ml * (J ** 2 / sigma(TT))
+        return Kk @ TT + hsink * ml * (TT - t0) - ml * (J ** 2 / sigma(TT, ea, t0))
 
     hist = []
     for it in range(1, NEWTON_MAX + 1):
@@ -84,7 +86,7 @@ def solve_T(J, Kk, ml, T_init):
         rn = np.linalg.norm(R); hist.append(rn)
         if rn < NEWTON_TOL:
             return T, it - 1, hist
-        dS = -(J ** 2) * dsigma(T) / sigma(T) ** 2       # d(J^2/sigma)/dT
+        dS = -(J ** 2) * dsigma(T, ea, t0) / sigma(T, ea, t0) ** 2   # d(J^2/sigma)/dT
         Jac = (Kk + Hm - sp.diags(ml * dS)).tocsc()
         dT = spla.spsolve(Jac, -R)
         a = 1.0
@@ -96,9 +98,9 @@ def solve_T(J, Kk, ml, T_init):
     return T, NEWTON_MAX, hist
 
 
-def voltage(J, T, x):
+def voltage(J, T, x, ea=EA, t0=T0):
     # V = J * integral dx / sigma(T)  (trapezoidal)
-    f = 1.0 / sigma(T)
+    f = 1.0 / sigma(T, ea, t0)
     return J * float(np.sum(0.5 * (f[:-1] + f[1:]) * np.diff(x)))
 
 
