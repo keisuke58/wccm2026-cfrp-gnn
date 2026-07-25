@@ -39,7 +39,7 @@ PI-DeepONet で置換**（背景整理: [`PI_DEEPONET_MC_ONLINE_LEARNING.md`](./
 
 ---
 
-## 3. 実証（11デモ・正直な結果）
+## 3. 実証（12デモ・正直な結果）
 
 | # | デモ | 主張 | 実測結果 |
 |---|---|---|---|
@@ -54,14 +54,14 @@ PI-DeepONet で置換**（背景整理: [`PI_DEEPONET_MC_ONLINE_LEARNING.md`](./
 | ⑨ | [`dd_breakdown_continuation.py`](../dd_breakdown_continuation.py) | 高逆バイアス coupled DD: **継続法が"必須"**（cold は基底を外れて発散） | cold（平衡から直接）は **4Vt** までしか収束せず発散、**継続法は 45Vt 到達**。案C が「速い」でなく「収束/発散を分ける」領域を実証（衝突イオン化は安定重視で mild ~x2.1, 真のavalanche/Full-Newton連立は要スケーリングの重い拡張として明記） |
 | ⑩ | [`gaa_material_sweep_warmstart.py`](../gaa_material_sweep_warmstart.py) | C: **多材料 GAA スイープの償却**（円筒断面で Si/Ge/GeSn/InGaAs/MoS₂ ×バイアス掃引 = 実TCADワークロード, cf. Balaji+2026） | **45 自己整合FE解**の総 Newton 反復 cold **217 → warm 161（26%削減）**。バイアス継続＋**材料転写**（同一形状で ε/遮蔽のみ変更）で償却。円筒（曲面）断面ゆえ**弱形式FEの必然性**とも接続。材料依存電荷（小ギャップ Ge/GeSn ほど強遮蔽）も再現 |
 | ⑪ | [`gaa_operator_deeponet.py`](../gaa_operator_deeponet.py) | **A+B+C 統合**: ⑩を**学習演算子化**（DeepONet: (ε,κ,V_g)×(x,y)→u）。1発推論＋warm-start | **未知材料**(InGaAs, 学習に不使用)へ 1-shot **rel-L2 0.015**、**未知バイアス** 0.013（デプロイ時 Newton 不要）。予測を warm-start にすると厳密FE Newton が cold **5.2 → 2.8**（約半減, tol=1e-9ゆえ1反復には潰れない）。正規化統計は学習材料のみで算出（未知材料の漏洩なし）。弱形式FEデータ(A)＋演算子学習(B)＋加速(C)を実ワークロードで一体化 |
+| ⑫ | [`gaa_wfm_vth.py`](../gaa_wfm_vth.py) | **WFM→Vth 静電**: 仕事関数金属（Endura-3 相当）で閾値電圧を調整。GAA 断面の非線形ポアソン | 5 種 WFM（Φ_m 4.2–5.0 eV）で Q–V_g を FE 求解→Vth 抽出。**ΔVth = ΔΦ_WFM（slope 1.00 V/eV）**を GAA 断面上で再現、Vth 設計窓 0.04–0.84 V。製造の WFM 成膜工程を計算可能な Vth に写像（理想フラットバンド模型・散乱/トラップ無し, スケールは例示）。パイロットライン対応: [`SEMICON_PILOT_LINE_GAA_PROCESS.md`](./SEMICON_PILOT_LINE_GAA_PROCESS.md) |
 
-図: `pi_deeponet_fem_gaa.png`, `bench_weak_vs_strong.png`, `fe_newton_warmstart.png`, `dd2d_newton_warmstart.png`, `cfet_stack_warmstart.png`, `tsv_thermal_stress.png`, `tsv_3d_stress.png`, `dd_full_1d.png`, `dd_breakdown_continuation.png`, `gaa_material_sweep_warmstart.png`, `gaa_operator_deeponet.png`。
-> ①〜⑤⑧⑨⑩⑪は半導体デバイス（電気物理; ①〜⑤⑩⑪は平衡ポアソン、⑧⑨は非平衡・輸送の完全DD）、⑥⑦は
+図: `pi_deeponet_fem_gaa.png`, `bench_weak_vs_strong.png`, `fe_newton_warmstart.png`, `dd2d_newton_warmstart.png`, `cfet_stack_warmstart.png`, `tsv_thermal_stress.png`, `tsv_3d_stress.png`, `dd_full_1d.png`, `dd_breakdown_continuation.png`, `gaa_material_sweep_warmstart.png`, `gaa_operator_deeponet.png`, `gaa_wfm_vth.png`。
+> ①〜⑤⑩⑪⑫は半導体デバイス（電気物理; ①〜⑤⑩⑪⑫は平衡ポアソン、⑧⑨は非平衡・輸送の完全DD）、⑥⑦は
 > 3D積層/パッケージ（後工程・熱機械）で、本リポジトリの CFRP 応力 FEA×GNN 中核に最も近い橋渡し。
 > 依存関係（実 import 準拠）: ②④⑤⑥は `pi_deeponet_fem_gaa.py` の FE 資産（`build_mesh`/`assemble`/`eps_map`）を、
-> ⑪は `gaa_material_sweep_warmstart.py`（メッシュ/組立/Newton）を再利用。①③⑦⑧⑨⑩は単体で自己完結。
-各デモは CPU で数分・seed 固定で再現可能。`bench_weak_vs_strong.py` は同リポの
-`pi_deeponet_fem_gaa.py` の `build_mesh`/`assemble` を再利用（＝リポジトリ依存）。他デモは単体で自己完結。
+> ⑪⑫は `gaa_material_sweep_warmstart.py`（メッシュ/組立/Newton）を再利用。①③⑦⑧⑨⑩は単体で自己完結。
+各デモは CPU で数分・seed 固定で再現可能。
 
 **物語の流れ**: ①で「弱形式演算子学習＋オンライン適応」を提示 → ②で「なぜ弱形式か」を離散化
 レベルで裏付け(新規性の一枚看板) → ③④で「FEMを権威に残す加速(案C)」を1D→2Dで実証。

@@ -85,7 +85,7 @@ function statCallout(s, x, y, w, big, label, color) {
     fontFace: BODY, fontSize: 20, color: ICE, margin: 0 });
   s.addText([
     { text: "FEM as the authority on accuracy · networks & continuation as accelerators", options: { color: ICE, fontSize: 14, breakLine: true } },
-    { text: "11 self-contained, seed-fixed concept demos", options: { color: AMBER, fontSize: 14, bold: true } },
+    { text: "12 self-contained, seed-fixed concept demos", options: { color: AMBER, fontSize: 14, bold: true } },
   ], { x: 0.9, y: 4.75, w: 11, h: 0.8, fontFace: BODY, margin: 0 });
   s.addText("〈氏名・所属〉   ·   github: keisuke58/wccm2026-cfrp-gnn", { x: 0.9, y: 6.7, w: 11.5, h: 0.4,
     fontFace: BODY, fontSize: 12, color: MUTED, margin: 0 });
@@ -368,7 +368,54 @@ demoSlide({
   page: 12,
 });
 
-// ============================================================ 13. LIMITATIONS
+// ============================================================ 13. demo ⑫ (WFM Vth)
+demoSlide({
+  kicker: "Demo ⑫ — WFM tunes the threshold voltage",
+  title: "Work-function metal → Vth on the GAA cross-section",
+  fig: FIG("gaa_wfm_vth.png"), figX: 6.6, figW: 6.1, figH: 4.4,
+  badges: [12],
+  bullets: [
+    "Maps the pilot-line WFM step (Applied Endura-3 class) to a computed threshold.",
+    "5 WFM (Φ_m 4.2–5.0 eV): FE Q–V_g solves on the disk → extract Vth per metal.",
+    "Recovers the ideal flat-band law ΔVth = ΔΦ_WFM on the real cross-section.",
+  ],
+  stats: [["1.00 V/eV", "ΔVth / ΔΦ_WFM (slope)", TEAL], ["0.04→0.84 V", "Vth design window", BLUE]],
+  caption: "gaa_wfm_vth.py — ideal flat-band model (no traps/poly-depletion), illustrative scale",
+  page: 13,
+});
+
+// ============================================================ 14. MANUFACTURING <-> SIM
+{
+  const s = pres.addSlide();
+  kicker(s, "From fab to simulation");
+  title(s, "Pilot-line process ↔ what we simulate");
+  s.addText("AIST advanced-semiconductor pilot line (GAA nanosheet)   →   this work's demos",
+    { x: 0.7, y: 1.55, w: 11.9, h: 0.3, fontFace: BODY, fontSize: 12, italic: true, color: MUTED, margin: 0 });
+  const rows = [
+    ["Si nanosheet channel — SiGe release (Certas)", "GAA nonlinear Poisson  ①③④⑩⑪⑫"],
+    ["High-k + WFM gate (Eagle-XP4 / Endura-3)", "variable-ε interface · WFM→Vth  ②⑫"],
+    ["SiGe → Ge / GeSn channels (EpiPrime)", "multi-material sweep  ⑩⑪ (Balaji+2026)"],
+    ["CFET / 3D stack / TSV (next node)", "CFET slice ⑤ · TSV thermo-mech ⑥⑦"],
+    ["material × bias TCAD sweep (Sentaurus)", "continuation ⑩ · learned operator ⑪"],
+  ];
+  const y0 = 2.05, rh = 0.86, gap = 0.14, lw = 5.1, rw = 5.6, rxc = 6.3;
+  rows.forEach((r, i) => {
+    const y = y0 + i * (rh + gap);
+    s.addShape(pres.ShapeType.roundRect, { x: 0.7, y, w: lw, h: rh, rectRadius: 0.07,
+      fill: { color: PANEL }, line: { type: "none" } });
+    s.addText(r[0], { x: 0.9, y, w: lw - 0.4, h: rh, valign: "middle", fontFace: BODY,
+      fontSize: 13, bold: true, color: INK, margin: 0 });
+    s.addShape(pres.ShapeType.line, { x: 0.7 + lw + 0.05, y: y + rh / 2, x2: rxc - 0.05, y2: y + rh / 2,
+      line: { color: TEAL, width: 2.5, endArrowType: "triangle" } });
+    s.addShape(pres.ShapeType.roundRect, { x: rxc, y, w: rw, h: rh, rectRadius: 0.07,
+      fill: { color: "E7F0F7" }, line: { color: TEAL, width: 1 } });
+    s.addText(r[1], { x: rxc + 0.2, y, w: rw - 0.4, h: rh, valign: "middle", fontFace: BODY,
+      fontSize: 13, color: BLUE, margin: 0 });
+  });
+  pageNum(s, 16);
+}
+
+// ============================================================ 15. LIMITATIONS
 {
   const s = pres.addSlide();
   kicker(s, "Honest limitations", AMBER);
@@ -381,7 +428,7 @@ demoSlide({
     "\"3D unimplemented\" refers to semiconductor DD only — 3D thermoelasticity (⑦) is implemented.",
     "⑩⑪ screening κ is an illustrative non-dimensional scale (ordering & trends are physical); ⑪'s disk is near radially symmetric.",
   ], 0.7, 1.95, 11.9, 4.6, 15.5);
-  pageNum(s, 13);
+  pageNum(s, 17);
 }
 
 // ============================================================ 14. ROADMAP
@@ -406,7 +453,7 @@ demoSlide({
     s.addText(it[0], { x: x0 + 0.7, y, w: cw - 1.0, h: ch, valign: "middle", fontFace: BODY,
       fontSize: 15, color: INK, margin: 0 });
   });
-  pageNum(s, 14);
+  pageNum(s, 16);
 }
 
 // ============================================================ 15. SUMMARY
@@ -438,7 +485,7 @@ demoSlide({
     s.addText(c[1], { x: x + 0.72, y, w: cw - 0.85, h: ch, valign: "middle", fontFace: BODY,
       fontSize: 12.5, color: ICE, margin: 0 });
   });
-  pageNum(s, 15);
+  pageNum(s, 17);
 }
 
 pres.writeFile({ fileName: OUT }).then((f) => console.log("wrote", f));
