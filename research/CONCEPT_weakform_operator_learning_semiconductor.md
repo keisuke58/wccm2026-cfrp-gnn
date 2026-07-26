@@ -39,7 +39,7 @@ PI-DeepONet で置換**（背景整理: [`PI_DEEPONET_MC_ONLINE_LEARNING.md`](./
 
 ---
 
-## 3. 実証（22デモ・正直な結果）
+## 3. 実証（23デモ・正直な結果）
 
 | # | デモ | 主張 | 実測結果 |
 |---|---|---|---|
@@ -65,8 +65,9 @@ PI-DeepONet で置換**（背景整理: [`PI_DEEPONET_MC_ONLINE_LEARNING.md`](./
 | ⑳ | [`dd_nonisothermal_2d.py`](../dd_nonisothermal_2d.py) | **2D 非等温ドリフト拡散（テーマG capstone）**: ⑰⑲の2D/3D熱 × ⑱の非等温DD を融合 | 2D **箱法(有限体積)Scharfetter–Gummel 電子連続＋非線形Poisson** を Gummel、これを **2D 格子熱FE** と外側連成（1掃引/1熱更新の完全連成, 低緩和）。μ(T)=(T/T0)^−1.5 の帰還で**自己発熱の電流ペナルティ（I_ON ロールオフ）＝Vmax で 19.8% 低下**（isothermal 305 vs 244）、最高格子温度上昇 0.25。**2D constriction（上下に絶縁バリア＋中央アパーチャ）で電流が開口に集中（current crowding）＝真の2Dホットスポット**を再現（x,y 両方向に局在）。**V=0 で電流≈0・温度上昇≈0 を検証**。バイアス継続 warm-start で外側反復 cold 219→182（17%減）。unipolar・構造格子・例示スケール, Full-Newton 2キャリアは要変数スケーリング, ML不使用 |
 | ㉑ | [`electrothermal_operator.py`](../electrothermal_operator.py) | **⑯-dataset を教師にした演算子学習サロゲート**（ML＝加速の従属, FE＝精度の権威。repo の DeepONet ⑪ と同枠） | ⑯-dataset（設計空間80点）で **DeepONet**（branch=設計パラメータ (EA,HSINK,KAPPA) × trunk=クエリ電流 J → (V, Tmax)）を学習。**未知設計24点（完全ホールドアウト）へ 1発推論で I-V 全曲線＋Tmax を予測**、rel-L2 **I-V 0.040 / Tmax 0.053**、**NDR折返し電流（argmax V）の MAE 0.068＜格子1ステップ0.117**＝S字/NDR位置も再現。正規化統計は学習設計のみ（ホールドアウト漏洩なし）。→ 設計空間の高速スクリーニング/逆設計の加速層（精度は FE が保証, 置換しない）。滑らか低次元ゆえ内挿である点は正直に明記, スケールは⑯継承 |
 | ㉒ | [`nanosheet_release_mechanics.py`](../nanosheet_release_mechanics.py) | **GAA ナノシート開放の力学信頼性（東京エレクトロン向け＝SiGe 選択エッチ直下流）**: 弱形式ビームFE 座屈＋スティクション→**開放プロセスウィンドウ** | SiGe 選択エッチ後の吊り橋状 Si ナノシートの2大破壊＝**座屈（残留圧縮応力）**と**スティクション（接着崩落）**を Euler–Bernoulli ビームFE（Hermite, 幾何剛性）で。座屈は固有値を**解析解 clamped-clamped σ_cr=π²Et²/3L² で機械精度検証（rel err 8e-7）**。スティクションは剥離のエネルギー収支（曲げ−接着, min_s U<0）で臨界長。両者を (L,t) 平面に重ね **safe/buckle/stick/both のプロセスウィンドウ** を生成＝エッチ/洗浄/乾燥のプロセス設計に直結（TEL の看板プロセス直下流, 村松研の固体力学が主役）。ML はこの窓の高速スクリーニング層（従属・未使用）。線形微小変形・等方Si・per-width 2Dビーム近似・例示nm/GPa |
+| ㉓ | [`electrothermal_inverse_design.py`](../electrothermal_inverse_design.py) | **自己発熱の逆設計**（⑯FE＋⑯-dataset＋㉑サロゲートの統合, ML=加速の従属・FE=権威） | 演算子サロゲート（(EA,HSINK,KAPPA,J)→(V,Tmax)）で設計空間を瞬時探索し、**動作電流 J_op で Tmax≤上限 かつ NDR折返し J_peak≥J_op** を満たす**最小コスト放熱設計(HSINK,KAPPA)**を発見→**FEで検証**。素朴設計は NDR が J_op より手前（電圧制御不安定）、最適設計は**NDRを J_op の外へ押し出し**Tmax 1.20→1.10 に低減。サロゲート@最適 Tmax 1.097/J_peak 1.28 vs **FE 1.096/1.24（一致）**。設計空間は⑯-dataset の範囲内（内挿, ㉑同枠）, 線形コスト, スケールは例示。ML が探索を加速し FE が最終判定 |
 
-図: `pi_deeponet_fem_gaa.png`, `bench_weak_vs_strong.png`, `fe_newton_warmstart.png`, `dd2d_newton_warmstart.png`, `cfet_stack_warmstart.png`, `tsv_thermal_stress.png`, `tsv_3d_stress.png`, `dd_full_1d.png`, `dd_breakdown_continuation.png`, `gaa_material_sweep_warmstart.png`, `gaa_operator_deeponet.png`, `gaa_wfm_vth.png`, `phasefield_fracture_warmstart.png`, `tsv_interface_fracture.png`, `tsv_layout_gnn.png`, `electrothermal_selfheating.png`, `electrothermal_dataset.png`, `cfet_thermal_crosstalk.png`, `dd_nonisothermal_1d.png`, `cfet_thermal_crosstalk_3d.png`（＋真の3Dパース `cfet_thermal_crosstalk_3d_view.png`）, `dd_nonisothermal_2d.png`, `electrothermal_operator.png`, `nanosheet_release_mechanics.png`。
+図: `pi_deeponet_fem_gaa.png`, `bench_weak_vs_strong.png`, `fe_newton_warmstart.png`, `dd2d_newton_warmstart.png`, `cfet_stack_warmstart.png`, `tsv_thermal_stress.png`, `tsv_3d_stress.png`, `dd_full_1d.png`, `dd_breakdown_continuation.png`, `gaa_material_sweep_warmstart.png`, `gaa_operator_deeponet.png`, `gaa_wfm_vth.png`, `phasefield_fracture_warmstart.png`, `tsv_interface_fracture.png`, `tsv_layout_gnn.png`, `electrothermal_selfheating.png`, `electrothermal_dataset.png`, `cfet_thermal_crosstalk.png`, `dd_nonisothermal_1d.png`, `cfet_thermal_crosstalk_3d.png`（＋真の3Dパース `cfet_thermal_crosstalk_3d_view.png`）, `dd_nonisothermal_2d.png`, `electrothermal_operator.png`, `nanosheet_release_mechanics.png`, `electrothermal_inverse_design.png`。
 > ①〜⑤⑩⑪⑫は半導体デバイス（電気物理; ①〜⑤⑩⑪⑫は平衡ポアソン、⑧⑨は非平衡・輸送の完全DD）、⑥⑦は
 > 3D積層/パッケージ（後工程・熱機械）で、本リポジトリの CFRP 応力 FEA×GNN 中核に最も近い橋渡し。
 > 依存関係（実 import 準拠）: ②④⑤⑥は `pi_deeponet_fem_gaa.py` の FE 資産（`build_mesh`/`assemble`/`eps_map`）を、
