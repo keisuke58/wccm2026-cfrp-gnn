@@ -1,7 +1,12 @@
 # アブストラクト＋スライド構成: 弱形式FEM演算子学習＋オンライン適応
 
 > 本リポジトリの半導体デバイスシミュレーション向け研究ラインを、発表（会議/ゼミ）で使える形に
-> まとめた草稿。実体は5デモ＋コンセプトノート（`CONCEPT_weakform_operator_learning_semiconductor.md`）。
+> まとめた草稿。実体は**11デモ**＋コンセプトノート（`CONCEPT_weakform_operator_learning_semiconductor.md`）。
+>
+> **発表スライド（実体・16枚）**: [`slides/weakform_operator_learning_semiconductor.pptx`](../slides/weakform_operator_learning_semiconductor.pptx)
+> （生成スクリプト: `slides/figure_sources/build_weakform_deck.js`, `node build_weakform_deck.js` で再生成）。
+> 下記 §3 の 12 枚構成は初期（5デモ）版の草案。PPTX は 11 デモ全体（②弱形式ベンチ→①演算子学習→
+> ③④⑤ warm-start→⑧⑨完全DD→⑥⑦TSV→⑩⑪材料掃引/学習演算子）を反映した最新版。
 
 ---
 
