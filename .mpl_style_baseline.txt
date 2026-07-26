@@ -39,3 +39,4 @@ cfrp_cure_residual_stress.py
 cfrp_cure_residual_stress_fe.py
 cfrtp_residual_stress_fe.py
 cfrtp_viscoelastic_residual_stress.py
+cfrtp_ilss_interface.py
