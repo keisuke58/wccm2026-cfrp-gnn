@@ -49,7 +49,11 @@
 - **界面接着 ILSS（作成済み・②）**：[`cfrtp_ilss_interface.py`](../cfrtp_ilss_interface.py) — **凝集域(cohesive)界面要素**（mode-II
   shear-lag, 双線形則）で課題①＝界面接着を定量化。**弱い界面（フッ素樹脂・低表面エネルギー）ILSS 13.8 MPa vs
   表面処理界面 38.1 MPa（2.8倍）**。せん断ラグ応力集中ゆえ ILSS < τ_max。**残留応力との連成**：残留界面せん断が
-  界面容量を食い、見かけ ILSS が 13.8→3.9 MPa へ低下（課題①×③の連成）＝リポの ⑭ 相場破壊界面と同系。次段：2D/3D 凝集域、混合モード。
+  界面容量を食い、見かけ ILSS が 13.8→3.9 MPa へ低下（課題①×③の連成）＝リポの ⑭ 相場破壊界面と同系。
+- **混合モード凝集域（作成済み・②）**：[`cfrtp_cohesive_mixedmode.py`](../cfrtp_cohesive_mixedmode.py) — 開口(mode I)＋せん断(mode II)
+  連成の Camanho–Davila 双線形＋**Benzeggagh–Kenane(B-K)** モード相互作用。**消散エネルギー＝Gc(B) を機械精度検証**。
+  破壊包絡線(GII,GI)を power-law と比較、強度/靱性のモード比依存（フッ素樹脂は peel に弱い）、残留せん断がモード比を mode II 側へ押す、を提示。
+  次段：2D/3D メッシュ上の剥離前縁進展（⑭ と同系）。
 - **プロセス→残留応力サロゲート（作成済み・③）**：[`cfrtp_process_surrogate.py`](../cfrtp_process_surrogate.py) — 粘弾性CFRTP FE で
   プロセス空間（冷却速度×溶融温度×結晶化傾向 X_inf）を掃引しデータ生成、小 MLP を学習。**未知プロセスへ 1発推論**、
   残留応力 rel-L2 0.001／結晶化度 0.011。応答曲面（冷却速度×溶融温度→残留応力）を FE 検証点付きで提示＝**プロセスウィンドウの高速探索/逆設計**
