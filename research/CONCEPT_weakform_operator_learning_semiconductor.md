@@ -39,7 +39,7 @@ PI-DeepONet で置換**（背景整理: [`PI_DEEPONET_MC_ONLINE_LEARNING.md`](./
 
 ---
 
-## 3. 実証（20デモ・正直な結果）
+## 3. 実証（21デモ・正直な結果）
 
 | # | デモ | 主張 | 実測結果 |
 |---|---|---|---|
@@ -63,8 +63,9 @@ PI-DeepONet で置換**（背景整理: [`PI_DEEPONET_MC_ONLINE_LEARNING.md`](./
 | ⑱ | [`dd_nonisothermal_1d.py`](../dd_nonisothermal_1d.py) | **非等温ドリフト拡散**（テーマGの物理深化＝reduced Ohmic からの昇格; Poisson+SG連続+格子熱の連成） | 1D 非等温 DD: Poisson＋Scharfetter–Gummel 連続(⑧の検証済み方式)を**格子熱方程式**と外側自己整合ループで連成。フォノン律速移動度 μ(T)=(T/T0)^−1.5 が発熱→移動度低下→電流劣化の帰還を作り、**自己発熱の電流ペナルティ（I_ON ロールオフ）を再現＝Vmax で 27.8% 低下**（isothermal 208 vs non-isothermal 150）、最高格子温度上昇 0.43、スロットル部にホットスポット。**V=0 で電流≈0・温度上昇≈0 を検証**。バイアス継続 warm-start で外側反復 cold 137→100（27%減）。1D・scaled・移動度のみT依存（BGN等省略）, ML不使用。**⑯ reduced モデルの物理的裏付け＝真の非等温DDの種** |
 | ⑲ | [`cfet_thermal_crosstalk_3d.py`](../cfet_thermal_crosstalk_3d.py) | **3D CFET 熱クロストーク**（⑰の3D化, 線形四面体; 3D固有の異方性） | ⑰を**線形四面体 P1**の3Dへ拡張（自己完結スカラFE, 基板シンク z=0 Dirichlet, σ(T)ジュール源, Newton 自己整合）。2セルを x 方向に並べ各セルは nFET(低z)↔pFET(高z) の縦積み。nFET_A 単独励起で **垂直（intra-cell, pFET_A←nFET_A）θ_vert=0.15 vs 横（inter-cell, nFET_B←nFET_A）θ_lat=0.07 ＝縦積みは横分離より約2.1倍強く熱結合**（2Dでは出せない3D固有の異方性）。x-z スライスで「熱は pFET へ上昇, 隣接セルへは僅か」を可視化。電力継続 warm-start で Newton cold 186→90（52%減）。reduced Ohmic・粗い構造格子・例示スケール, ML不使用 |
 | ⑳ | [`dd_nonisothermal_2d.py`](../dd_nonisothermal_2d.py) | **2D 非等温ドリフト拡散（テーマG capstone）**: ⑰⑲の2D/3D熱 × ⑱の非等温DD を融合 | 2D **箱法(有限体積)Scharfetter–Gummel 電子連続＋非線形Poisson** を Gummel、これを **2D 格子熱FE** と外側連成（1掃引/1熱更新の完全連成, 低緩和）。μ(T)=(T/T0)^−1.5 の帰還で**自己発熱の電流ペナルティ（I_ON ロールオフ）＝Vmax で 19.8% 低下**（isothermal 305 vs 244）、最高格子温度上昇 0.25。**2D constriction（上下に絶縁バリア＋中央アパーチャ）で電流が開口に集中（current crowding）＝真の2Dホットスポット**を再現（x,y 両方向に局在）。**V=0 で電流≈0・温度上昇≈0 を検証**。バイアス継続 warm-start で外側反復 cold 219→182（17%減）。unipolar・構造格子・例示スケール, Full-Newton 2キャリアは要変数スケーリング, ML不使用 |
+| ㉑ | [`electrothermal_operator.py`](../electrothermal_operator.py) | **⑯-dataset を教師にした演算子学習サロゲート**（ML＝加速の従属, FE＝精度の権威。repo の DeepONet ⑪ と同枠） | ⑯-dataset（設計空間80点）で **DeepONet**（branch=設計パラメータ (EA,HSINK,KAPPA) × trunk=クエリ電流 J → (V, Tmax)）を学習。**未知設計24点（完全ホールドアウト）へ 1発推論で I-V 全曲線＋Tmax を予測**、rel-L2 **I-V 0.040 / Tmax 0.053**、**NDR折返し電流（argmax V）の MAE 0.068＜格子1ステップ0.117**＝S字/NDR位置も再現。正規化統計は学習設計のみ（ホールドアウト漏洩なし）。→ 設計空間の高速スクリーニング/逆設計の加速層（精度は FE が保証, 置換しない）。滑らか低次元ゆえ内挿である点は正直に明記, スケールは⑯継承 |
 
-図: `pi_deeponet_fem_gaa.png`, `bench_weak_vs_strong.png`, `fe_newton_warmstart.png`, `dd2d_newton_warmstart.png`, `cfet_stack_warmstart.png`, `tsv_thermal_stress.png`, `tsv_3d_stress.png`, `dd_full_1d.png`, `dd_breakdown_continuation.png`, `gaa_material_sweep_warmstart.png`, `gaa_operator_deeponet.png`, `gaa_wfm_vth.png`, `phasefield_fracture_warmstart.png`, `tsv_interface_fracture.png`, `tsv_layout_gnn.png`, `electrothermal_selfheating.png`, `electrothermal_dataset.png`, `cfet_thermal_crosstalk.png`, `dd_nonisothermal_1d.png`, `cfet_thermal_crosstalk_3d.png`（＋真の3Dパース `cfet_thermal_crosstalk_3d_view.png`）, `dd_nonisothermal_2d.png`。
+図: `pi_deeponet_fem_gaa.png`, `bench_weak_vs_strong.png`, `fe_newton_warmstart.png`, `dd2d_newton_warmstart.png`, `cfet_stack_warmstart.png`, `tsv_thermal_stress.png`, `tsv_3d_stress.png`, `dd_full_1d.png`, `dd_breakdown_continuation.png`, `gaa_material_sweep_warmstart.png`, `gaa_operator_deeponet.png`, `gaa_wfm_vth.png`, `phasefield_fracture_warmstart.png`, `tsv_interface_fracture.png`, `tsv_layout_gnn.png`, `electrothermal_selfheating.png`, `electrothermal_dataset.png`, `cfet_thermal_crosstalk.png`, `dd_nonisothermal_1d.png`, `cfet_thermal_crosstalk_3d.png`（＋真の3Dパース `cfet_thermal_crosstalk_3d_view.png`）, `dd_nonisothermal_2d.png`, `electrothermal_operator.png`。
 > ①〜⑤⑩⑪⑫は半導体デバイス（電気物理; ①〜⑤⑩⑪⑫は平衡ポアソン、⑧⑨は非平衡・輸送の完全DD）、⑥⑦は
 > 3D積層/パッケージ（後工程・熱機械）で、本リポジトリの CFRP 応力 FEA×GNN 中核に最も近い橋渡し。
 > 依存関係（実 import 準拠）: ②④⑤⑥は `pi_deeponet_fem_gaa.py` の FE 資産（`build_mesh`/`assemble`/`eps_map`）を、

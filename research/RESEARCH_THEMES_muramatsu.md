@@ -77,8 +77,11 @@
 - **2D 非等温DD（capstone）: `dd_nonisothermal_2d.py`（⑳）** — ⑰⑲の2D/3D熱 × ⑱の非等温DD を融合。
   2D 箱法SG 電子連続＋非線形Poisson を 2D 格子熱FE と完全連成し、**自己発熱の電流ペナルティ ~19%**・
   **2D constriction（中央アパーチャへの current crowding）で真の2Dホットスポット**・warm-start ~17%減。V=0 検証済み。
-- 次段: **非等温2キャリア Full-Newton**（要変数スケーリング）、CFET footprint 幾何、
-  電気→熱→熱応力(B)接続、⑯-dataset を教師にした演算子学習サロゲート。
+- **サロゲート: `electrothermal_operator.py`（㉑）** — ⑯-dataset を教師に **DeepONet**（設計params×クエリ電流→(V,Tmax)）。
+  **未知設計へ 1発推論**で I-V＋Tmax、rel-L2 I-V 0.040/Tmax 0.053、NDR折返し電流 MAE 0.068＜格子1ステップ。
+  ML は設計空間の高速スクリーニング/逆設計の加速層（精度は FE が権威, 置換しない）＝村松研 ML-CAE の位置づけに合致。
+- 次段: **非等温2キャリア Full-Newton**（要変数スケーリング）、CFET footprint 幾何、電気→熱→熱応力(B)接続、
+  逆設計（サロゲートで放熱設計 HSINK / 材料 EA を最適化）。
 
 ---
 
