@@ -39,8 +39,11 @@
 
 ## 関連（着手済みの軽い一歩）
 - 文献の軽い整理：[`LITREVIEW_cfrp_cure_residual_stress.md`](./LITREVIEW_cfrp_cure_residual_stress.md)。
-- 種デモ：[`cfrp_cure_residual_stress.py`](../cfrp_cure_residual_stress.py) — CLT で **工程(ΔT＋硬化収縮)→残留応力＋反り**。
+- 種デモ（軽）：[`cfrp_cure_residual_stress.py`](../cfrp_cure_residual_stress.py) — CLT で **工程(ΔT＋硬化収縮)→残留応力＋反り**。
   対称 [0/90]s は反り≈0（B=0 を検証）＋層間残留応力 ~60 MPa、非対称 [0/90] は反り。プロセス→残留応力の掃引つき。
-  次段：⑥⑦熱弾性を硬化熱化学（DoC 発展）＋粘弾性へ、プロセス→残留応力のサロゲート化（㉑と同枠）。
+- **格上げ版**：[`cfrp_cure_residual_stress_fe.py`](../cfrp_cure_residual_stress_fe.py) — **弱形式FE＋硬化度(DoC)＋CHILE の増分連成**。
+  硬化サイクル T(t)→ cure kinetics で α(t)、CHILE で剛性 g(α) が発展（ゲル後に応力ロック）、熱＋硬化収縮を増分固有ひずみで。
+  **残留応力 σ と残留ひずみ ε の両方の場**を出力（[0/90] 断面, 層間ミスマッチ）。単一プライ自由収縮→残留応力≈0 を機械精度検証。
+  σxx ~[−139, 77] MPa、εxx ~[−2.5, 0.4] milli-strain。次段：粘弾性応力緩和、工具拘束、プロセス→残留のサロゲート化（㉑と同枠）。
 
 > ステータス：口頭メモ段階。着手前に上記「要確認」を先方（ダイキン）・指導教員と詰める。
