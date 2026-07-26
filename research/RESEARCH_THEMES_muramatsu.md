@@ -75,10 +75,10 @@
 - **3D化: `cfet_thermal_crosstalk_3d.py`（⑲）** — 線形四面体の3Dで2セル配置。**垂直(intra-cell)θ=0.15 vs 横(inter-cell)θ=0.07
   ＝縦積みは横分離より約2.1倍強く熱結合**という3D固有の異方性を定量化、warm-start で Newton 52%減。
 - **2D 非等温DD（capstone）: `dd_nonisothermal_2d.py`（⑳）** — ⑰⑲の2D/3D熱 × ⑱の非等温DD を融合。
-  2D 箱法SG 電子連続＋非線形Poisson を 2D 格子熱FE と完全連成し、**自己発熱の電流ペナルティ 19.8%**・
-  スロットルの2Dホットスポット・warm-start 20%減。V=0 検証済み。
-- 次段: **横変化幾何**（constriction/L-channel/CFET footprint）で真の2次元場、**非等温2キャリア Full-Newton**
-  （要変数スケーリング）、電気→熱→熱応力(B)接続、⑯-dataset を教師にした演算子学習サロゲート。
+  2D 箱法SG 電子連続＋非線形Poisson を 2D 格子熱FE と完全連成し、**自己発熱の電流ペナルティ ~19%**・
+  **2D constriction（中央アパーチャへの current crowding）で真の2Dホットスポット**・warm-start ~17%減。V=0 検証済み。
+- 次段: **非等温2キャリア Full-Newton**（要変数スケーリング）、CFET footprint 幾何、
+  電気→熱→熱応力(B)接続、⑯-dataset を教師にした演算子学習サロゲート。
 
 ---
 

@@ -4,8 +4,10 @@ solve (⑰ cfet_thermal_crosstalk.py, ⑲ ...3d.py) with the 1-D non-isothermal 
 coupling (⑱ dd_nonisothermal_1d.py). This is the "2-D non-isothermal DD" next
 axis flagged in RESEARCH_THEMES theme G and LITREVIEW_G §4.
 
-Model (scaled, steady, unipolar electrons — an n-i-n resistive channel so a real
-current dissipates power):
+Model (scaled, steady, unipolar electrons — an n-i-n resistive channel with a 2D
+CONSTRICTION: a lightly-doped barrier spans top and bottom near mid-channel, leaving
+a central conductive aperture, so current funnels through it and crowds — a genuine
+2D hot spot, not just a 1D-along-x band):
   * Electrical: nonlinear Poisson for psi (5-point) + a 2-D BOX-METHOD (finite-volume)
     Scharfetter-Gummel electron-continuity solve, coupled by a Gummel map. Bias is
     applied across x (anode x=0, cathode x=L); the y-edges are insulated.
@@ -26,10 +28,9 @@ self-heating current penalty vs the isothermal device, and the warm-start saving
 Honest scope: 2-D, scaled units, UNIPOLAR (electron) transport on a structured grid
 box method (not the full 2-carrier Full-Newton system, which needs variable scaling),
 mobility the only explicit T channel. The Poisson, continuity and heat solves are all
-genuinely 2-D, but the doping throttle spans the full width, so the current (and hence
-the hot spot) is a y-uniform band — a series resistor. A laterally-varying geometry
-(constriction, L-channel, or the CFET footprints of ⑰/⑲) is the natural next step
-that makes the field 2-D in both axes. A seed toward full 2-D non-isothermal DD. No ML.
+genuinely 2-D and, with the constriction, so is the hot spot (current crowds through
+the aperture). A seed toward full 2-D non-isothermal DD (2-carrier Full-Newton, real
+device geometry). No ML.
 
 Run:  python3 dd_nonisothermal_2d.py       (writes dd_nonisothermal_2d.png)
       python3 dd_nonisothermal_2d.py --help
@@ -46,6 +47,7 @@ SEED = 20260725
 LAMBDA2 = 3e-4          # scaled Debye length squared
 C0 = 40.0               # scaled contact doping (N/n_i)
 XD, WD = 0.5, 0.10      # centre / width of the lightly-doped throttle (x)
+WY = 0.16               # aperture half-width in y (central conductive opening)
 KAPPA = 5e-3            # lattice heat conduction
 HSINK = 0.5             # distributed substrate sink
 T0 = 1.0
@@ -62,8 +64,14 @@ def bern(x):
     return out
 
 
-def doping_1d(xs):
-    return C0 * (1.0 - 0.97 * np.exp(-((xs - XD) / WD) ** 2))
+def doping(xx, yy):
+    """2D constriction: a lightly-doped (high-resistance) barrier spanning top and
+    bottom near x=XD, leaving a central conductive APERTURE (|y-0.5|<~WY). Current
+    must funnel through the aperture -> current crowding -> a genuine 2D hot spot.
+    Contacts (x=0,L) stay heavily doped (barrier ~ 0 there) for ohmic behaviour."""
+    x_gate = np.exp(-((xx - XD) / WD) ** 2)              # active only near the neck
+    y_barrier = 1.0 - np.exp(-((yy - 0.5) / WY) ** 2)    # 0 at aperture centre, ->1 at edges
+    return C0 * (1.0 - 0.97 * x_gate * y_barrier)
 
 
 def mobility(T):
@@ -258,7 +266,7 @@ def main():
     Lap = _laplacian5(args.nx, args.ny, hx, hy)       # grid-only, build once
     we = edge_weights(edge, hx, hy)
     N = args.nx * args.ny
-    C = doping_1d(nodes[:, 0]); psi_eq = np.arcsinh(C / 2.0); n_eq = np.exp(psi_eq)
+    C = doping(nodes[:, 0], nodes[:, 1]); psi_eq = np.arcsinh(C / 2.0); n_eq = np.exp(psi_eq)
     T0f = np.full(N, T0)
 
     # equilibrium check
@@ -320,7 +328,7 @@ def _plot(out, xs, ys, nx, ny, nodes, biases, I_iso, I_niso, Tmax, Tfield,
     im = ax[0, 1].imshow(Tg.T, origin="lower", extent=[0, 1, 0, 1], cmap="inferno",
                          aspect="auto")
     fig.colorbar(im, ax=ax[0, 1], label="lattice temperature T")
-    ax[0, 1].set_title("2D self-consistent lattice T at Vmax\n(Joule hot spot at the throttle)")
+    ax[0, 1].set_title("2D self-consistent lattice T at Vmax\n(2D hot spot: current crowds through the aperture)")
     ax[0, 1].set_xlabel("x (anode→cathode)"); ax[0, 1].set_ylabel("y (width)")
 
     ax[1, 0].plot(biases, Tmax, "-o", ms=3, color="#b5651d")
