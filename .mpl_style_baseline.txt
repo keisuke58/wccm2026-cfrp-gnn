@@ -37,3 +37,4 @@ electrothermal_operator.py
 nanosheet_release_mechanics.py
 cfrp_cure_residual_stress.py
 cfrp_cure_residual_stress_fe.py
+cfrtp_residual_stress_fe.py
