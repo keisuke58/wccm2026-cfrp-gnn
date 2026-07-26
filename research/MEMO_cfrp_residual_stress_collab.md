@@ -53,7 +53,10 @@
 - **混合モード凝集域（作成済み・②）**：[`cfrtp_cohesive_mixedmode.py`](../cfrtp_cohesive_mixedmode.py) — 開口(mode I)＋せん断(mode II)
   連成の Camanho–Davila 双線形＋**Benzeggagh–Kenane(B-K)** モード相互作用。**消散エネルギー＝Gc(B) を機械精度検証**。
   破壊包絡線(GII,GI)を power-law と比較、強度/靱性のモード比依存（フッ素樹脂は peel に弱い）、残留せん断がモード比を mode II 側へ押す、を提示。
-  次段：2D/3D メッシュ上の剥離前縁進展（⑭ と同系）。
+- **2D 剥離前縁 本格FE（作成済み）**：[`cfrtp_delamination_2d_fe.py`](../cfrtp_delamination_2d_fe.py) — 上の混合モード則を
+  **メッシュ上の伝播FE**へ。二層(plane-strain CST)＋界面 cohesive ばね(B-K)、初期き裂＋先端に角度θの変位で開口＋せん断。
+  secant(損傷陽解法)反復で**剥離前縁がメッシュを進展**（a0=5→19.8mm）。荷重変位＝上昇→伝播ピーク(10.3 kN/m@340µm)→軟化、
+  界面損傷場・cohesive 過程帯を可視化。次段：3D 前縁・cohesive 要素・arc-length。
 - **含浸・ボイド × 開繊（作成済み・③）**：[`cfrtp_impregnation_void.py`](../cfrtp_impregnation_void.py) — 課題②＝高粘度フッ素樹脂溶融の
   含浸とボイドを **Darcy 流＋Gebart 透過率**で。含浸時間 t_imp ∝ h²·μ/(K·ΔP)。**開繊(fibre spreading)で h→h/s ⇒ t_imp→t_imp/s²**。
   **未開繊 tow(100µm)は t_imp 55s>t_proc40s でボイド15.9%、開繊×2で0.8% へ激減**（高粘度 μ=6000 だと未開繊41%→開繊で<1%）。

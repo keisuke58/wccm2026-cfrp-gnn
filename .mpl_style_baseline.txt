@@ -44,3 +44,4 @@ cfrtp_process_surrogate.py
 cfrtp_calibration.py
 cfrtp_cohesive_mixedmode.py
 cfrtp_impregnation_void.py
+cfrtp_delamination_2d_fe.py
