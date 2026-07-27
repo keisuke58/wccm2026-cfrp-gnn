@@ -8,19 +8,21 @@ inverse-design pipeline. For a real project the physics moves to a commercial so
 **Abaqus** (composites: cohesive elements, UMAT/USDFLD, B-K, VCCT/XFEM) or **Ansys**
 (ACP + Mechanical CZM). These files are the Abaqus starting points.
 
-> ⚠️ **SKELETONS — NOT VERIFIED.** Abaqus is not available in this environment (no
-> license), so none of these were run. They are structured, commented templates with
-> placeholder meshes/props to adapt in Abaqus/CAE, then validate. Treat every number and
-> the exact card syntax as a starting point to check against the Abaqus Keywords/User
-> Subroutines manuals for your version.
+> ⚠️ **COMPLETE decks, but NOT VERIFIED IN ABAQUS.** The `.inp` files now carry real,
+> generated meshes and consistent node/element sets (validated: no dangling node or set
+> references), so they are meant to submit directly. But Abaqus is not available in this
+> environment (no license), so **nothing was run or compiled here** — check the card
+> syntax / UMAT argument list against your Abaqus version, and run the 1-element
+> free-contraction sanity test (below) before trusting results.
 
 ## Files
 
 | file | purpose | Python counterpart |
 |---|---|---|
 | `cfrtp_cure_umat.f` | UMAT: orthotropic **CHILE** (cure-hardening) + cure kinetics (STATEV α) + cure/crystallization shrinkage + thermal eigenstrain, incremental residual-stress build-up | `cfrp_cure_residual_stress_fe.py` (⑳), `cfrtp_residual_stress_fe.py` |
-| `cfrtp_cure_residual.inp` | [0/90] laminate residual stress driven by a cure cycle, using the UMAT | same |
-| `cfrtp_delamination_mixedmode.inp` | bilayer + **built-in cohesive** elements with **Benzeggagh-Kenane** mixed-mode delamination | `cfrtp_cohesive_mixedmode.py`, `cfrtp_delamination_2d_fe.py` |
+| `cfrtp_cure_residual.inp` | **complete** 3D [0/90] laminate (105 nodes, 48 C3D8) residual stress driven by a cure cycle, using the UMAT | same |
+| `cfrtp_delamination_mixedmode.inp` | **complete** 2D plane-strain bilayer (366 nodes, 240 CPE4 + 45 COH2D4) with **built-in cohesive** + **Benzeggagh-Kenane** mixed-mode, pre-crack + mixed-mode loading | `cfrtp_cohesive_mixedmode.py`, `cfrtp_delamination_2d_fe.py` |
+| `gen_inp.py` | regenerates both decks (change mesh size / geometry / layup / mixity here); pure-Python, no Abaqus/numpy needed | — |
 
 ## Physics mapping (Python → Abaqus)
 
@@ -63,6 +65,19 @@ abaqus job=cfrtp_delamination_mixedmode  interactive
 Requires a compatible Fortran compiler linked to Abaqus for the UMAT. Check
 `ABA_PARAM.INC`, the UMAT argument list, and stress/strain component ordering
 (3D: 11,22,33,12,13,23) for your Abaqus version before trusting results.
+
+**Units** are SI (Pa, m, s, K). Temperature is supplied in °C; the UMAT adds
+`TABS=273.15` internally for the Arrhenius kinetics — keep that consistent if you edit.
+
+**First check — UMAT free-contraction sanity test.** Before trusting the [0/90]
+result, run one C3D8 element with the UMAT, the 3-2-1 constraint (statically
+determinate, free to contract), and the cure cycle. A single uniform ply that can
+contract freely must end at ~0 residual stress — the composite free-expansion check the
+Python demos also use. If it is not ~0, the eigenstrain sign / props / ordering is off.
+
+**Resizing / editing.** `python3 gen_inp.py` regenerates both decks; change mesh
+density, geometry, layup, pre-crack length `a0`, or the loading angle `theta_deg` at the
+top of `gen_cure` / `gen_delam`.
 
 ### Ansys equivalents (pointers)
 - Cure/CHILE residual stress: `USERMAT`/`USERMATTH` (or the Ansys Composite Cure Simulation
