@@ -79,6 +79,30 @@ Python demos also use. If it is not ~0, the eigenstrain sign / props / ordering 
 density, geometry, layup, pre-crack length `a0`, or the loading angle `theta_deg` at the
 top of `gen_cure` / `gen_delam`.
 
+## One-shot run + summary (on your own server)
+
+Everything runs on **your** Abaqus box over **your** SSH session — this sandbox cannot
+reach your server (outbound is HTTPS-proxy-only, and it should not hold your credentials).
+Get the repo onto the server (`git clone …` or `rsync -av abaqus/ user@host:~/cfrtp/`),
+then:
+
+```
+cd abaqus
+bash run_all.sh              # both jobs + summary   (ABAQUS=abq2023 bash run_all.sh to pick a version)
+bash run_all.sh cure        # cure job only
+bash run_all.sh delam       # delamination job only
+```
+
+- `run_all.sh` submits `cfrtp_cure_residual` (with the UMAT) and
+  `cfrtp_delamination_mixedmode`, then runs `postprocess.py`.
+- `postprocess.py` (Abaqus Python / odbAccess) prints metrics to compare with the Python
+  seeds: cure → residual σ₁₁ range + warpage + degree-of-cure; delam → peak tip reaction
+  + delamination front. Untested here (no license) — if a field/step/instance name
+  differs in your Abaqus version, adjust the small helpers at the top of the file.
+
+Send me the printed summary (or the `.dat`/`.msg` tail on a non-convergence) and I'll
+tune the UMAT constants, cohesive parameters, or increment controls.
+
 ### Ansys equivalents (pointers)
 - Cure/CHILE residual stress: `USERMAT`/`USERMATTH` (or the Ansys Composite Cure Simulation
   ACT extension), thermal + field-driven eigenstrain.
