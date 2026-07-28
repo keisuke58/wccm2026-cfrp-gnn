@@ -125,6 +125,77 @@ def gen_cure(path, nx=6, ny=4, Lx=20.0e-3, Ly=12.0e-3, tply=0.6e-3):
     return dict(nodes=NX * NY * NZ, els=nx * ny * nz)
 
 
+# ------------------------------------------------------- 1-element free-contraction
+def gen_1elem_sanity(path, L=0.6e-3):
+    """Single C3D8, ORI0 ply, 3-2-1 statically-determinate support (free to
+    contract), same material + cure cycle as gen_cure. A single homogeneous
+    ply with no external constraint beyond rigid-body suppression must end
+    at ~0 residual stress -- if not, the UMAT eigenstrain sign/ordering or
+    the BC set is wrong."""
+    # explicit unit-cube node numbering (matches gen_cure's C3D8 connectivity order)
+    coords = {
+        1: (0.0, 0.0, 0.0), 2: (L, 0.0, 0.0), 3: (L, L, 0.0), 4: (0.0, L, 0.0),
+        5: (0.0, 0.0, L),   6: (L, 0.0, L),   7: (L, L, L),   8: (0.0, L, L),
+    }
+    L_ = ["*HEADING",
+          " CFRTP UMAT 1-element free-contraction sanity test -- Abaqus/Standard",
+          " Single ply, 3-2-1 support, same cure cycle as cfrtp_cure_residual.inp.",
+          " Expect residual sigma ~ 0 at every increment (nothing external restrains it).",
+          "**",
+          "*NODE, NSET=NALL"]
+    for n, (x, y, z) in coords.items():
+        L_.append(f" {n}, {x:.6e}, {y:.6e}, {z:.6e}")
+    L_ += ["*ELEMENT, TYPE=C3D8, ELSET=EALL",
+           " 1, 1, 2, 3, 4, 5, 6, 7, 8",
+           "**",
+           "*ORIENTATION, NAME=ORI0, DEFINITION=COORDINATES",
+           " 1.0, 0.0, 0.0,  0.0, 1.0, 0.0",
+           " 3, 0.0",
+           "*SOLID SECTION, ELSET=EALL, MATERIAL=CFRTP, ORIENTATION=ORI0",
+           "**",
+           "*MATERIAL, NAME=CFRTP",
+           "*DEPVAR",
+           " 3,",
+           "1, alpha, degree of cure",
+           "2, g_chile, stiffness fraction",
+           "3, smax, max abs sigma11",
+           "*USER MATERIAL, CONSTANTS=20",
+           " 135.0e9, 9.0e9, 9.0e9, 0.30, 0.30, 0.45, 5.0e9, 5.0e9,",
+           " 3.0e9, -0.3e-6, 28.0e-6, 28.0e-6, -3.0e-3, 1.0e8, 5.5e4, 1.6,",
+           " 0.5, 0.02, 8.314, 273.15",
+           "*INITIAL CONDITIONS, TYPE=TEMPERATURE",
+           " NALL, 25.0",
+           "*INITIAL CONDITIONS, TYPE=SOLUTION",
+           " EALL, 0.0, 0.02, 0.0"]
+    # 3-2-1: node 1 all three, node 2 (along x from node1) y&z, node 4 (along y) z only
+    L_ += ["**",
+           "*NSET, NSET=NA\n 1,",
+           "*NSET, NSET=NB\n 2,",
+           "*NSET, NSET=NC\n 4,",
+           "*BOUNDARY",
+           " NA, 1, 3, 0.0",
+           " NB, 2, 2, 0.0",
+           " NB, 3, 3, 0.0",
+           " NC, 1, 1, 0.0",
+           " NC, 3, 3, 0.0"]
+    L_ += ["**",
+           "*AMPLITUDE, NAME=CURECYCLE, TIME=TOTAL TIME",
+           " 0.0, 25.0, 0.25, 180.0, 0.55, 180.0, 1.0, 25.0",
+           "*STEP, NLGEOM=NO, INC=500",
+           "*STATIC",
+           " 0.005, 1.0, 1.0e-6, 0.02",
+           "*TEMPERATURE, AMPLITUDE=CURECYCLE",
+           " NALL, 1.0",
+           "*OUTPUT, FIELD",
+           "*ELEMENT OUTPUT",
+           " S, E, SDV",
+           "*NODE OUTPUT",
+           " U",
+           "*END STEP"]
+    open(path, "w").write("\n".join(L_) + "\n")
+    return dict(nodes=8, els=1)
+
+
 # --------------------------------------------------------------- delamination (2D)
 def gen_delam(path, nx=60, nzl=2, Lx=60.0e-3, t=0.6e-3, a0=15.0e-3, theta_deg=25.0):
     """2D plane-strain bilayer + cohesive interface (built-in COH2D4 + B-K).
@@ -181,7 +252,9 @@ def gen_delam(path, nx=60, nzl=2, Lx=60.0e-3, t=0.6e-3, a0=15.0e-3, theta_deg=25
     L += ["**",
           "*SOLID SECTION, ELSET=BOT, MATERIAL=PLY",
           "*SOLID SECTION, ELSET=TOP, MATERIAL=PLY",
-          "*COHESIVE SECTION, ELSET=COH, MATERIAL=INTERFACE, RESPONSE=TRACTION SEPARATION, THICKNESS=SPECIFIED",
+          "*SECTION CONTROLS, NAME=COHVISC, VISCOSITY=1.0e-5",
+          "*COHESIVE SECTION, ELSET=COH, MATERIAL=INTERFACE, RESPONSE=TRACTION SEPARATION,"
+          " THICKNESS=SPECIFIED, CONTROLS=COHVISC",
           " 1.0",
           "**",
           "*MATERIAL, NAME=PLY",
@@ -193,9 +266,7 @@ def gen_delam(path, nx=60, nzl=2, Lx=60.0e-3, t=0.6e-3, a0=15.0e-3, theta_deg=25
           "*DAMAGE INITIATION, CRITERION=QUADS",
           " 12.0e6, 18.0e6, 18.0e6",
           "*DAMAGE EVOLUTION, TYPE=ENERGY, MIXED MODE BEHAVIOR=BK, POWER=1.6",
-          " 200.0, 600.0, 600.0",
-          "*DAMAGE STABILIZATION",
-          " 1.0e-5"]
+          " 200.0, 600.0, 600.0"]
 
     # BCs: clamp right end (x=Lx) of both layers; drive top-left tip (mixed mode)
     right_b = [nb(nx, j) for j in range(nzl + 1)]
@@ -232,5 +303,7 @@ if __name__ == "__main__":
     here = os.path.dirname(os.path.abspath(__file__))
     c = gen_cure(os.path.join(here, "cfrtp_cure_residual.inp"))
     d = gen_delam(os.path.join(here, "cfrtp_delamination_mixedmode.inp"))
+    s = gen_1elem_sanity(os.path.join(here, "cfrtp_1elem_sanity.inp"))
     print(f"cure  : {c['nodes']} nodes, {c['els']} C3D8 elements")
     print(f"delam : {d['nodes']} nodes, {d['els']} CPE4 + {d['coh']} COH2D4 elements")
+    print(f"sanity: {s['nodes']} nodes, {s['els']} C3D8 element")
