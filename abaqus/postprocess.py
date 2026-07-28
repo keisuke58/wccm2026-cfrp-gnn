@@ -47,8 +47,8 @@ def cure(odbname="cfrtp_cure_residual.odb"):
     print("  residual sigma_11 range: [%.1f, %.1f] MPa" %
           (min(s11) / 1.0e6, max(s11) / 1.0e6))
     print("  warpage max|U3|: %.3f mm" % (max(u3) * 1.0e3))
-    if "SDV1" in fr.fieldOutputs.keys():
-        a = [v.data for v in fr.fieldOutputs["SDV1"].values]
+    if "SDV_alpha" in fr.fieldOutputs.keys():
+        a = [v.data for v in fr.fieldOutputs["SDV_alpha"].values]
         print("  degree of cure alpha: [%.3f, %.3f]" % (min(a), max(a)))
     odb.close()
 

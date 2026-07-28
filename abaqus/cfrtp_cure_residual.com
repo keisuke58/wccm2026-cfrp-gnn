@@ -22,6 +22,7 @@ options = {
     'directCyclic':OFF,
     'direct_solver':DMP,
     'direct_solver_use_default':'1',
+    'double_precision':EXPLICIT,
     'dsa':OFF,
     'dynStepSenseAdj':OFF,
     'dynamic':OFF,
