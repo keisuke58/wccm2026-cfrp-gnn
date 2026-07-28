@@ -52,10 +52,12 @@ def gen_cure(path, nx=6, ny=4, Lx=20.0e-3, Ly=12.0e-3, tply=0.6e-3):
                 e = eid(i, j, k)
                 L.append(f" {e}, {n0}, {n1}, {n2}, {n3}, {m0}, {m1}, {m2}, {m3}")
                 (ely0 if k == 0 else ely90).append(e)
-    L.append("*ELSET, ELSET=PLY0")
-    L.append(" " + ", ".join(str(e) for e in ely0))
-    L.append("*ELSET, ELSET=PLY90")
-    L.append(" " + ", ".join(str(e) for e in ely90))
+    # NB: Abaqus allows at most 16 items per data line, so use GENERATE
+    # (first, last, increment) for these contiguous element ranges.
+    L.append("*ELSET, ELSET=PLY0, GENERATE")
+    L.append(f" {ely0[0]}, {ely0[-1]}, 1")
+    L.append("*ELSET, ELSET=PLY90, GENERATE")
+    L.append(f" {ely90[0]}, {ely90[-1]}, 1")
 
     # orientations: 0 deg (fibre // x), 90 deg (fibre // y)
     L += ["**",
