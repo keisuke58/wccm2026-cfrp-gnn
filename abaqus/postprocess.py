@@ -8,14 +8,17 @@ summary comparable to the Python seed demos. Run with Abaqus' Python:
     abaqus python postprocess.py ve         # cfrtp_cure_residual_ve.odb only
     abaqus python postprocess.py crystve    # cfrtp_cryst_residual_ve.odb only
     abaqus python postprocess.py crystpeek  # cfrtp_cryst_peek_validation.odb only
+    abaqus python postprocess.py crystpeekhl # cfrtp_cryst_peek_hl.odb only
+    abaqus python postprocess.py daikinpfa  # cfrtp_daikin_pfa_hl.odb only
     abaqus python postprocess.py delam3d    # cfrtp_delamination_3d.odb only
 
 Uses odbAccess (Abaqus Python 2.7 interpreter). Runs on YOUR Abaqus box, not the
 sandbox.
 
 Metrics:
-  cure/sanity/ve/crystve/crystpeek : residual sigma_11 range [MPa], warpage
-          max|U3| [mm], SDV_alpha range (degree of cure / relative crystallinity)
+  cure/sanity/ve/crystve/crystpeek/crystpeekhl/daikinpfa : residual sigma_11
+          range [MPa], warpage max|U3| [mm], SDV_alpha range (degree of cure /
+          relative crystallinity)
           -> compare with cfrp_cure_residual_stress_fe.py / cfrtp_residual_stress_fe.py
   delam/delam3d : peak reaction at the loaded tip, delamination front
           (max x with SDEG>0.5)
@@ -111,6 +114,10 @@ JOBS = [
      {"label": "crystve", "alpha_desc": "relative crystallinity"}),
     ("crystpeek", "cfrtp_cryst_peek_validation.odb", cure,
      {"label": "crystpeek", "alpha_desc": "relative crystallinity"}),
+    ("crystpeekhl", "cfrtp_cryst_peek_hl.odb", cure,
+     {"label": "crystpeekhl", "alpha_desc": "relative crystallinity"}),
+    ("daikinpfa", "cfrtp_daikin_pfa_hl.odb", cure,
+     {"label": "daikinpfa", "alpha_desc": "relative crystallinity"}),
     ("delam",     "cfrtp_delamination_mixedmode.odb", delam, {}),
     ("delam3d",   "cfrtp_delamination_3d.odb", delam, {"label": "delam3d"}),
 ]
