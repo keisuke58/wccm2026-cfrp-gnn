@@ -13,6 +13,14 @@ inverse-design pipeline. For a real project the physics moves to a commercial so
 > discontinuity iterations, no cutbacks). Summary below ("Verified results"); see that
 > section for one known cross-check gap (a `BETA` cure-shrinkage property mismatch
 > against the Python seed) that is flagged but not yet reconciled.
+>
+> ✅ **UPDATE (2026-08-01)**: all seven decks (`sanity`, `cure`, `ve`, `crystve`,
+> `crystpeek`, `delam`, `delam3d`) verified. Fixed two real bugs found along the way:
+> (1) `gen_inp.py`'s crystallization-coupled decks under-specified `*INITIAL
+> CONDITIONS, TYPE=SOLUTION` (1 value against `*DEPVAR, 23`), which Abaqus 2024
+> rejects outright; (2) `postprocess.py`'s delamination-front element count summed
+> raw `SDEG` field values instead of distinct elements, over-counting damaged
+> elements 2×/4× for COH2D4/COH3D8. See "Verified results (2026-08-01)" below.
 
 ## Files
 
@@ -168,9 +176,12 @@ moving it to `*SECTION CONTROLS, VISCOSITY=1.0e-5` + `CONTROLS=` on the
 failure wasn't perturbing the physics, just wasn't wired up):
 ```
 peak reaction |RF| at TIP: 119631.0 (frame 55)
-delaminated cohesive elements (SDEG>0.5): 4 / 45
+delaminated cohesive elements (SDEG>0.5): 2 / 45
 delamination front x: 17.0 mm   (from pre-crack a0=15 mm, i.e. Δa=2 mm)
 ```
+(the element count was originally misreported as 4 — `postprocess.py` was counting
+raw `SDEG` field values rather than distinct elements; COH2D4 reports 2 integration
+points per element. Fixed 2026-08-01, see below.)
 
 **Cohesive mesh resolution** — the Camanho-Davila/Turon estimate
 `lcz ≈ E·Gc/σmax²` (M=1) with this deck's props (E=60 GPa, GIc/GIIc=200/600 N/m,
@@ -209,6 +220,79 @@ being past the softening onset — not a meshing or convergence problem.
 **Open item**: reconcile the `BETA` cure-shrinkage constant between the UMAT
 (`gen_cure()` in `gen_inp.py`, currently `-3.0e-3`) and `cfrp_cure_residual_stress_fe.py`
 (currently `-4e-3`) if exact quantitative parity with the Python seed is wanted.
+
+## Verified results (2026-08-01, Abaqus 2024) — remaining four decks
+
+All four decks not covered above (`ve`, `crystve`, `crystpeek`, `delam3d`) converged
+(53 increments, no cutbacks for the cure-family jobs). **Two real bugs found and
+fixed during this pass**:
+
+1. `gen_inp.py`'s `gen_cryst_ve()` / `gen_cryst_peek()` declared `*DEPVAR, 23` but
+   supplied only 1 value (`EALL, 1.0e-3`) in `*INITIAL CONDITIONS, TYPE=SOLUTION`.
+   Abaqus 2024 rejects this outright (`***ERROR: THERE ARE INSUFFICIENT DATA CARDS
+   TO DEFINE THE SOLUTION-DEPENDENT VARIABLES`) rather than zero-filling as older
+   versions do. Fixed by padding the remaining 22 state variables with `0.0`.
+2. `postprocess.py`'s `delam()` counted raw `SDEG` field *values*, not distinct
+   elements — COH2D4/COH3D8 report 2/4 integration-point values per element, so the
+   printed damaged-element count was 2×/4× too high (see correction above).
+
+**`cfrtp_cure_residual_ve.inp` (viscoelastic CHILE cure)**:
+```
+[ve] residual sigma_11 range: [-44.5, 8.1] MPa   (vs elastic cure: [-71.7, 13.1] MPa)
+     warpage max|U3|: 0.053 mm                     (same as elastic cure — geometry-driven)
+     degree of cure alpha: [0.988, 0.988]
+```
+Peak magnitude relaxes from 71.7 → 44.5 MPa (~38%) relative to the elastic `cure`
+job. The Python counterpart in the mapping table, `cfrtp_viscoelastic_residual_stress.py`,
+runs a *different* base cycle (fluoropolymer melt→RT, 340→25 °C, crystallization
+kinetics) rather than this deck's Arrhenius/CHILE cure kinetics (same family as the
+elastic `cure`/`sanity` jobs) — so magnitudes aren't expected to match 1:1. At the
+default 5 °C/s rate it reports elastic 500 → viscoelastic 131 MPa (74% relaxed).
+Both show the same qualitative story (VE relaxation cuts peak residual stress by
+roughly a third to three-quarters), but exact parity would need the same underlying
+kinetics model and cure/melt cycle on both sides — not yet reconciled, same spirit as
+the open `BETA` item above.
+
+**`cfrtp_cryst_residual_ve.inp` / `cfrtp_cryst_peek_validation.inp` (crystallization + VE)**:
+```
+[crystve]   residual sigma_11 range: [-1.0, 0.2] MPa   relative crystallinity: 0.230
+[crystpeek] residual sigma_11 range: [-52.0, 7.5] MPa  relative crystallinity: 1.000
+```
+`crystve` (illustrative fluoropolymer proxy, `TCRYST=120 °C`, melt cycle from 260 °C)
+only reaches partial crystallization (α=0.23) over the cool-down, so stiffness
+development `g(α)` stays low and locked-in stress is correspondingly tiny (~1 MPa) —
+physically consistent, but worth a second look given this is the exact deck where the
+`*DEPVAR` bug above was found; flagging as an open item rather than asserting it's
+correct. `crystpeek` (AS4/PEEK, `TCRYST=290 °C`, melt 380→RT) reaches full
+crystallization (α=1.0, as `KMAX` was calibrated to do) and the largest warpage of the
+cure-family jobs (0.269 mm), with σ₁₁≈52 MPa. Cross-check: the *elastic*, no-relaxation
+Python melt-crystallize model (`cfrtp_residual_stress_fe.py`, melt 340→RT @5 °C/s)
+predicts crystallinity 0.363 and σ_xx range **[-499.7, 292.0] MPa** — an order of
+magnitude above `crystpeek`'s VE-relaxed 52 MPa, which is expected since that Python
+seed has no relaxation. Its viscoelastic counterpart
+(`cfrtp_viscoelastic_residual_stress.py`) brings the elastic 500 MPa down to 131 MPa
+(74% relaxed) at the same rate, and down to 88 MPa at a slow 0.5 °C/s cool — the same
+order of magnitude as `crystpeek`'s 52 MPa. Not a strict validation (different
+material system, parameter set, and crystallization temperature window), but the same
+qualitative conclusion: crystallization + VE relaxation brings residual stress down
+from a purely-elastic hundreds-of-MPa prediction to a measurement-grade tens-of-MPa
+range.
+
+**`cfrtp_delamination_3d.inp` (3D mixed-mode front, COH3D8 + B-K)**:
+```
+[delam3d] peak reaction |RF| at TIP: 7835.5 N (frame 142)
+          delaminated cohesive elements (SDEG>0.5): 30 / 90
+          delamination front x: 30.0 mm   (from pre-crack a0=15 mm, i.e. Δa=15 mm)
+```
+Same `Lx=60 mm`, `a0=15 mm` domain as the 2D `delam` deck above (θ=30° vs 25°),
+extended across a 20 mm width with 90 COH3D8 elements. 30/90 (33%) of the cohesive
+elements are damaged and the front advances 15 mm of the 45 mm ligament — a much
+larger fraction than the 2D job's Δa=2 mm/45 mm (4%) despite the identical `Lx`/`a0`.
+This is consistent with the true 3D crack front (curving across the width) relieving
+the constraint that the plane-strain 2D idealization imposes, and matches the
+direction (if not magnitude) of `cfrtp_delamination_2d_fe.py`'s own front sweep
+(Δa 14.8 mm of a 15 mm ligament, 99% — see the `lcz` discussion above for why the
+short-ligament Python/3D domains show more front advance than the longer 2D deck).
 
 ### Ansys equivalents (pointers)
 - Cure/CHILE residual stress: `USERMAT`/`USERMATTH` (or the Ansys Composite Cure Simulation

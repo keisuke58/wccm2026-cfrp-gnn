@@ -83,15 +83,18 @@ def delam(odbname="cfrtp_delamination_mixedmode.odb", label="delam"):
     for inst in odb.rootAssembly.instances.values():
         for e in inst.elements:
             conn[(inst.name, e.label)] = [(inst.name, l) for l in e.connectivity]
-    front = 0.0; damaged = 0
+    front = 0.0; damaged_elems = set()
     if "SDEG" in fr.fieldOutputs.keys():
+        # COH2D4/COH3D8 report SDEG per integration point (2 / 4 per element), so
+        # dedupe by element -- an element counts as damaged if ANY IP exceeds 0.5.
         for v in fr.fieldOutputs["SDEG"].values:
             if v.data > 0.5:
-                damaged += 1
                 key = (v.instance.name if v.instance else list(odb.rootAssembly.instances.keys())[0], v.elementLabel)
+                damaged_elems.add(key)
                 xs = [xyz[k][0] for k in conn.get(key, []) if k in xyz]
                 if xs:
                     front = max(front, max(xs))
+    damaged = len(damaged_elems)
     print("[%s] step=%s" % (label, stepname))
     print("  peak reaction |RF| at TIP: %.1f (at frame %d)" % (peak, peak_f))
     print("  delaminated cohesive elements (SDEG>0.5): %d" % damaged)
