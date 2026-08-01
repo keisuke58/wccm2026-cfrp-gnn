@@ -304,6 +304,240 @@ def gen_cure_ve(path, nx=6, ny=4, Lx=20.0e-3, Ly=12.0e-3, tply=0.6e-3):
     return dict(nodes=NX * NY * NZ, els=nx * ny * nz)
 
 
+# ---------------------------------------- cure residual, crystallization + VE UMAT
+def gen_cryst_ve(path, nx=6, ny=4, Lx=20.0e-3, Ly=12.0e-3, tply=0.6e-3):
+    """Same [0/90] mesh, driven by the CRYSTALLIZATION-COUPLED viscoelastic UMAT
+    (cfrtp_cryst_umat_ve.f): alpha = relative crystallinity from a Nakamura
+    non-isothermal law, developed on a MELT -> COOL cycle, controlling stiffness,
+    crystallization shrinkage and the relaxation shift. Reproduces the
+    cooling-rate -> crystallinity -> residual-stress pathway for semi-crystalline
+    fluoropolymer CFRTP. Prony tau_k in the step's (normalized) time unit --
+    co-calibrate with the real cool-down duration + DMA before trusting values."""
+    nz = 2
+    NX, NY, NZ = nx + 1, ny + 1, nz + 1
+    xs = [Lx * i / nx for i in range(NX)]
+    ys = [Ly * j / ny for j in range(NY)]
+    zs = [tply * k for k in range(NZ)]
+
+    def nid(i, j, k):
+        return 1 + (k * NY + j) * NX + i
+
+    def eid(i, j, k):
+        return 1 + (k * ny + j) * nx + i
+
+    L = ["*HEADING",
+         " CFRTP residual stress (3D [0/90]) -- CRYSTALLIZATION-COUPLED VE UMAT",
+         " Nakamura crystallization + Prony/WLF + crystallinity shift. "
+         "cfrtp_cryst_umat_ve.f.",
+         "**", "*NODE, NSET=NALL"]
+    for k in range(NZ):
+        for j in range(NY):
+            for i in range(NX):
+                L.append(f" {nid(i,j,k)}, {xs[i]:.6e}, {ys[j]:.6e}, {zs[k]:.6e}")
+
+    ely0, ely90 = [], []
+    L.append("*ELEMENT, TYPE=C3D8, ELSET=EALL")
+    for k in range(nz):
+        for j in range(ny):
+            for i in range(nx):
+                n0 = nid(i, j, k); n1 = nid(i + 1, j, k); n2 = nid(i + 1, j + 1, k); n3 = nid(i, j + 1, k)
+                m0 = nid(i, j, k + 1); m1 = nid(i + 1, j, k + 1); m2 = nid(i + 1, j + 1, k + 1); m3 = nid(i, j + 1, k + 1)
+                e = eid(i, j, k)
+                L.append(f" {e}, {n0}, {n1}, {n2}, {n3}, {m0}, {m1}, {m2}, {m3}")
+                (ely0 if k == 0 else ely90).append(e)
+    L.append("*ELSET, ELSET=PLY0, GENERATE")
+    L.append(f" {ely0[0]}, {ely0[-1]}, 1")
+    L.append("*ELSET, ELSET=PLY90, GENERATE")
+    L.append(f" {ely90[0]}, {ely90[-1]}, 1")
+
+    L += ["**",
+          "*ORIENTATION, NAME=ORI0, DEFINITION=COORDINATES",
+          " 1.0, 0.0, 0.0,  0.0, 1.0, 0.0",
+          " 3, 0.0",
+          "*ORIENTATION, NAME=ORI90, DEFINITION=COORDINATES",
+          " 0.0, 1.0, 0.0, -1.0, 0.0, 0.0",
+          " 3, 0.0",
+          "*SOLID SECTION, ELSET=PLY0,  MATERIAL=CFRTPX, ORIENTATION=ORI0",
+          "*SOLID SECTION, ELSET=PLY90, MATERIAL=CFRTPX, ORIENTATION=ORI90"]
+
+    # crystallization-coupled viscoelastic UMAT: 30 constants, 23 state vars.
+    # *USER MATERIAL data lines capped at 8 values/line -> pack 8/8/8/6.
+    L += ["**",
+          "*MATERIAL, NAME=CFRTPX",
+          "*DEPVAR",
+          " 23,",
+          "1, alpha, relative crystallinity",
+          "2, g_chile, stiffness fraction",
+          "3, smax, max abs sigma11",
+          "4, aT, WLF shift",
+          "5, aX, crystallinity shift",
+          "*USER MATERIAL, CONSTANTS=30",
+          "** E1 E2 E3  NU12 NU13 NU23  G12 G13",
+          " 135.0e9, 9.0e9, 9.0e9, 0.30, 0.30, 0.45, 5.0e9, 5.0e9,",
+          "** G23  A1 A2 A3  BETA  NAVRAMI KMAX TCRYST",
+          " 3.0e9, -0.3e-6, 28.0e-6, 28.0e-6, -3.0e-3, 2.5, 3.0, 120.0,",
+          "** WCRYST AGEL G0  GINF  G1 TAU1 G2 TAU2   (ginf+g1+g2+g3 = 1)",
+          " 30.0, 0.2, 0.02, 0.3, 0.4, 0.02, 0.2, 0.1,",
+          "** G3 TAU3  WLF_C1 WLF_C2 WLF_TREF(C)  BX",
+          " 0.1, 0.5, 20.0, 80.0, 140.0, 2.0",
+          "*INITIAL CONDITIONS, TYPE=TEMPERATURE",
+          " NALL, 260.0",
+          "*INITIAL CONDITIONS, TYPE=SOLUTION",
+          " EALL, 1.0e-3"]
+
+    nA = nid(0, 0, 0); nB = nid(nx, 0, 0); nC = nid(0, ny, 0)
+    L += ["**",
+          f"*NSET, NSET=NA\n {nA},",
+          f"*NSET, NSET=NB\n {nB},",
+          f"*NSET, NSET=NC\n {nC},",
+          "*BOUNDARY",
+          " NA, 1, 3, 0.0",
+          " NB, 2, 2, 0.0",
+          " NB, 3, 3, 0.0",
+          " NC, 1, 1, 0.0",
+          " NC, 3, 3, 0.0"]
+
+    # melt -> hold -> cool cycle (total-time amplitude on [0,1]); crystallizes on
+    # cooling through the TCRYST window.
+    L += ["**",
+          "*AMPLITUDE, NAME=MELTCOOL, TIME=TOTAL TIME",
+          " 0.0, 260.0, 0.15, 260.0, 1.0, 25.0",
+          "*STEP, NLGEOM=NO, INC=500",
+          "*STATIC",
+          " 0.005, 1.0, 1.0e-6, 0.02",
+          "*TEMPERATURE, AMPLITUDE=MELTCOOL",
+          " NALL, 1.0",
+          "*OUTPUT, FIELD",
+          "*ELEMENT OUTPUT",
+          " S, E, SDV",
+          "*NODE OUTPUT",
+          " U",
+          "*END STEP"]
+    open(path, "w").write("\n".join(L) + "\n")
+    return dict(nodes=NX * NY * NZ, els=nx * ny * nz)
+
+
+# ------------------------------------------- PEEK/carbon crystallization VALIDATION
+def gen_cryst_peek(path, nx=6, ny=4, Lx=20.0e-3, Ly=12.0e-3, tply=0.6e-3):
+    """VALIDATION benchmark for the crystallization-coupled VE UMAT, using
+    literature-typical AS4/PEEK (APC-2) values -- because public crystallization +
+    residual-stress data exist for carbon/PEEK (fluoropolymer-CF data are
+    proprietary). Run this to confirm the METHOD reproduces the known
+    cooling-rate -> crystallinity -> residual-stress behaviour, then swap in the
+    Daikin system once data are available.
+
+    Property provenance (LITERATURE-TYPICAL -- confirm against the cited sources,
+    NOT extracted from a single table):
+      - AS4/PEEK elastic constants: standard APC-2 lamina values.
+      - PEEK crystallization: Avrami/Nakamura n ~ 2.5; bell-shaped K(T) centred in
+        the PEEK crystallization window (Tg~143, Tm~343 C). KMAX calibrated by
+        simulation so alpha -> ~1 over this deck's cool-down (dt-converged).
+      - WLF: universal constants C1=17.4, C2=51.6 at Tref=Tg=143 C.
+      Refs: Parlevliet et al., Composites Part A (2006-07); Tierney & Gillespie,
+      Composites Part A (2004); MDPI Polymers PEEK crystallization (2025)."""
+    nz = 2
+    NX, NY, NZ = nx + 1, ny + 1, nz + 1
+    xs = [Lx * i / nx for i in range(NX)]
+    ys = [Ly * j / ny for j in range(NY)]
+    zs = [tply * k for k in range(NZ)]
+
+    def nid(i, j, k):
+        return 1 + (k * NY + j) * NX + i
+
+    def eid(i, j, k):
+        return 1 + (k * ny + j) * nx + i
+
+    L = ["*HEADING",
+         " Carbon/PEEK crystallization-coupled residual stress -- VALIDATION case",
+         " Nakamura + Prony/WLF (AS4/PEEK literature-typical). cfrtp_cryst_umat_ve.f.",
+         "**", "*NODE, NSET=NALL"]
+    for k in range(NZ):
+        for j in range(NY):
+            for i in range(NX):
+                L.append(f" {nid(i,j,k)}, {xs[i]:.6e}, {ys[j]:.6e}, {zs[k]:.6e}")
+
+    ely0, ely90 = [], []
+    L.append("*ELEMENT, TYPE=C3D8, ELSET=EALL")
+    for k in range(nz):
+        for j in range(ny):
+            for i in range(nx):
+                n0 = nid(i, j, k); n1 = nid(i + 1, j, k); n2 = nid(i + 1, j + 1, k); n3 = nid(i, j + 1, k)
+                m0 = nid(i, j, k + 1); m1 = nid(i + 1, j, k + 1); m2 = nid(i + 1, j + 1, k + 1); m3 = nid(i, j + 1, k + 1)
+                e = eid(i, j, k)
+                L.append(f" {e}, {n0}, {n1}, {n2}, {n3}, {m0}, {m1}, {m2}, {m3}")
+                (ely0 if k == 0 else ely90).append(e)
+    L.append("*ELSET, ELSET=PLY0, GENERATE")
+    L.append(f" {ely0[0]}, {ely0[-1]}, 1")
+    L.append("*ELSET, ELSET=PLY90, GENERATE")
+    L.append(f" {ely90[0]}, {ely90[-1]}, 1")
+
+    L += ["**",
+          "*ORIENTATION, NAME=ORI0, DEFINITION=COORDINATES",
+          " 1.0, 0.0, 0.0,  0.0, 1.0, 0.0",
+          " 3, 0.0",
+          "*ORIENTATION, NAME=ORI90, DEFINITION=COORDINATES",
+          " 0.0, 1.0, 0.0, -1.0, 0.0, 0.0",
+          " 3, 0.0",
+          "*SOLID SECTION, ELSET=PLY0,  MATERIAL=PEEKCF, ORIENTATION=ORI0",
+          "*SOLID SECTION, ELSET=PLY90, MATERIAL=PEEKCF, ORIENTATION=ORI90"]
+
+    # AS4/PEEK crystallization-coupled VE UMAT: 30 constants, 23 state vars.
+    # *USER MATERIAL data lines capped at 8 values/line -> pack 8/8/8/6.
+    L += ["**",
+          "*MATERIAL, NAME=PEEKCF",
+          "*DEPVAR",
+          " 23,",
+          "1, alpha, relative crystallinity",
+          "2, g_chile, stiffness fraction",
+          "3, smax, max abs sigma11",
+          "4, aT, WLF shift",
+          "5, aX, crystallinity shift",
+          "*USER MATERIAL, CONSTANTS=30",
+          "** E1 E2 E3  NU12 NU13 NU23  G12 G13   (AS4/PEEK APC-2)",
+          " 138.0e9, 10.2e9, 10.2e9, 0.30, 0.30, 0.45, 5.7e9, 5.7e9,",
+          "** G23  A1 A2 A3  BETA  NAVRAMI KMAX TCRYST",
+          " 3.5e9, -0.2e-6, 30.0e-6, 30.0e-6, -4.0e-3, 2.5, 12.0, 290.0,",
+          "** WCRYST AGEL G0  GINF  G1 TAU1 G2 TAU2   (ginf+g1+g2+g3 = 1)",
+          " 45.0, 0.1, 0.01, 0.3, 0.4, 0.02, 0.2, 0.1,",
+          "** G3 TAU3  WLF_C1 WLF_C2 WLF_TREF(Tg,C)  BX",
+          " 0.1, 0.5, 17.4, 51.6, 143.0, 2.0",
+          "*INITIAL CONDITIONS, TYPE=TEMPERATURE",
+          " NALL, 380.0",
+          "*INITIAL CONDITIONS, TYPE=SOLUTION",
+          " EALL, 1.0e-3"]
+
+    nA = nid(0, 0, 0); nB = nid(nx, 0, 0); nC = nid(0, ny, 0)
+    L += ["**",
+          f"*NSET, NSET=NA\n {nA},",
+          f"*NSET, NSET=NB\n {nB},",
+          f"*NSET, NSET=NC\n {nC},",
+          "*BOUNDARY",
+          " NA, 1, 3, 0.0",
+          " NB, 2, 2, 0.0",
+          " NB, 3, 3, 0.0",
+          " NC, 1, 1, 0.0",
+          " NC, 3, 3, 0.0"]
+
+    # melt (above Tm=343) -> hold -> cool to RT; crystallizes on cooling through the
+    # ~230-335 C window (TCRYST=290). Total-time amplitude on [0,1].
+    L += ["**",
+          "*AMPLITUDE, NAME=MELTCOOL, TIME=TOTAL TIME",
+          " 0.0, 380.0, 0.15, 380.0, 1.0, 25.0",
+          "*STEP, NLGEOM=NO, INC=500",
+          "*STATIC",
+          " 0.005, 1.0, 1.0e-6, 0.02",
+          "*TEMPERATURE, AMPLITUDE=MELTCOOL",
+          " NALL, 1.0",
+          "*OUTPUT, FIELD",
+          "*ELEMENT OUTPUT",
+          " S, E, SDV",
+          "*NODE OUTPUT",
+          " U",
+          "*END STEP"]
+    open(path, "w").write("\n".join(L) + "\n")
+    return dict(nodes=NX * NY * NZ, els=nx * ny * nz)
+
+
 # --------------------------------------------------------------- delamination (2D)
 def gen_delam(path, nx=60, nzl=2, Lx=60.0e-3, t=0.6e-3, a0=15.0e-3, theta_deg=25.0):
     """2D plane-strain bilayer + cohesive interface (built-in COH2D4 + B-K).
@@ -528,11 +762,15 @@ if __name__ == "__main__":
     here = os.path.dirname(os.path.abspath(__file__))
     c = gen_cure(os.path.join(here, "cfrtp_cure_residual.inp"))
     cve = gen_cure_ve(os.path.join(here, "cfrtp_cure_residual_ve.inp"))
+    cx = gen_cryst_ve(os.path.join(here, "cfrtp_cryst_residual_ve.inp"))
+    cp = gen_cryst_peek(os.path.join(here, "cfrtp_cryst_peek_validation.inp"))
     d = gen_delam(os.path.join(here, "cfrtp_delamination_mixedmode.inp"))
     d3 = gen_delam3d(os.path.join(here, "cfrtp_delamination_3d.inp"))
     s = gen_1elem_sanity(os.path.join(here, "cfrtp_1elem_sanity.inp"))
-    print(f"cure   : {c['nodes']} nodes, {c['els']} C3D8 elements")
-    print(f"cure_ve: {cve['nodes']} nodes, {cve['els']} C3D8 (viscoelastic UMAT)")
-    print(f"delam  : {d['nodes']} nodes, {d['els']} CPE4 + {d['coh']} COH2D4 elements")
-    print(f"delam3d: {d3['nodes']} nodes, {d3['els']} C3D8 + {d3['coh']} COH3D8 elements")
-    print(f"sanity : {s['nodes']} nodes, {s['els']} C3D8 element")
+    print(f"cure    : {c['nodes']} nodes, {c['els']} C3D8 elements")
+    print(f"cure_ve : {cve['nodes']} nodes, {cve['els']} C3D8 (viscoelastic UMAT)")
+    print(f"cryst_ve: {cx['nodes']} nodes, {cx['els']} C3D8 (crystallization+VE UMAT)")
+    print(f"cryst_pk: {cp['nodes']} nodes, {cp['els']} C3D8 (PEEK validation)")
+    print(f"delam   : {d['nodes']} nodes, {d['els']} CPE4 + {d['coh']} COH2D4 elements")
+    print(f"delam3d : {d3['nodes']} nodes, {d3['els']} C3D8 + {d3['coh']} COH3D8 elements")
+    print(f"sanity  : {s['nodes']} nodes, {s['els']} C3D8 element")

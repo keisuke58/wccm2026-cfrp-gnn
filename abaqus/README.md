@@ -24,6 +24,9 @@ inverse-design pipeline. For a real project the physics moves to a commercial so
 | `cfrtp_1elem_sanity.inp` | **complete** single-C3D8 UMAT free-contraction sanity test (3-2-1 support, same cure cycle) | the `[validate]` line each Python seed prints |
 | `cfrtp_cure_umat_ve.f` | UMAT: CHILE **+ thermo-viscoelastic** (generalized-Maxwell / Prony + WLF shift). Hot → fast relaxation, cold → frozen residual stress. 30 constants, 22 STATEV | `cfrtp_viscoelastic_residual_stress.py` |
 | `cfrtp_cure_residual_ve.inp` | **complete** 3D [0/90] (105 nodes, 48 C3D8) driven by the **viscoelastic** UMAT | same |
+| `cfrtp_cryst_umat_ve.f` | UMAT: viscoelastic **+ non-isothermal crystallization** (Nakamura). α = relative crystallinity develops on melt→cool and drives stiffness, shrinkage and the relaxation shift `a_X(α)`. 30 constants, 23 STATEV | `cfrtp_residual_stress_fe.py` (cooling-rate → crystallinity → residual) |
+| `cfrtp_cryst_residual_ve.inp` | **complete** 3D [0/90] (105 nodes, 48 C3D8) driven by the **crystallization-coupled VE** UMAT on a melt→cool cycle | same |
+| `cfrtp_cryst_peek_validation.inp` | **complete** carbon/**PEEK** validation case (105 nodes, 48 C3D8) — literature-typical AS4/PEEK values so the method can be checked against **public** crystallization + residual-stress data (fluoropolymer-CF data are proprietary) | same |
 | `cfrtp_delamination_3d.inp` | **complete** 3D bilayer (656 nodes, 240 C3D8 + 90 COH3D8), built-in cohesive + B-K; a curved delamination **front** develops across the width | `cfrtp_delamination_2d_fe.py` (3D extension) |
 | `gen_inp.py` | regenerates **all** decks (mesh size / geometry / layup / mixity / Prony); pure-Python, no Abaqus/numpy needed | — |
 
@@ -43,6 +46,27 @@ inverse-design pipeline. For a real project the physics moves to a commercial so
     Abaqus counterpart of `cfrtp_viscoelastic_residual_stress.py`. Prony `τ_k` are in the
     deck's time unit — co-calibrate them with the cure-cycle duration (and re-tune the
     kinetics `AK`) before trusting magnitudes.
+  - **Semi-crystalline upgrade** — for a fluoropolymer-matrix (semi-crystalline)
+    CFRTP the most defensible model couples the viscoelasticity with
+    **crystallization kinetics**: **`cfrtp_cryst_umat_ve.f`** (`cfrtp_cryst_residual_ve.inp`)
+    makes α the **relative crystallinity** from a Nakamura non-isothermal law
+    (`dα/dt = n K(T)(1−α)[−ln(1−α)]^((n−1)/n)`, bell-shaped `K(T)` window),
+    developed on a **melt→cool** cycle, driving stiffness `g(α)`, crystallization
+    shrinkage `β·dα` and a crystallinity relaxation shift `a_X = 10^{BX·α}` (crystals
+    freeze relaxation as α→1). This generates the cooling-rate → crystallinity →
+    residual-stress pathway of `cfrtp_residual_stress_fe.py`. The Nakamura integrator
+    is checked against the closed-form isothermal Avrami `α = 1 − exp(−(K t)^n)`.
+  - **Validation on public data** — the Daikin fluoropolymer-CF system is proprietary,
+    but the *method* can be validated on **carbon/PEEK**, for which crystallization
+    kinetics and residual-stress data are public. `cfrtp_cryst_peek_validation.inp`
+    uses literature-typical AS4/PEEK values (Avrami `n≈2.5`; bell `K(T)` centred in the
+    PEEK crystallization window, `Tg≈143`/`Tm≈343 °C`; universal WLF `C1=17.4,
+    C2=51.6` at `Tref=Tg`; `KMAX` calibrated by simulation so α→1 over the cool-down,
+    dt-converged). These are literature-typical values to confirm against the sources,
+    **not** extracted from one table: Parlevliet et al., *Composites Part A* (2006–07,
+    residual stresses in TP composites, 3-part review); Tierney & Gillespie,
+    *Composites Part A* (2004, PEEK non-isothermal kinetics); MDPI *Polymers* (2025,
+    transient PEEK crystallization). Swap in the Daikin system once data are available.
 - **Mixed-mode delamination** — Abaqus has this built in, so it is mostly an `.inp`:
   `*COHESIVE SECTION` + `*DAMAGE INITIATION, CRITERION=QUADS` + `*DAMAGE EVOLUTION,
   TYPE=ENERGY, MIXED MODE BEHAVIOR=BK, POWER=η`. This reproduces the Camanho-Davila

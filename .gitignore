@@ -14,6 +14,8 @@ __pycache__/
 !abaqus/cfrtp_delamination_mixedmode.inp
 !abaqus/cfrtp_1elem_sanity.inp
 !abaqus/cfrtp_cure_residual_ve.inp
+!abaqus/cfrtp_cryst_residual_ve.inp
+!abaqus/cfrtp_cryst_peek_validation.inp
 !abaqus/cfrtp_delamination_3d.inp
 *.dat
 *.msg
