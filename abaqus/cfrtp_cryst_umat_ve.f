@@ -43,7 +43,7 @@ C     STATEV(6..11)  = q_1 (6 comp)   Maxwell branch partial stresses
 C     STATEV(12..17) = q_2 (6 comp)
 C     STATEV(18..23) = q_3 (6 comp)
 C
-C  PROPS (*USER MATERIAL, CONSTANTS=30):
+C  PROPS (*USER MATERIAL, CONSTANTS=31):
 C     1-3   E1,E2,E3        10-12 A1,A2,A3 (CTE, 1/K)
 C     4-6   NU12,NU13,NU23  13    BETA (crystallization shrinkage /dalpha)
 C     7-9   G12,G13,G23     14    NAVRAMI (Avrami/Nakamura exponent n)
@@ -53,8 +53,11 @@ C                           20    GINF
 C                           21-22 G1,TAU1  23-24 G2,TAU2  25-26 G3,TAU3
 C                           27-29 WLF_C1, WLF_C2, WLF_TREF
 C                           30    BX (crystallinity relaxation-shift exponent)
+C                           31    TMELT (no crystallization at/above Tm; undercooling
+C                                 cutoff -- the bare bell K(T) otherwise crystallizes
+C                                 above the melt at slow cooling, see validation/)
 C  Drive with a MELT->COOL temperature cycle via *TEMPERATURE (TEMP/DTEMP);
-C  TCRYST/TREF are in the same temperature unit as TEMP (e.g. deg C).
+C  TCRYST/TREF/TMELT are in the same temperature unit as TEMP (e.g. deg C).
 C =====================================================================
       SUBROUTINE UMAT(STRESS,STATEV,DDSDDE,SSE,SPD,SCD,
      1 RPL,DDSDDT,DRPLDE,DRPLDT,STRAN,DSTRAN,TIME,DTIME,TEMP,DTEMP,
@@ -85,7 +88,7 @@ C ---- unpack properties -------------------------------------------------
       GK(2)=PROPS(23); TAUK(2)=PROPS(24)
       GK(3)=PROPS(25); TAUK(3)=PROPS(26)
       WC1=PROPS(27); WC2=PROPS(28); WTREF=PROPS(29)
-      BX=PROPS(30)
+      BX=PROPS(30); TMELT=PROPS(31)
 C
 C ---- non-isothermal crystallization (Nakamura) over the increment ------
       ALPHA=STATEV(1)
@@ -95,6 +98,9 @@ C ---- non-isothermal crystallization (Nakamura) over the increment ------
       ARGK=-((TC-TCRYST)/WCRYST)**2
       IF (ARGK.LT.-60.D0) ARGK=-60.D0
       XK=XKMAX*EXP(ARGK)
+C     undercooling cutoff: no crystallization at/above the melt temperature
+C     (the bare bell's high-T tail otherwise crystallizes above Tm at slow cooling)
+      IF (TC.GE.TMELT) XK=ZERO
       ARGL=-LOG(ONE-ALPHA)
       IF (ARGL.LT.1.D-12) ARGL=1.D-12
       POWL=(XN-ONE)/XN
