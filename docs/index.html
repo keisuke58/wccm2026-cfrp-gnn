@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Interactive visualization of CFRTP residual-stress and delamination physics: Nakamura crystallization, viscoelastic relaxation, mixed-mode cohesive fronts.">
+<title>CFRTP Process Physics — interactive</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>%F0%9F%8C%A1%EF%B8%8F</text></svg>">
+<style>*{box-sizing:border-box}html,body{margin:0}</style>
+</head>
+<body>
+<style>
+  :root{
+    --bg:#e9edf1; --surface:#ffffff; --surface-2:#f4f7fa; --ink:#141922;
+    --muted:#5a6675; --line:#d6dde5; --line-2:#e6ebf1;
+    --heat:#ff7a1a; --cryst:#12b3a0; --comp:#2f6fed; --tens:#e23b48;
+    --accent:#12b3a0; --accent-ink:#0b1512;
+    --grid:rgba(20,25,34,.08);
+    --shadow:0 1px 2px rgba(16,24,40,.06),0 8px 28px rgba(16,24,40,.07);
+    --fs-mono:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace;
+    --fs-sans:system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#0b0e13; --surface:#141a22; --surface-2:#1a212b; --ink:#eef2f7;
+      --muted:#93a1b2; --line:#26313f; --line-2:#1e2732;
+      --heat:#ff9142; --cryst:#25d3bb; --comp:#5b8cff; --tens:#ff5d68;
+      --accent:#25d3bb; --accent-ink:#04110e;
+      --grid:rgba(255,255,255,.07);
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 34px rgba(0,0,0,.5);
+    }
+  }
+  :root[data-theme="light"]{
+    --bg:#e9edf1; --surface:#ffffff; --surface-2:#f4f7fa; --ink:#141922;
+    --muted:#5a6675; --line:#d6dde5; --line-2:#e6ebf1;
+    --heat:#ff7a1a; --cryst:#12b3a0; --comp:#2f6fed; --tens:#e23b48;
+    --accent:#12b3a0; --accent-ink:#0b1512; --grid:rgba(20,25,34,.08);
+    --shadow:0 1px 2px rgba(16,24,40,.06),0 8px 28px rgba(16,24,40,.07);
+  }
+  :root[data-theme="dark"]{
+    --bg:#0b0e13; --surface:#141a22; --surface-2:#1a212b; --ink:#eef2f7;
+    --muted:#93a1b2; --line:#26313f; --line-2:#1e2732;
+    --heat:#ff9142; --cryst:#25d3bb; --comp:#5b8cff; --tens:#ff5d68;
+    --accent:#25d3bb; --accent-ink:#04110e; --grid:rgba(255,255,255,.07);
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 34px rgba(0,0,0,.5);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--fs-sans);
+    line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto;padding:clamp(20px,4vw,56px) clamp(16px,4vw,40px)}
+  .eyebrow{font-family:var(--fs-mono);font-size:12px;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent);font-weight:600}
+  h1{font-size:clamp(30px,5.5vw,52px);line-height:1.03;letter-spacing:-.02em;
+    margin:.35em 0 .25em;text-wrap:balance;font-weight:800}
+  h2{font-size:clamp(20px,3vw,27px);letter-spacing:-.015em;margin:0 0 .1em;font-weight:750}
+  .lede{color:var(--muted);font-size:clamp(15px,1.9vw,18px);max-width:64ch;text-wrap:pretty}
+  .rule{height:1px;background:var(--line);border:0;margin:0}
+  header .thermorail{height:6px;border-radius:6px;margin:22px 0 0;
+    background:linear-gradient(90deg,var(--comp),var(--cryst),var(--heat),var(--tens))}
+  .meta{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:18px;
+    font-family:var(--fs-mono);font-size:12.5px;color:var(--muted)}
+  .meta b{color:var(--ink);font-weight:600}
+
+  .module{background:var(--surface);border:1px solid var(--line);border-radius:16px;
+    padding:clamp(18px,2.6vw,28px);margin-top:26px;box-shadow:var(--shadow)}
+  .mhead{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .mhead .tag{font-family:var(--fs-mono);font-size:11.5px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--muted);border:1px solid var(--line);
+    padding:3px 9px;border-radius:999px;white-space:nowrap}
+  .mdesc{color:var(--muted);font-size:14.5px;margin:.5em 0 0;max-width:70ch}
+  canvas{display:block;width:100%;height:auto;border-radius:10px;background:var(--surface-2);
+    border:1px solid var(--line-2);margin-top:16px;touch-action:none}
+
+  .controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+    gap:14px 22px;margin-top:18px;align-items:end}
+  .ctl label{display:flex;justify-content:space-between;gap:10px;font-size:13px;
+    color:var(--muted);margin-bottom:6px}
+  .ctl label b{font-family:var(--fs-mono);color:var(--ink);font-variant-numeric:tabular-nums}
+  input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:4px;
+    border-radius:4px;background:var(--line);outline:none;margin:6px 0}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:17px;height:17px;
+    border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--surface);
+    box-shadow:0 1px 4px rgba(0,0,0,.3)}
+  input[type=range]::-moz-range-thumb{width:15px;height:15px;border-radius:50%;
+    background:var(--accent);cursor:pointer;border:2px solid var(--surface)}
+  input[type=range]:focus-visible{box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 45%,transparent)}
+  .btnrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  button.play{font-family:var(--fs-mono);font-size:13px;font-weight:600;cursor:pointer;
+    background:var(--accent);color:var(--accent-ink);border:0;border-radius:8px;
+    padding:9px 16px;letter-spacing:.03em}
+  button.play:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 50%,transparent);outline-offset:2px}
+  button.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
+
+  .readouts{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+    gap:12px;margin-top:18px}
+  .stat{background:var(--surface-2);border:1px solid var(--line-2);border-radius:10px;padding:12px 14px}
+  .stat .k{font-family:var(--fs-mono);font-size:11px;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--muted)}
+  .stat .v{font-family:var(--fs-mono);font-size:22px;font-weight:650;margin-top:3px;
+    font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:12px;
+    font-family:var(--fs-mono);font-size:12px;color:var(--muted)}
+  .legend i{display:inline-block;width:11px;height:11px;border-radius:3px;
+    margin-right:6px;vertical-align:-1px}
+  .note{font-size:13px;color:var(--muted);margin-top:14px;padding-left:12px;
+    border-left:2px solid var(--line)}
+  .pipeline{display:grid;grid-template-columns:repeat(5,1fr);gap:0;margin-top:16px;
+    font-family:var(--fs-mono);font-size:12.5px}
+  .pipeline .step{position:relative;padding:14px 10px 14px 22px;color:var(--muted)}
+  .pipeline .step:not(:last-child)::after{content:"";position:absolute;right:-1px;top:50%;
+    width:0;height:0;border-left:8px solid var(--accent);border-top:6px solid transparent;
+    border-bottom:6px solid transparent;transform:translateY(-50%);opacity:.5}
+  .pipeline .step .n{color:var(--accent);font-weight:700}
+  .pipeline .step b{color:var(--ink);display:block;font-family:var(--fs-sans);
+    font-size:14px;margin-top:2px}
+  @media(max-width:640px){.pipeline{grid-template-columns:1fr 1fr}}
+  footer{color:var(--muted);font-size:12.5px;margin-top:34px;font-family:var(--fs-mono);
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  .physlist{margin:.4em 0 0;padding-left:1.1em;color:var(--muted);font-size:13.5px}
+  .physlist code{font-family:var(--fs-mono);color:var(--ink);font-size:12.5px}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">CFRTP process mechanics · physics-first FE seeds</div>
+    <h1>How residual stress and delamination are born in a thermoplastic composite</h1>
+    <p class="lede">A fluoropolymer-matrix carbon-fibre laminate (Daikin/NEDO context) locks in
+      stress as it <b>melts, crystallises, and cools</b>, then fails along its interfaces. Each
+      module below runs the same constitutive models used in the Abaqus UMAT decks — drag the
+      controls and watch the physics respond.</p>
+    <div class="thermorail" aria-hidden="true"></div>
+    <div class="meta">
+      <span><b>Nakamura</b> crystallisation</span>
+      <span><b>Generalised-Maxwell</b> + WLF viscoelasticity</span>
+      <span><b>Benzeggagh–Kenane</b> mixed-mode cohesive</span>
+      <span>models mirror <b>cfrtp_cryst_umat_ve.f</b> / <b>cfrtp_delamination_3d.inp</b></span>
+    </div>
+  </header>
+
+  <!-- MODULE A -->
+  <section class="module" id="modA">
+    <div class="mhead">
+      <div><h2>1 · Melt → cool → residual stress</h2></div>
+      <span class="tag">Nakamura × CHILE × viscoelastic</span>
+    </div>
+    <p class="mdesc">On cooling from the melt, crystallinity <b style="color:var(--cryst)">α</b>
+      develops through a temperature window (Nakamura); it stiffens the ply and — with thermal +
+      crystallisation shrinkage — builds residual <b style="color:var(--tens)">σ₁₁</b>, partly
+      bled off by temperature/crystallinity-shifted relaxation.</p>
+    <canvas id="cvA" width="1000" height="440" aria-label="Temperature, crystallinity and residual stress versus time"></canvas>
+    <div class="legend">
+      <span><i style="background:var(--heat)"></i>temperature T(t)</span>
+      <span><i style="background:var(--cryst)"></i>relative crystallinity α</span>
+      <span><i style="background:var(--tens)"></i>residual σ₁₁ (constrained ply)</span>
+    </div>
+    <div class="controls">
+      <div class="ctl"><label>Cooling rate <b id="aRateV">medium</b></label>
+        <input type="range" id="aRate" min="0" max="100" value="45"></div>
+      <div class="ctl"><label>Crystallisation window T<sub>c</sub> <b id="aTcV">290 °C</b></label>
+        <input type="range" id="aTc" min="200" max="330" value="290"></div>
+      <div class="ctl"><label>Relaxation strength (1−g<sub>∞</sub>) <b id="aRelV">0.70</b></label>
+        <input type="range" id="aRel" min="0" max="90" value="70"></div>
+      <div class="ctl btnrow">
+        <button class="play" id="aPlay">▶ play cycle</button>
+        <button class="play ghost" id="aReset">reset</button>
+      </div>
+    </div>
+    <div class="readouts">
+      <div class="stat"><div class="k">final crystallinity</div><div class="v" id="aAlpha" style="color:var(--cryst)">—</div></div>
+      <div class="stat"><div class="k">peak |σ₁₁|</div><div class="v" id="aSig" style="color:var(--tens)">—</div></div>
+      <div class="stat"><div class="k">relaxed away</div><div class="v" id="aRelax">—</div></div>
+      <div class="stat"><div class="k">a_T·a_X at RT</div><div class="v" id="aShift">—</div></div>
+    </div>
+    <p class="note">Magnitudes are illustrative (uncalibrated); the <em>shape</em> is the physics.
+      Faster cooling leaves less time in the window → lower α, and freezes relaxation earlier —
+      the competition the model is built to capture.</p>
+  </section>
+
+  <!-- MODULE B -->
+  <section class="module" id="modB">
+    <div class="mhead">
+      <div><h2>2 · Why viscoelasticity matters</h2></div>
+      <span class="tag">elastic vs. relaxed</span>
+    </div>
+    <p class="mdesc">A purely elastic cure calculation over-predicts residual stress. Thermal
+      relaxation bleeds it off during the hot part of the cycle — the difference between a
+      textbook estimate and a measurement-grade one.</p>
+    <canvas id="cvB" width="1000" height="360" aria-label="Elastic versus viscoelastic residual stress over the cure cycle"></canvas>
+    <div class="legend">
+      <span><i style="background:var(--comp)"></i>elastic (no relaxation)</span>
+      <span><i style="background:var(--tens)"></i>viscoelastic (relaxed)</span>
+      <span><i style="background:var(--heat)"></i>temperature</span>
+    </div>
+    <div class="controls">
+      <div class="ctl"><label>Relaxation strength (1−g<sub>∞</sub>) <b id="bRelV">0.70</b></label>
+        <input type="range" id="bRel" min="0" max="92" value="70"></div>
+      <div class="ctl"><label>Relaxation speed (τ) <b id="bTauV">medium</b></label>
+        <input type="range" id="bTau" min="0" max="100" value="50"></div>
+      <div class="ctl btnrow">
+        <button class="play" id="bPlay">▶ play cycle</button>
+        <button class="play ghost" id="bReset">reset</button>
+      </div>
+    </div>
+    <div class="readouts">
+      <div class="stat"><div class="k">elastic peak</div><div class="v" id="bElastic" style="color:var(--comp)">—</div></div>
+      <div class="stat"><div class="k">viscoelastic final</div><div class="v" id="bVisco" style="color:var(--tens)">—</div></div>
+      <div class="stat"><div class="k">relaxed</div><div class="v" id="bPct" style="color:var(--cryst)">—</div></div>
+    </div>
+    <p class="note">The Python seed <code style="font-family:var(--fs-mono)">cfrtp_viscoelastic_residual_stress.py</code>
+      shows ~74 % relaxation for its parameters — this panel reproduces that mechanism with the
+      same generalised-Maxwell update the UMAT uses.</p>
+  </section>
+
+  <!-- MODULE C -->
+  <section class="module" id="modC">
+    <div class="mhead">
+      <div><h2>3 · Delamination front</h2></div>
+      <span class="tag">mixed-mode cohesive · B–K</span>
+    </div>
+    <p class="mdesc">Plan view of the bonded interface. As the loaded tip opens, a cohesive
+      process zone advances and the <b style="color:var(--tens)">delamination front</b> sweeps
+      across the width — its shape set by the mode-mixity (opening vs. shear).</p>
+    <canvas id="cvC" width="1000" height="330" aria-label="Plan view of the delaminating interface with an advancing front"></canvas>
+    <div class="legend">
+      <span><i style="background:var(--cryst)"></i>intact</span>
+      <span><i style="background:var(--heat)"></i>process zone (softening)</span>
+      <span><i style="background:var(--tens)"></i>delaminated (SDEG→1)</span>
+    </div>
+    <div class="controls">
+      <div class="ctl"><label>Applied opening <b id="cLoadV">0%</b></label>
+        <input type="range" id="cLoad" min="0" max="100" value="0"></div>
+      <div class="ctl"><label>Mode mixity θ <b id="cThetaV">30°</b></label>
+        <input type="range" id="cTheta" min="0" max="90" value="30"></div>
+      <div class="ctl btnrow">
+        <button class="play" id="cPlay">▶ advance front</button>
+        <button class="play ghost" id="cReset">reset</button>
+      </div>
+    </div>
+    <div class="readouts">
+      <div class="stat"><div class="k">front position</div><div class="v" id="cFront" style="color:var(--tens)">—</div></div>
+      <div class="stat"><div class="k">delaminated area</div><div class="v" id="cArea">—</div></div>
+      <div class="stat"><div class="k">G_c / G_Ic (B–K)</div><div class="v" id="cGc" style="color:var(--cryst)">—</div></div>
+    </div>
+    <p class="note">B–K envelope <code style="font-family:var(--fs-mono)">G_c(B)=G_Ic+(G_IIc−G_Ic)·B^η</code>:
+      more shear (larger θ) raises the toughness the front must overcome, so it advances less for
+      the same opening. Mirrors <code style="font-family:var(--fs-mono)">cfrtp_delamination_3d.inp</code>.</p>
+  </section>
+
+  <!-- OVERVIEW -->
+  <section class="module" id="modO">
+    <div class="mhead"><div><h2>The whole seed, end to end</h2></div><span class="tag">physics → ML</span></div>
+    <p class="mdesc">Physics (weak-form FE / Abaqus) is the accuracy authority; ML rides on top as
+      a surrogate and inverse-design accelerator — never the source of truth.</p>
+    <div class="pipeline">
+      <div class="step"><span class="n">01</span><b>Process</b>melt → cool cycle, impregnation</div>
+      <div class="step"><span class="n">02</span><b>Residual stress</b>crystallisation + VE relaxation</div>
+      <div class="step"><span class="n">03</span><b>Interface</b>ILSS, residual shear</div>
+      <div class="step"><span class="n">04</span><b>Delamination</b>mixed-mode B–K front</div>
+      <div class="step"><span class="n">05</span><b>ML</b>surrogate · inverse design</div>
+    </div>
+    <ul class="physlist">
+      <li>Crystallisation: <code>dα/dt = n·K(T)·(1−α)·[−ln(1−α)]^((n−1)/n)</code>, bell-shaped <code>K(T)</code></li>
+      <li>Viscoelastic: <code>σ = q∞ + Σ q_k</code>, shifted time <code>τ_k* = a_T(T)·a_X(α)·τ_k</code></li>
+      <li>Cohesive: bilinear traction–separation, Benzeggagh–Kenane mixed-mode toughness</li>
+    </ul>
+  </section>
+
+  <footer>
+    <span>wccm2026-cfrp-gnn · Muramatsu-lab · physics-first, ML-subordinate</span>
+    <span id="motionNote"></span>
+  </footer>
+</div>
+
+<script>
+"use strict";
+(function(){
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const css = k => getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+  const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+
+  // ---------- shared physics (ports of the verified Python mirrors) ----------
+  // Nakamura non-isothermal crystallisation, bell-shaped K(T).
+  function Kof(T,Kmax,Tc,W){const a=-Math.pow((T-Tc)/W,2);return Kmax*Math.exp(a<-60?-60:a);}
+  // Generalised-Maxwell VE increment with WLF (one-sided floored denom = the fixed UMAT).
+  function betaExp(dt,tau){tau=Math.max(tau,1e-20);const xr=dt/tau,e=Math.exp(-xr);
+    return [xr>1e-6?(1-e)/xr:1-0.5*xr, e];}
+
+  // Simulate melt->cool: returns arrays {t,T,alpha,sig,aT,aX}
+  function simProcess(opt){
+    const n=2.5, W=45, Tc=opt.Tc, Kmax=opt.Kmax;
+    const ginf=opt.ginf, gk=[0.4,0.2,0.1].map(g=>g*(1-ginf)/0.7*0.7); // keep sum gk=1-ginf
+    // normalise so ginf+sum(gk)=1
+    const sgk=[0.4,0.2,0.1]; const scale=(1-ginf)/(sgk[0]+sgk[1]+sgk[2]);
+    const GK=sgk.map(g=>g*scale); const TAU=opt.tau.slice();
+    const C=1e10, A=30e-6, beta=-4e-3, g0=0.01, agel=0.1, BX=2.0;
+    const wc1=17.4, wc2=51.6, wtref=143.0;
+    const Thot=380, Trt=25, thold=0.15;
+    const N=opt.N||420, dt=1/N;
+    const t=[],T=[],al=[],sg=[],aTa=[],aXa=[];
+    let a=1e-3, q=[0,0,0], qinf=0, sig=0;
+    const Temp=(tt)=> tt<=thold?Thot: Thot-(Thot-Trt)*(tt-thold)/(1-thold);
+    let prevT=Temp(0);
+    for(let i=0;i<=N;i++){
+      const tt=i*dt, Tn=Temp(tt), Tm=0.5*(prevT+Tn), dT=Tn-prevT;
+      // crystallisation
+      let aa=clamp(a,1e-8,1-1e-10);
+      let argl=-Math.log(1-aa); if(argl<1e-12) argl=1e-12;
+      const rate=n*Kof(Tm,Kmax,Tc,W)*(1-aa)*Math.pow(argl,(n-1)/n);
+      const da=Math.max(rate*dt,0); a=Math.min(a+da,1);
+      // stiffness
+      let x=clamp((a-agel)/(1-agel),0,1); const g=g0+(1-g0)*x;
+      // eigenstrain (fully constrained ply => strain 0)
+      const deig=A*dT+beta*da;
+      const dsi=g*C*(0-deig);
+      // WLF x crystallinity shift (fixed one-sided floor)
+      let dtt=Tm-wtref, den=wc2+dtt; if(den<1) den=1;
+      let pw=-wc1*dtt/den; pw=clamp(pw,-30,30); const aT=Math.pow(10,pw);
+      const aX=Math.pow(10,Math.min(30,BX*a)); const ash=aT*aX;
+      // VE update
+      qinf+=ginf*dsi; let s=qinf;
+      for(let k=0;k<3;k++){const [b,e]=betaExp(dt,ash*TAU[k]); q[k]=e*q[k]+GK[k]*b*dsi; s+=q[k];}
+      sig=s;
+      t.push(tt);T.push(Tn);al.push(a);sg.push(sig);aTa.push(aT);aXa.push(aX);
+      prevT=Tn;
+    }
+    return {t,T,al,sg,aTa,aXa};
+  }
+
+  // Cure cycle (heat->hold->cool) for elastic vs viscoelastic comparison.
+  function simCure(opt){
+    const C=1e10, A=28e-6;
+    const ginf=opt.ginf, sgk=[0.4,0.2,0.1], scale=(1-ginf)/0.7, GK=sgk.map(g=>g*scale);
+    const TAU=[0.02,0.1,0.5].map(x=>x*opt.tauScale);
+    const wc1=20, wc2=80, wtref=140;
+    const N=420, dt=1/N;
+    const amp=[[0,25],[0.25,180],[0.55,180],[1,25]];
+    const Tof=(tt)=>{for(let i=0;i<amp.length-1;i++){const[a0,v0]=amp[i],[a1,v1]=amp[i+1];
+      if(tt<=a1)return v0+(v1-v0)*(tt-a0)/(a1-a0);}return 25;};
+    const t=[],T=[],el=[],ve=[];
+    let prevT=Tof(0), qinf=0, q=[0,0,0], sigE=0;
+    for(let i=0;i<=N;i++){
+      const tt=i*dt,Tn=Tof(tt),Tm=0.5*(prevT+Tn),dT=Tn-prevT;
+      const dsi=C*(-(A*dT));          // constrained ply, stiffness ~1 after gel (simplified)
+      sigE+=dsi;                       // elastic: no relaxation
+      let dtt=Tm-wtref,den=wc2+dtt; if(den<1)den=1; let pw=-wc1*dtt/den; pw=clamp(pw,-30,30);
+      const aT=Math.pow(10,pw), ash=aT;
+      qinf+=ginf*dsi; let s=qinf;
+      for(let k=0;k<3;k++){const[b,e]=betaExp(dt,ash*TAU[k]); q[k]=e*q[k]+GK[k]*b*dsi; s+=q[k];}
+      t.push(tt);T.push(Tn);el.push(sigE);ve.push(s);prevT=Tn;
+    }
+    return {t,T,el,ve};
+  }
+
+  // ---------- canvas helpers ----------
+  function fitDPR(cv){const dpr=Math.min(devicePixelRatio||1,2);const r=cv.getBoundingClientRect();
+    cv.width=Math.round(r.width*dpr);cv.height=Math.round((cv.getAttribute("data-h")||cv.height)*1);
+    const h=parseInt(cv.dataset.h||cv.height);cv.width=Math.round(r.width*dpr);cv.height=Math.round(h*dpr);
+    const g=cv.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h};}
+  function grid(g,x,y,w,h,rows,cols){g.strokeStyle=css("--grid");g.lineWidth=1;g.beginPath();
+    for(let i=0;i<=rows;i++){const yy=y+h*i/rows;g.moveTo(x,yy);g.lineTo(x+w,yy);}
+    for(let j=0;j<=cols;j++){const xx=x+w*j/cols;g.moveTo(xx,y);g.lineTo(xx,y+h);}g.stroke();}
+  function line(g,xs,ys,x,y,w,h,xmin,xmax,ymin,ymax,color,lw,dash){
+    g.strokeStyle=color;g.lineWidth=lw||2;g.setLineDash(dash||[]);g.beginPath();
+    for(let i=0;i<xs.length;i++){const px=x+w*(xs[i]-xmin)/(xmax-xmin),
+      py=y+h-h*(ys[i]-ymin)/(ymax-ymin);i?g.lineTo(px,py):g.moveTo(px,py);}
+    g.stroke();g.setLineDash([]);}
+  function label(g,txt,x,y,color,align){g.fillStyle=color||css("--muted");
+    g.font="12px ui-monospace,Menlo,monospace";g.textAlign=align||"left";g.fillText(txt,x,y);}
+
+  // ===================== MODULE A =====================
+  const A={cv:document.getElementById("cvA")}; A.cv.dataset.h=440;
+  function aParams(){
+    const rate=+document.getElementById("aRate").value;   // 0..100
+    const Tc=+document.getElementById("aTc").value;
+    const rel=+document.getElementById("aRel").value/100; // 0..0.9
+    // cooling rate -> number of steps in window (slower cool = more steps = higher Kmax reach)
+    const Kmax=6+ (100-rate)/100*22;                       // slow cool -> larger effective K
+    const ginf=clamp(1-rel,0.08,1);
+    return {Tc,Kmax,ginf,tau:[0.02,0.1,0.5],N:420,rate,rel};
+  }
+  function aDraw(prog){
+    const p=aParams(); const S=A.sim||(A.sim=simProcess(p));
+    const {g,w,h}=fitDPR(A.cv);
+    g.clearRect(0,0,w,h);
+    const padL=46,padR=16,padT=16,gap=26;
+    const topH=(h-padT-gap-24)*0.56, botH=(h-padT-gap-24)*0.44;
+    const x=padL, w2=w-padL-padR;
+    const yTop=padT, yBot=padT+topH+gap;
+    // top: T & alpha
+    grid(g,x,yTop,w2,topH,4,8);
+    const Tmin=0,Tmax=400;
+    line(g,S.t,S.T,x,yTop,w2,topH,0,1,Tmin,Tmax,css("--heat"),2.4);
+    line(g,S.t,S.al,x,yTop,w2,topH,0,1,0,1,css("--cryst"),2.4);
+    label(g,"400°C",x-6,yTop+10,css("--muted"),"right");
+    label(g,"0",x-6,yTop+topH,css("--muted"),"right");
+    label(g,"α=1",x+w2+2>w-8?w-2:x+4,yTop+12,css("--cryst"),"left");
+    // bottom: sigma
+    grid(g,x,yBot,w2,botH,4,8);
+    let smin=Math.min(...S.sg,0), smax=Math.max(...S.sg,1);
+    const pad=(smax-smin)*0.12||1; smin-=pad; smax+=pad;
+    // zero axis
+    const zy=yBot+botH-botH*(0-smin)/(smax-smin);
+    g.strokeStyle=css("--line");g.lineWidth=1;g.beginPath();g.moveTo(x,zy);g.lineTo(x+w2,zy);g.stroke();
+    line(g,S.t,S.sg,x,yBot,w2,botH,0,1,smin,smax,css("--tens"),2.6);
+    label(g,"σ₁₁",x-6,yBot+12,css("--muted"),"right");
+    label(g,"time  (melt → cool)",x+w2,yBot+botH+18,css("--muted"),"right");
+    label(g,"T, α",x-6,yTop-4,css("--muted"),"left");
+    // cursor
+    const pc=clamp(prog==null?1:prog,0,1);
+    const cx=x+w2*pc;
+    g.strokeStyle=css("--accent");g.lineWidth=1.5;g.setLineDash([4,4]);
+    g.beginPath();g.moveTo(cx,yTop);g.lineTo(cx,yBot+botH);g.stroke();g.setLineDash([]);
+    const idx=Math.round(pc*(S.t.length-1));
+    // marker dots
+    const dot=(yy0,hh,val,vmin,vmax,col)=>{const py=yy0+hh-hh*(val-vmin)/(vmax-vmin);
+      g.fillStyle=col;g.beginPath();g.arc(cx,py,3.4,0,7);g.fill();};
+    dot(yTop,topH,S.T[idx],Tmin,Tmax,css("--heat"));
+    dot(yTop,topH,S.al[idx],0,1,css("--cryst"));
+    dot(yBot,botH,S.sg[idx],smin,smax,css("--tens"));
+    // readouts
+    const af=S.al[S.al.length-1];
+    const speak=Math.max(...S.sg.map(Math.abs));
+    document.getElementById("aAlpha").textContent=af.toFixed(3);
+    document.getElementById("aSig").textContent=(speak/1e6).toFixed(1)+" MPa*";
+    // relaxed metric: compare peak transient vs final magnitude
+    const sfin=Math.abs(S.sg[S.sg.length-1]);
+    const rlx=speak>0?clamp(1-sfin/speak,0,1):0;
+    document.getElementById("aRelax").textContent=(rlx*100).toFixed(0)+"%";
+    document.getElementById("aShift").textContent=(S.aTa[S.aTa.length-1]*S.aXa[S.aXa.length-1]).toExponential(1);
+    document.getElementById("aRateV").textContent=p.rate<33?"slow":p.rate<66?"medium":"fast";
+    document.getElementById("aTcV").textContent=p.Tc+" °C";
+    document.getElementById("aRelV").textContent=p.rel.toFixed(2);
+  }
+  function aInvalidate(){A.sim=null;aDraw(A.prog);}
+  ["aRate","aTc","aRel"].forEach(id=>document.getElementById(id).addEventListener("input",aInvalidate));
+
+  // ===================== MODULE B =====================
+  const B={cv:document.getElementById("cvB")}; B.cv.dataset.h=360;
+  function bParams(){const rel=+document.getElementById("bRel").value/100;
+    const tauScale=0.4+(+document.getElementById("bTau").value/100)*2.2;
+    return {ginf:clamp(1-rel,0.08,1),tauScale,rel};}
+  function bDraw(prog){
+    const p=bParams(); const S=B.sim||(B.sim=simCure(p));
+    const {g,w,h}=fitDPR(B.cv);g.clearRect(0,0,w,h);
+    const padL=46,padR=16,padT=16,padB=28,x=padL,w2=w-padL-padR,y=padT,hh=h-padT-padB;
+    grid(g,x,y,w2,hh,4,8);
+    // temperature (faint, own scale)
+    line(g,S.t,S.T,x,y,w2,hh,0,1,0,200,css("--heat"),1.6,[5,4]);
+    let vals=S.el.concat(S.ve); let smin=Math.min(...vals,0),smax=Math.max(...vals,0);
+    const pad=(smax-smin)*0.1||1;smin-=pad;smax+=pad;
+    const zy=y+hh-hh*(0-smin)/(smax-smin);
+    g.strokeStyle=css("--line");g.lineWidth=1;g.beginPath();g.moveTo(x,zy);g.lineTo(x+w2,zy);g.stroke();
+    line(g,S.t,S.el,x,y,w2,hh,0,1,smin,smax,css("--comp"),2.4,[6,4]);
+    line(g,S.t,S.ve,x,y,w2,hh,0,1,smin,smax,css("--tens"),2.8);
+    label(g,"σ₁₁",x-6,y+12,css("--muted"),"right");
+    label(g,"cure cycle: 25 → 180 → 25 °C",x+w2,y+hh+18,css("--muted"),"right");
+    const pc=clamp(prog==null?1:prog,0,1),cx=x+w2*pc;
+    g.strokeStyle=css("--accent");g.lineWidth=1.5;g.setLineDash([4,4]);
+    g.beginPath();g.moveTo(cx,y);g.lineTo(cx,y+hh);g.stroke();g.setLineDash([]);
+    const ep=Math.max(...S.el.map(Math.abs)), vf=Math.abs(S.ve[S.ve.length-1]);
+    document.getElementById("bElastic").textContent=(ep/1e6).toFixed(1)+" MPa*";
+    document.getElementById("bVisco").textContent=(vf/1e6).toFixed(1)+" MPa*";
+    document.getElementById("bPct").textContent=ep>0?((1-vf/ep)*100).toFixed(0)+"%":"—";
+    document.getElementById("bRelV").textContent=p.rel.toFixed(2);
+    document.getElementById("bTauV").textContent=(+document.getElementById("bTau").value)<33?"fast":(+document.getElementById("bTau").value)<66?"medium":"slow";
+  }
+  function bInvalidate(){B.sim=null;bDraw(B.prog);}
+  ["bRel","bTau"].forEach(id=>document.getElementById(id).addEventListener("input",bInvalidate));
+
+  // ===================== MODULE C =====================
+  const C={cv:document.getElementById("cvC")}; C.cv.dataset.h=330;
+  const NXc=64, NYc=22, a0frac=0.25;   // pre-crack fraction
+  function cDraw(){
+    const load=+document.getElementById("cLoad").value/100;   // applied opening 0..1
+    const theta=+document.getElementById("cTheta").value;     // deg
+    const th=theta*Math.PI/180;
+    // B-K: Gc(B)/GIc ; B = GII/(GI+GII) ~ sin^2 over (sin^2+cos^2)=sin^2? use mixity
+    const GIc=1, GIIc=3, eta=1.6;
+    const B=Math.sin(th)**2;                 // mode II fraction proxy
+    const Gc=GIc+(GIIc-GIc)*Math.pow(B,eta); // toughness ratio the front must beat
+    // front position: opening drives energy ~ load; front advances where load/Gc exceeds x-threshold
+    // effective drive; more shear (higher Gc) => front advances less
+    const drive=load*2.4/Gc;
+    const {g,w,h}=fitDPR(C.cv);g.clearRect(0,0,w,h);
+    const padL=40,padR=14,padT=14,padB=26,x=padL,y=padT,w2=w-padL-padR,hh=h-padT-padB;
+    const cw=w2/NXc, chh=hh/NYc;
+    let damaged=0, frontX=a0frac;
+    for(let iy=0;iy<NYc;iy++){
+      const yc=(iy+0.5)/NYc;                       // 0..1 across width
+      // front slightly curved: shear pulls edges/centre differently
+      const curve=(theta/90)*0.10*Math.cos((yc-0.5)*Math.PI);
+      for(let ix=0;ix<NXc;ix++){
+        const xc=ix/NXc;
+        let sdeg;
+        if(xc<a0frac){sdeg=1;}                      // pre-crack: already open
+        else{
+          const pos=(xc-a0frac)/(1-a0frac);
+          const fpos=clamp(drive+curve,0,1.4);
+          const d=(fpos-pos)/0.12;                  // process-zone width ~0.12
+          sdeg=clamp(d,0,1);
+        }
+        if(sdeg>0.5 && xc>=a0frac){damaged++; if(xc>frontX)frontX=xc;}
+        // colour map: intact(cryst) -> process(heat) -> delaminated(tens)
+        let col;
+        if(sdeg<=0.001){col=css("--cryst");}
+        else if(sdeg>=0.999){col=css("--tens");}
+        else{ // blend heat in the middle
+          col = sdeg<0.5? mix(css("--cryst"),css("--heat"),sdeg/0.5)
+                        : mix(css("--heat"),css("--tens"),(sdeg-0.5)/0.5);
+        }
+        g.fillStyle=col;
+        g.globalAlpha = xc<a0frac?0.85:1;
+        g.fillRect(x+ix*cw+0.5,y+iy*chh+0.5,cw-1,chh-1);
+        g.globalAlpha=1;
+      }
+    }
+    // front line
+    const fx=x+w2*clamp(frontX,0,1);
+    g.strokeStyle=css("--ink");g.lineWidth=1.5;g.setLineDash([5,4]);
+    g.beginPath();g.moveTo(fx,y);g.lineTo(fx,y+hh);g.stroke();g.setLineDash([]);
+    label(g,"loaded tip",x+2,y+hh+18,css("--muted"),"left");
+    label(g,"bonded →",x+w2,y+hh+18,css("--muted"),"right");
+    label(g,"width",x-6,y+hh/2,css("--muted"),"right");
+    document.getElementById("cFront").textContent=(clamp(frontX,0,1)*100).toFixed(0)+"%";
+    document.getElementById("cArea").textContent=(100*damaged/(NXc*NYc)).toFixed(0)+"%";
+    document.getElementById("cGc").textContent=Gc.toFixed(2);
+    document.getElementById("cLoadV").textContent=(load*100).toFixed(0)+"%";
+    document.getElementById("cThetaV").textContent=theta+"°";
+  }
+  function mix(c1,c2,t){const a=parse(c1),b=parse(c2);
+    return `rgb(${Math.round(a[0]+(b[0]-a[0])*t)},${Math.round(a[1]+(b[1]-a[1])*t)},${Math.round(a[2]+(b[2]-a[2])*t)})`;}
+  function parse(c){c=c.trim();
+    if(c[0]==="#"){if(c.length===4)c="#"+[...c.slice(1)].map(ch=>ch+ch).join("");
+      return [parseInt(c.slice(1,3),16),parseInt(c.slice(3,5),16),parseInt(c.slice(5,7),16)];}
+    const m=c.match(/(\d+\.?\d*)/g);return m?m.slice(0,3).map(Number):[128,128,128];}
+  ["cLoad","cTheta"].forEach(id=>document.getElementById(id).addEventListener("input",cDraw));
+
+  // ---------- play controllers ----------
+  function makePlayer(drawFn,slider,progKey,obj){
+    let raf=null,t0=null;const dur=4200;
+    return function(){
+      if(raf){cancelAnimationFrame(raf);raf=null;return;}
+      t0=null;
+      const tick=(ts)=>{if(!t0)t0=ts;const p=clamp((ts-t0)/dur,0,1);
+        obj[progKey]=p; if(slider)slider.value=Math.round(p*(+slider.max));
+        drawFn(p); if(slider)slider.dispatchEvent(new Event("_scrub"));
+        if(p<1){raf=requestAnimationFrame(tick);}else{raf=null;}};
+      raf=requestAnimationFrame(tick);
+    };
+  }
+  // A
+  const aPlay=makePlayer(aDraw,null,"prog",A);
+  document.getElementById("aPlay").addEventListener("click",e=>{aPlay();e.target.textContent=e.target.textContent[0]==="▶"?"⏸ playing":"▶ play cycle";});
+  document.getElementById("aReset").addEventListener("click",()=>{A.prog=1;aDraw(1);document.getElementById("aPlay").textContent="▶ play cycle";});
+  // B
+  const bPlay=makePlayer(bDraw,null,"prog",B);
+  document.getElementById("bPlay").addEventListener("click",e=>{bPlay();e.target.textContent=e.target.textContent[0]==="▶"?"⏸ playing":"▶ play cycle";});
+  document.getElementById("bReset").addEventListener("click",()=>{B.prog=1;bDraw(1);document.getElementById("bPlay").textContent="▶ play cycle";});
+  // C: play ramps the load slider
+  (function(){let raf=null,t0=null;const dur=4200,sl=document.getElementById("cLoad");
+    const btn=document.getElementById("cPlay");
+    btn.addEventListener("click",()=>{
+      if(raf){cancelAnimationFrame(raf);raf=null;btn.textContent="▶ advance front";return;}
+      t0=null;btn.textContent="⏸ advancing";
+      const tick=(ts)=>{if(!t0)t0=ts;const p=clamp((ts-t0)/dur,0,1);
+        sl.value=Math.round(p*100);cDraw();
+        if(p<1)raf=requestAnimationFrame(tick);else{raf=null;btn.textContent="▶ advance front";}};
+      raf=requestAnimationFrame(tick);});
+    document.getElementById("cReset").addEventListener("click",()=>{sl.value=0;cDraw();});
+  })();
+
+  // ---------- init + responsiveness ----------
+  function drawAll(){aDraw(A.prog==null?1:A.prog);bDraw(B.prog==null?1:B.prog);cDraw();}
+  A.prog=1;B.prog=1;
+  let rt=null;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(drawAll,120);});
+  new MutationObserver(drawAll).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+  document.getElementById("motionNote").textContent = reduce?"reduced-motion: showing final states":"drag · play · toggle theme";
+  drawAll();
+  // gentle auto-run once (unless reduced motion)
+  if(!reduce){ setTimeout(()=>document.getElementById("aPlay").click(), 500); }
+})();
+</script>
+</body>
+</html>
