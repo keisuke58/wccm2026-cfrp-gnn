@@ -30,13 +30,15 @@ The bare bell `K(T) = KMAX·exp(−((T−TCRYST)/WCRYST)²)` used in the UMAT/de
 This harness adds an **undercooling cutoff** (`K = 0 for T ≥ Tm`), after which Tp
 stays below Tm and the trends come out right.
 
-**Recommended next step (physics deepening):**
-1. Add the same `Tm` cutoff to `cfrtp_cryst_umat_ve.f` (small, safe — needs a
-   re-verify run on the Abaqus box), and/or
-2. Move `K(T)` to the **Hoffman–Lauritzen** form (transport × nucleation factors,
-   vanishing at **both** Tg and Tm) for quantitative Tp. The crude bell reproduces
+**Status / next step (physics deepening):**
+1. ✅ **Done** — the `Tm` undercooling cutoff is now in `cfrtp_cryst_umat_ve.f`
+   (new prop `TMELT` = PROPS(31), `CONSTANTS=31`; `K=0` for `T ≥ Tm`). Both
+   crystallization decks pass `TMELT` (250 °C fluoro, 343 °C PEEK). **Needs a
+   re-verify run on the Abaqus box** (new Fortran).
+2. ⏳ Move `K(T)` to the **Hoffman–Lauritzen** form (transport × nucleation factors,
+   vanishing at **both** Tg and Tm) for quantitative Tp. The bell+cutoff reproduces
    the qualitative laws but predicts slow-cool Tp too close to Tm (~338 vs the
-   literature PEEK ~305–310 °C).
+   literature PEEK ~305–310 °C) — do this alongside a digitized-data fit.
 
 ## Quantitative comparison hook
 
