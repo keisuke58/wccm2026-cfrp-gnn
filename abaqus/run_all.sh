@@ -7,6 +7,9 @@
 #   bash run_all.sh                                        # runs both jobs + summary
 #   bash run_all.sh cure                                   # cure job only
 #   bash run_all.sh delam                                  # delamination job only
+#   bash run_all.sh sanity                                 # 1-element free-contraction check
+#   bash run_all.sh ve                                     # viscoelastic cure job
+#   bash run_all.sh delam3d                                # 3D mixed-mode delamination
 #
 # Nothing here reaches back to the sandbox; it runs entirely on your machine.
 set -euo pipefail
@@ -25,12 +28,30 @@ run_delam() {
   "$ABQ" job=cfrtp_delamination_mixedmode interactive double
   echo "  -> cfrtp_delamination_mixedmode.odb"
 }
+run_sanity() {
+  echo "=== 1-element free-contraction sanity (UMAT) -- expect residual ~0 ==="
+  "$ABQ" job=cfrtp_1elem_sanity user=cfrtp_cure_umat.f interactive double
+  echo "  -> cfrtp_1elem_sanity.odb"
+}
+run_ve() {
+  echo "=== cure residual stress (VISCOELASTIC UMAT) ==="
+  "$ABQ" job=cfrtp_cure_residual_ve user=cfrtp_cure_umat_ve.f interactive double
+  echo "  -> cfrtp_cure_residual_ve.odb"
+}
+run_delam3d() {
+  echo "=== 3D mixed-mode delamination (COH3D8 + B-K) ==="
+  "$ABQ" job=cfrtp_delamination_3d interactive double
+  echo "  -> cfrtp_delamination_3d.odb"
+}
 
 case "$WHICH" in
-  cure)  run_cure ;;
-  delam) run_delam ;;
-  all)   run_cure; run_delam ;;
-  *) echo "usage: bash run_all.sh [cure|delam|all]"; exit 2 ;;
+  cure)    run_cure ;;
+  delam)   run_delam ;;
+  sanity)  run_sanity ;;
+  ve)      run_ve ;;
+  delam3d) run_delam3d ;;
+  all)     run_cure; run_delam ;;
+  *) echo "usage: bash run_all.sh [cure|delam|sanity|ve|delam3d|all]"; exit 2 ;;
 esac
 
 echo "=== post-processing (odb -> summary) ==="
