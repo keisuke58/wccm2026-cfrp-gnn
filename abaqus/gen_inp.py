@@ -383,7 +383,9 @@ def gen_cryst_ve(path, nx=6, ny=4, Lx=20.0e-3, Ly=12.0e-3, tply=0.6e-3):
           "*INITIAL CONDITIONS, TYPE=TEMPERATURE",
           " NALL, 260.0",
           "*INITIAL CONDITIONS, TYPE=SOLUTION",
-          " EALL, 1.0e-3"]
+          " EALL, 1.0e-3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,",
+          " 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,",
+          " 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0"]
 
     nA = nid(0, 0, 0); nB = nid(nx, 0, 0); nC = nid(0, ny, 0)
     L += ["**",
@@ -504,7 +506,9 @@ def gen_cryst_peek(path, nx=6, ny=4, Lx=20.0e-3, Ly=12.0e-3, tply=0.6e-3):
           "*INITIAL CONDITIONS, TYPE=TEMPERATURE",
           " NALL, 380.0",
           "*INITIAL CONDITIONS, TYPE=SOLUTION",
-          " EALL, 1.0e-3"]
+          " EALL, 1.0e-3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,",
+          " 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,",
+          " 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0"]
 
     nA = nid(0, 0, 0); nB = nid(nx, 0, 0); nC = nid(0, ny, 0)
     L += ["**",
