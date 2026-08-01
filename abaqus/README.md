@@ -10,17 +10,18 @@ inverse-design pipeline. For a real project the physics moves to a commercial so
 
 > ✅ **VERIFIED IN ABAQUS 2024** (2026-07-28, on a licensed box). All three decks run
 > and converge cleanly (`THE ANALYSIS HAS COMPLETED SUCCESSFULLY`, no severe
-> discontinuity iterations, no cutbacks). Summary below ("Verified results"); see that
-> section for one known cross-check gap (a `BETA` cure-shrinkage property mismatch
-> against the Python seed) that is flagged but not yet reconciled.
+> discontinuity iterations, no cutbacks). Summary below ("Verified results").
 >
 > ✅ **UPDATE (2026-08-01)**: all seven decks (`sanity`, `cure`, `ve`, `crystve`,
-> `crystpeek`, `delam`, `delam3d`) verified. Fixed two real bugs found along the way:
-> (1) `gen_inp.py`'s crystallization-coupled decks under-specified `*INITIAL
+> `crystpeek`, `delam`, `delam3d`) verified. Fixed three real bugs found along the
+> way: (1) `gen_inp.py`'s crystallization-coupled decks under-specified `*INITIAL
 > CONDITIONS, TYPE=SOLUTION` (1 value against `*DEPVAR, 23`), which Abaqus 2024
 > rejects outright; (2) `postprocess.py`'s delamination-front element count summed
 > raw `SDEG` field values instead of distinct elements, over-counting damaged
-> elements 2×/4× for COH2D4/COH3D8. See "Verified results (2026-08-01)" below.
+> elements 2×/4× for COH2D4/COH3D8; (3) a WLF-shift pole in both viscoelastic UMATs
+> was silently un-freezing relaxation for the coldest part of the cool-down. Also
+> **closed** the `BETA` cure-shrinkage mismatch against the Python seed (now `-4e-3`
+> on both sides). See "Verified results (2026-08-01)" below.
 
 ## Files
 
@@ -155,15 +156,16 @@ tune the UMAT constants, cohesive parameters, or increment controls.
 E1=135 GPa (solver round-off). Eigenstrain sign / BC set confirmed correct.
 
 **Cure `[0/90]` laminate** (`cfrtp_cure_residual.inp`) — converged (53 increments, no
-cutbacks). `postprocess.py` output:
+cutbacks). `postprocess.py` output (post-`BETA` reconciliation, see below —
+originally `[-71.7, 13.1]` MPa / `0.053` mm at `BETA=-3.0e-3`):
 ```
-residual sigma_11 range: [-71.7, 13.1] MPa
-warpage max|U3|: 0.053 mm
+residual sigma_11 range: [-76.4, 14.0] MPa
+warpage max|U3|: 0.071 mm
 degree of cure alpha: [0.988, 0.988]
 ```
 A 2-ply `[0/90]` is *unsymmetric* in classical laminate theory (bending-extension
-coupling), so non-zero warpage is expected, not a defect. 0.053 mm over a 20×12 mm,
-1.2 mm-thick plate (~0.26% of span) is modest for the CTE/cure-shrinkage mismatch size.
+coupling), so non-zero warpage is expected, not a defect. 0.071 mm over a 20×12 mm,
+1.2 mm-thick plate (~0.35% of span) is modest for the CTE/cure-shrinkage mismatch size.
 
 **Mixed-mode delamination** (`cfrtp_delamination_mixedmode.inp`) — converged (55
 increments, no cutbacks, equilibrium iterations peak at 9-10 through the softening
@@ -197,15 +199,15 @@ being past the softening onset — not a meshing or convergence problem.
 <script>.py`:
 - `cfrp_cure_residual_stress_fe.py` (direct counterpart of `cfrtp_cure_residual.inp`):
   single-ply free contraction ~0 (matches); `[0/90]` σ_xx range **[-138.7, 77.0] MPa**
-  vs Abaqus's **[-71.7, 13.1] MPa** — same sign pattern, same order of magnitude, but
-  ~2-2.5× wider in the Python seed. Root causes found: (1) **`BETA` (cure-shrinkage
-  coefficient) mismatch** — Python uses `BETA_T=-4e-3`, the Abaqus UMAT `*USER
-  MATERIAL` uses `BETA=-3.0e-3` (a ~33% property difference, not yet reconciled —
-  pick one and edit the other); (2) ply thickness differs 2× (Python: 0.3 mm/ply,
-  0.6 mm laminate; Abaqus: 0.6 mm/ply, 1.2 mm laminate); (3) 2D plane-stress CST vs
-  full 3D C3D8 + different mesh density. `cfrtp_residual_stress_fe.py` is a
-  *different* cycle (fluoropolymer melt→RT at 340 °C) and is not the matching
-  counterpart for this cure deck.
+  vs Abaqus's **[-76.4, 14.0] MPa** (post-`BETA` fix, was `[-71.7, 13.1]` MPa) — same
+  sign pattern, same order of magnitude, still ~1.8× wider in the Python seed. The
+  `BETA` mismatch is now reconciled (both `-4e-3`, see "Open item" below — closed);
+  the remaining gap is the two structural differences that were never expected to
+  match exactly: (1) ply thickness differs 2× (Python: 0.3 mm/ply, 0.6 mm laminate;
+  Abaqus: 0.6 mm/ply, 1.2 mm laminate); (2) 2D plane-stress CST vs full 3D C3D8 +
+  different mesh density. `cfrtp_residual_stress_fe.py` is a *different* cycle
+  (fluoropolymer melt→RT at 340 °C) and is not the matching counterpart for this
+  cure deck.
 - `cfrtp_cohesive_mixedmode.py` (cohesive-law point check, no BVP): properties match
   the deck exactly (GIc/GIIc=200/600 N/m, tn/ts=12/18 MPa, B-K η=1.6).
 - `cfrtp_delamination_2d_fe.py` (direct counterpart of the mixedmode deck): **same**
@@ -217,9 +219,15 @@ being past the softening onset — not a meshing or convergence problem.
   the early stage (Δa 2 mm of 45 mm) of the same regime — consistent with the `lcz`
   finding above, not a discrepancy.
 
-**Open item**: reconcile the `BETA` cure-shrinkage constant between the UMAT
-(`gen_cure()` in `gen_inp.py`, currently `-3.0e-3`) and `cfrp_cure_residual_stress_fe.py`
-(currently `-4e-3`) if exact quantitative parity with the Python seed is wanted.
+**Open item — CLOSED (2026-08-01)**: `BETA` is now `-4.0e-3` in `gen_cure()`,
+`gen_1elem_sanity()`, and `gen_cure_ve()` in `gen_inp.py` (matching
+`cfrp_cure_residual_stress_fe.py`'s `BETA_T=-4e-3`), regenerated and rerun. `sanity`
+still confirms ~0 residual (BETA magnitude doesn't affect a free-contraction check).
+The `[0/90]` cure job's peak σ₁₁ moved `-71.7 → -76.4` MPa and warpage `0.053 → 0.071`
+mm — a real but modest shift, since `BETA` only changes the transverse crystallization/
+cure-shrinkage eigenstrain, one of several inputs to the interlaminar mismatch. The
+remaining ~1.8× gap to the Python seed is the ply-thickness and 2D-vs-3D/mesh
+differences noted above, not a property mismatch.
 
 ## Verified results (2026-08-01, Abaqus 2024) — remaining four decks
 
@@ -251,13 +259,13 @@ fixed during this pass**:
    frozen extreme instead of flipping — confirmed monotonic afterward by re-checking
    the `SDV_aT` history. Numbers below are post-fix (recompiled + rerun).
 
-**`cfrtp_cure_residual_ve.inp` (viscoelastic CHILE cure)**:
+**`cfrtp_cure_residual_ve.inp` (viscoelastic CHILE cure)**, post-`BETA` fix:
 ```
-[ve] residual sigma_11 range: [-44.5, 8.1] MPa   (vs elastic cure: [-71.7, 13.1] MPa)
-     warpage max|U3|: 0.053 mm                     (same as elastic cure — geometry-driven)
+[ve] residual sigma_11 range: [-45.9, 8.4] MPa   (vs elastic cure: [-76.4, 14.0] MPa)
+     warpage max|U3|: 0.071 mm                     (same as elastic cure — geometry-driven)
      degree of cure alpha: [0.988, 0.988]
 ```
-Peak magnitude relaxes from 71.7 → 44.5 MPa (~38%) relative to the elastic `cure`
+Peak magnitude relaxes from 76.4 → 45.9 MPa (~40%) relative to the elastic `cure`
 job. The Python counterpart in the mapping table, `cfrtp_viscoelastic_residual_stress.py`,
 runs a *different* base cycle (fluoropolymer melt→RT, 340→25 °C, crystallization
 kinetics) rather than this deck's Arrhenius/CHILE cure kinetics (same family as the
