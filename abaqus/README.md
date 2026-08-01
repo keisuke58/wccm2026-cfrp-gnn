@@ -36,6 +36,8 @@ inverse-design pipeline. For a real project the physics moves to a commercial so
 | `cfrtp_cryst_umat_ve.f` | UMAT: viscoelastic **+ non-isothermal crystallization** (Nakamura). α = relative crystallinity develops on melt→cool and drives stiffness, shrinkage and the relaxation shift `a_X(α)`. 30 constants, 23 STATEV | `cfrtp_residual_stress_fe.py` (cooling-rate → crystallinity → residual) |
 | `cfrtp_cryst_residual_ve.inp` | **complete** 3D [0/90] (105 nodes, 48 C3D8) driven by the **crystallization-coupled VE** UMAT on a melt→cool cycle | same |
 | `cfrtp_cryst_peek_validation.inp` | **complete** carbon/**PEEK** validation case (105 nodes, 48 C3D8) — literature-typical AS4/PEEK values so the method can be checked against **public** crystallization + residual-stress data (fluoropolymer-CF data are proprietary) | same |
+| `cfrtp_cryst_umat_hl.f` | UMAT: crystallization-coupled VE with a **Hoffman–Lauritzen** K(T) (transport × nucleation, vanishes at both Tg and Tm0) — quantitative Tp. 32 constants, 23 STATEV | `../validation/cfrtp_peek_validation.py` |
+| `cfrtp_cryst_peek_hl.inp` | **complete** carbon/PEEK deck (105 nodes, 48 C3D8) driven by the **HL** UMAT in **physical time** (10 °C/min); Tp lands in the documented ~305 °C band | same |
 | `cfrtp_delamination_3d.inp` | **complete** 3D bilayer (656 nodes, 240 C3D8 + 90 COH3D8), built-in cohesive + B-K; a curved delamination **front** develops across the width | `cfrtp_delamination_2d_fe.py` (3D extension) |
 | `gen_inp.py` | regenerates **all** decks (mesh size / geometry / layup / mixity / Prony); pure-Python, no Abaqus/numpy needed | — |
 
