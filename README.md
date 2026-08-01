@@ -6,6 +6,9 @@ WCCM 2026 / ECCOMAS（ミュンヘン, 2026-07-22, セッション MS090E）登�
 > 既発表（穴あき試験片）: Nishioka et al., *Frontiers in Materials* 12, 1652484 (2025) —
 > [DOI:10.3389/fmats.2025.1652484](https://doi.org/10.3389/fmats.2025.1652484)。本研究はこれを**穴あり段間構造＋ノイズ頑健**へ拡張する。
 
+[![▶ Live demo — CFRTP process physics](https://img.shields.io/badge/%E2%96%B6_Live_demo-CFRTP_process_physics-12b3a0?style=flat-square)](https://keisuke58.github.io/wccm2026-cfrp-gnn/)
+&nbsp;インタラクティブ可視化（結晶化→残留応力・粘弾性緩和・混合モード剥離前縁）→ **[keisuke58.github.io/wccm2026-cfrp-gnn](https://keisuke58.github.io/wccm2026-cfrp-gnn/)**
+
 ## 課題設定（NDT制約）
 
 - 非破壊検査（赤外線応力測定）を想定 → **入力は主応力和 DSPSS と既知形状（座標）のみ**。応力テンソル成分は使用不可。
@@ -85,3 +88,17 @@ bash scripts/run_ablation.sh
 
 ## 来歴
 Frontiers companion `keisuke58/nishioka_cfrp_gnn` の `GNN_hole_2026/` から、WCCM用に厳選コピーして整理。
+
+## 可視化（CFRTP 工程物理）
+
+物理主役・ML従属の CFRTP 種（残留応力・界面・剥離）を視覚化した副テーマ。定数は例示（`*` 付き）で、**形＝物理の傾向**が主眼。
+
+- **▶ インタラクティブ（GitHub Pages）**: <https://keisuke58.github.io/wccm2026-cfrp-gnn/>
+  結晶化→残留応力 / 弾性 vs 粘弾性 / 混合モード剥離前縁 をスライダー操作・再生（テーマ自動）。
+- **アニメ GIF**（スライド/論文へ URL 埋め込み可）:
+  - 結晶化→残留応力: <https://keisuke58.github.io/wccm2026-cfrp-gnn/cfrtp_crystallization_residual.gif>
+  - 弾性 vs 粘弾性（緩和）: <https://keisuke58.github.io/wccm2026-cfrp-gnn/cfrtp_viscoelastic_relaxation.gif>
+  - 剥離前縁の進展: <https://keisuke58.github.io/wccm2026-cfrp-gnn/cfrtp_delamination_front.gif>
+- ソース: [`viz/`](./viz/)（`gen_viz_anim.py` で再生成）、Abaqus 実装: [`abaqus/`](./abaqus/)。
+
+![結晶化→残留応力](docs/cfrtp_crystallization_residual.gif)
