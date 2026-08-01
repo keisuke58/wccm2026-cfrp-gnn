@@ -127,7 +127,10 @@ C ---- relaxation shifts: WLF (temperature) x crystallinity --------------
       TMID=TEMP+HALF*DTEMP
       DTT=TMID-WTREF
       DENOM=WC2+DTT
-      IF (ABS(DENOM).LT.ONE) DENOM=SIGN(ONE,DENOM)
+C     one-sided floor: below the WLF pole (T < WTREF-WC2) DENOM would go
+C     negative and flip the sign of POW, un-freezing a_T on further cooling.
+C     Floor it at +1 instead so a_T saturates frozen (monotonic in T).
+      IF (DENOM.LT.ONE) DENOM=ONE
       POW=-WC1*DTT/DENOM
       IF (POW.GT. 30.D0) POW= 30.D0
       IF (POW.LT.-30.D0) POW=-30.D0

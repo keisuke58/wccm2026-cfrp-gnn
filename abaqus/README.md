@@ -224,7 +224,7 @@ being past the softening onset — not a meshing or convergence problem.
 ## Verified results (2026-08-01, Abaqus 2024) — remaining four decks
 
 All four decks not covered above (`ve`, `crystve`, `crystpeek`, `delam3d`) converged
-(53 increments, no cutbacks for the cure-family jobs). **Two real bugs found and
+(53 increments, no cutbacks for the cure-family jobs). **Three real bugs found and
 fixed during this pass**:
 
 1. `gen_inp.py`'s `gen_cryst_ve()` / `gen_cryst_peek()` declared `*DEPVAR, 23` but
@@ -235,6 +235,21 @@ fixed during this pass**:
 2. `postprocess.py`'s `delam()` counted raw `SDEG` field *values*, not distinct
    elements — COH2D4/COH3D8 report 2/4 integration-point values per element, so the
    printed damaged-element count was 2×/4× too high (see correction above).
+3. **WLF pole in `cfrtp_cure_umat_ve.f` / `cfrtp_cryst_umat_ve.f`** — the shift
+   `log10(a_T) = -C1(T-Tref)/(C2+(T-Tref))` has a pole at `T = Tref-C2`. The code
+   only guarded literal division-by-zero (`ABS(DENOM)<1 -> DENOM=SIGN(1,DENOM)`),
+   so once cooling pushed `T` past the pole, `DENOM` went genuinely negative and the
+   *sign* of the exponent flipped — `a_T` snapped from `1e+30` (frozen) to `1e-30`
+   (fluid) in one increment, then stayed anomalously fast-relaxing for the rest of
+   the cool-down to room temperature, instead of continuing to freeze further as a
+   real material does below Tg. Traced via the `SDV_aT` history in the odb:
+   `crystve` crosses its pole at `T=WTREF-WC2=140-80=60 °C`; `crystpeek` at
+   `143-51.6=91.4 °C`; both cool straight through to 25 °C, both were hit. The
+   `ve` job uses the same formula but its cure cycle (25→180→25 °C) never drops
+   below its own pole (`100-80=20 °C`), so it was silently unaffected. Fixed by
+   flooring `DENOM` at `+1` (one-sided, not `SIGN`-based) so `a_T` saturates at the
+   frozen extreme instead of flipping — confirmed monotonic afterward by re-checking
+   the `SDV_aT` history. Numbers below are post-fix (recompiled + rerun).
 
 **`cfrtp_cure_residual_ve.inp` (viscoelastic CHILE cure)**:
 ```
@@ -255,27 +270,36 @@ the open `BETA` item above.
 
 **`cfrtp_cryst_residual_ve.inp` / `cfrtp_cryst_peek_validation.inp` (crystallization + VE)**:
 ```
-[crystve]   residual sigma_11 range: [-1.0, 0.2] MPa   relative crystallinity: 0.230
-[crystpeek] residual sigma_11 range: [-52.0, 7.5] MPa  relative crystallinity: 1.000
+[crystve]   residual sigma_11 range: [-2.5, 0.4] MPa   relative crystallinity: 0.230
+[crystpeek] residual sigma_11 range: [-96.0, 13.9] MPa relative crystallinity: 1.000
 ```
+(post-WLF-fix; before the fix these read `[-1.0, 0.2]` and `[-52.0, 7.5]` MPa
+respectively — the pole bug was quietly relaxing away real stress in both.)
+
 `crystve` (illustrative fluoropolymer proxy, `TCRYST=120 °C`, melt cycle from 260 °C)
-only reaches partial crystallization (α=0.23) over the cool-down, so stiffness
-development `g(α)` stays low and locked-in stress is correspondingly tiny (~1 MPa) —
-physically consistent, but worth a second look given this is the exact deck where the
-`*DEPVAR` bug above was found; flagging as an open item rather than asserting it's
-correct. `crystpeek` (AS4/PEEK, `TCRYST=290 °C`, melt 380→RT) reaches full
-crystallization (α=1.0, as `KMAX` was calibrated to do) and the largest warpage of the
-cure-family jobs (0.269 mm), with σ₁₁≈52 MPa. Cross-check: the *elastic*, no-relaxation
-Python melt-crystallize model (`cfrtp_residual_stress_fe.py`, melt 340→RT @5 °C/s)
-predicts crystallinity 0.363 and σ_xx range **[-499.7, 292.0] MPa** — an order of
-magnitude above `crystpeek`'s VE-relaxed 52 MPa, which is expected since that Python
-seed has no relaxation. Its viscoelastic counterpart
-(`cfrtp_viscoelastic_residual_stress.py`) brings the elastic 500 MPa down to 131 MPa
-(74% relaxed) at the same rate, and down to 88 MPa at a slow 0.5 °C/s cool — the same
-order of magnitude as `crystpeek`'s 52 MPa. Not a strict validation (different
-material system, parameter set, and crystallization temperature window), but the same
-qualitative conclusion: crystallization + VE relaxation brings residual stress down
-from a purely-elastic hundreds-of-MPa prediction to a measurement-grade tens-of-MPa
+still only reaches **partial crystallization** (α=0.23) over the cool-down — that part
+was not a bug: `KMAX=3.0` is 4× lower than `crystpeek`'s calibrated `KMAX=12.0`,
+too slow relative to this cycle's cooling rate to drive much conversion through the
+`TCRYST=120±30 °C` window, so `g(α)` stays at only ≈0.056 (barely past the `AGEL=0.2`
+gel threshold). That genuinely caps how much stress *can* lock in, independent of the
+WLF fix — `crystve`'s small magnitude is real, not an artifact, but the absolute
+number should be treated as **illustrative/uncalibrated** (this deck was never tuned
+to reach a target crystallinity the way `crystpeek`'s `KMAX` was); calibrating `KMAX`
+to a real Daikin-system crystallization-rate measurement is the natural next step if
+this deck's magnitude needs to be trusted quantitatively. `crystpeek` (AS4/PEEK,
+`TCRYST=290 °C`, melt 380→RT) reaches full crystallization (α=1.0, as `KMAX` was
+calibrated to do) and the largest warpage of the cure-family jobs (0.269 mm), now
+σ₁₁≈96 MPa post-fix. Cross-check: the *elastic*, no-relaxation Python melt-crystallize
+model (`cfrtp_residual_stress_fe.py`, melt 340→RT @5 °C/s) predicts crystallinity
+0.363 and σ_xx range **[-499.7, 292.0] MPa** — above `crystpeek`'s VE-relaxed 96 MPa,
+which is expected since that Python seed has no relaxation. Its viscoelastic
+counterpart (`cfrtp_viscoelastic_residual_stress.py`) brings the elastic 500 MPa down
+to 131 MPa (74% relaxed) at the same rate, and down to 88 MPa at a slow 0.5 °C/s cool
+— `crystpeek`'s post-fix 96 MPa now sits squarely inside that range rather than below
+it. Not a strict validation (different material system, parameter set, and
+crystallization temperature window), but the same qualitative conclusion: crystallization
++ VE relaxation brings residual stress down from a purely-elastic hundreds-of-MPa
+prediction to a measurement-grade tens-of-MPa
 range.
 
 **`cfrtp_delamination_3d.inp` (3D mixed-mode front, COH3D8 + B-K)**:
