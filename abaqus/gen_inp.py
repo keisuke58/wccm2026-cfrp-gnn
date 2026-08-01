@@ -196,6 +196,114 @@ def gen_1elem_sanity(path, L=0.6e-3):
     return dict(nodes=8, els=1)
 
 
+# ------------------------------------------------- cure residual, viscoelastic UMAT
+def gen_cure_ve(path, nx=6, ny=4, Lx=20.0e-3, Ly=12.0e-3, tply=0.6e-3):
+    """Same [0/90] mesh as gen_cure, but driven by the thermo-VISCOELASTIC
+    UMAT (cfrtp_cure_umat_ve.f): generalized-Maxwell relaxation + WLF shift.
+    Reproduces the elastic->viscoelastic stress drop of the Python demo
+    cfrtp_viscoelastic_residual_stress.py inside Abaqus.
+
+    NB: Prony tau_k are in the SAME time unit as the step (total time 1.0
+    here), so relaxation is visible within the normalized cure cycle; rescale
+    tau_k (and re-tune the kinetics AK) to seconds for a physical run."""
+    nz = 2
+    NX, NY, NZ = nx + 1, ny + 1, nz + 1
+    xs = [Lx * i / nx for i in range(NX)]
+    ys = [Ly * j / ny for j in range(NY)]
+    zs = [tply * k for k in range(NZ)]
+
+    def nid(i, j, k):
+        return 1 + (k * NY + j) * NX + i
+
+    def eid(i, j, k):
+        return 1 + (k * ny + j) * nx + i
+
+    L = ["*HEADING",
+         " CFRTP cure residual stress (3D [0/90]) -- THERMO-VISCOELASTIC UMAT",
+         " CHILE + generalized-Maxwell (Prony) + WLF. cfrtp_cure_umat_ve.f.",
+         "**", "*NODE, NSET=NALL"]
+    for k in range(NZ):
+        for j in range(NY):
+            for i in range(NX):
+                L.append(f" {nid(i,j,k)}, {xs[i]:.6e}, {ys[j]:.6e}, {zs[k]:.6e}")
+
+    ely0, ely90 = [], []
+    L.append("*ELEMENT, TYPE=C3D8, ELSET=EALL")
+    for k in range(nz):
+        for j in range(ny):
+            for i in range(nx):
+                n0 = nid(i, j, k); n1 = nid(i + 1, j, k); n2 = nid(i + 1, j + 1, k); n3 = nid(i, j + 1, k)
+                m0 = nid(i, j, k + 1); m1 = nid(i + 1, j, k + 1); m2 = nid(i + 1, j + 1, k + 1); m3 = nid(i, j + 1, k + 1)
+                e = eid(i, j, k)
+                L.append(f" {e}, {n0}, {n1}, {n2}, {n3}, {m0}, {m1}, {m2}, {m3}")
+                (ely0 if k == 0 else ely90).append(e)
+    L.append("*ELSET, ELSET=PLY0, GENERATE")
+    L.append(f" {ely0[0]}, {ely0[-1]}, 1")
+    L.append("*ELSET, ELSET=PLY90, GENERATE")
+    L.append(f" {ely90[0]}, {ely90[-1]}, 1")
+
+    L += ["**",
+          "*ORIENTATION, NAME=ORI0, DEFINITION=COORDINATES",
+          " 1.0, 0.0, 0.0,  0.0, 1.0, 0.0",
+          " 3, 0.0",
+          "*ORIENTATION, NAME=ORI90, DEFINITION=COORDINATES",
+          " 0.0, 1.0, 0.0, -1.0, 0.0, 0.0",
+          " 3, 0.0",
+          "*SOLID SECTION, ELSET=PLY0,  MATERIAL=CFRTPVE, ORIENTATION=ORI0",
+          "*SOLID SECTION, ELSET=PLY90, MATERIAL=CFRTPVE, ORIENTATION=ORI90"]
+
+    # material: viscoelastic CHILE UMAT, 30 constants, 22 state vars.
+    # *USER MATERIAL data lines are capped at 8 values/line -> pack 8/8/8/6.
+    L += ["**",
+          "*MATERIAL, NAME=CFRTPVE",
+          "*DEPVAR",
+          " 22,",
+          "1, alpha, degree of cure",
+          "2, g_chile, stiffness fraction",
+          "3, smax, max abs sigma11",
+          "4, aT, WLF shift factor",
+          "*USER MATERIAL, CONSTANTS=30",
+          "** E1 E2 E3  NU12 NU13 NU23  G12 G13",
+          " 135.0e9, 9.0e9, 9.0e9, 0.30, 0.30, 0.45, 5.0e9, 5.0e9,",
+          "** G23  A1 A2 A3  BETA  AK EAK NEXP",
+          " 3.0e9, -0.3e-6, 28.0e-6, 28.0e-6, -3.0e-3, 1.0e8, 5.5e4, 1.6,",
+          "** AGEL G0 RGAS TABS  GINF  G1 TAU1 G2   (ginf+g1+g2+g3 = 1)",
+          " 0.5, 0.02, 8.314, 273.15, 0.3, 0.4, 0.02, 0.2,",
+          "** TAU2 G3 TAU3  WLF_C1 WLF_C2 WLF_TREF(C)",
+          " 0.1, 0.1, 0.5, 20.0, 80.0, 100.0",
+          "*INITIAL CONDITIONS, TYPE=TEMPERATURE",
+          " NALL, 25.0"]
+
+    nA = nid(0, 0, 0); nB = nid(nx, 0, 0); nC = nid(0, ny, 0)
+    L += ["**",
+          f"*NSET, NSET=NA\n {nA},",
+          f"*NSET, NSET=NB\n {nB},",
+          f"*NSET, NSET=NC\n {nC},",
+          "*BOUNDARY",
+          " NA, 1, 3, 0.0",
+          " NB, 2, 2, 0.0",
+          " NB, 3, 3, 0.0",
+          " NC, 1, 1, 0.0",
+          " NC, 3, 3, 0.0"]
+
+    L += ["**",
+          "*AMPLITUDE, NAME=CURECYCLE, TIME=TOTAL TIME",
+          " 0.0, 25.0, 0.25, 180.0, 0.55, 180.0, 1.0, 25.0",
+          "*STEP, NLGEOM=NO, INC=500",
+          "*STATIC",
+          " 0.005, 1.0, 1.0e-6, 0.02",
+          "*TEMPERATURE, AMPLITUDE=CURECYCLE",
+          " NALL, 1.0",
+          "*OUTPUT, FIELD",
+          "*ELEMENT OUTPUT",
+          " S, E, SDV",
+          "*NODE OUTPUT",
+          " U",
+          "*END STEP"]
+    open(path, "w").write("\n".join(L) + "\n")
+    return dict(nodes=NX * NY * NZ, els=nx * ny * nz)
+
+
 # --------------------------------------------------------------- delamination (2D)
 def gen_delam(path, nx=60, nzl=2, Lx=60.0e-3, t=0.6e-3, a0=15.0e-3, theta_deg=25.0):
     """2D plane-strain bilayer + cohesive interface (built-in COH2D4 + B-K).
@@ -298,12 +406,133 @@ def gen_delam(path, nx=60, nzl=2, Lx=60.0e-3, t=0.6e-3, a0=15.0e-3, theta_deg=25
     return dict(nodes=2 * NB, els=2 * nx * nzl, coh=ce - 2000000)
 
 
+# ------------------------------------------------------------- delamination (3D)
+def gen_delam3d(path, nx=40, ny=3, Lx=60.0e-3, Ly=20.0e-3, t=0.6e-3,
+                a0=15.0e-3, theta_deg=30.0):
+    """3D mixed-mode interlaminar delamination: two solid sublaminates (C3D8)
+    joined by a cohesive layer (COH3D8) with Benzeggagh-Kenane mixed mode.
+    Separate interface nodes on each sublaminate; cohesive elements only in the
+    bonded region x >= a0 (pre-crack ahead of the loaded near end x=0). The 3D
+    counterpart of gen_delam / cfrtp_delamination_2d_fe.py -- lets a curved
+    delamination FRONT develop across the width y."""
+    import math
+    NX, NY = nx + 1, ny + 1
+    xs = [Lx * i / nx for i in range(NX)]
+    ysg = [Ly * j / ny for j in range(NY)]
+    NB = NX * NY * 2                              # nodes in the bottom sublaminate
+
+    def nb(i, j, k):                             # bottom sublaminate (z=0..t)
+        return 1 + (k * NY + j) * NX + i
+
+    def nt(i, j, k):                             # top sublaminate (z=t..2t)
+        return 1 + NB + (k * NY + j) * NX + i
+
+    L = ["*HEADING",
+         " CFRTP 3D mixed-mode interlaminar delamination (COH3D8 + B-K)",
+         " Two C3D8 sublaminates + cohesive layer. Generated by gen_inp.py.",
+         "**", "*NODE, NSET=NALL"]
+    for k in range(2):
+        for j in range(NY):
+            for i in range(NX):
+                L.append(f" {nb(i,j,k)}, {xs[i]:.6e}, {ysg[j]:.6e}, {t*k:.6e}")
+    for k in range(2):
+        for j in range(NY):
+            for i in range(NX):
+                L.append(f" {nt(i,j,k)}, {xs[i]:.6e}, {ysg[j]:.6e}, {t+t*k:.6e}")
+
+    def hexc(nfun, i, j):                        # C3D8 connectivity (z0 face, z1 face)
+        return (f" {nfun(i,j,0)}, {nfun(i+1,j,0)}, {nfun(i+1,j+1,0)}, {nfun(i,j+1,0)},"
+                f" {nfun(i,j,1)}, {nfun(i+1,j,1)}, {nfun(i+1,j+1,1)}, {nfun(i,j+1,1)}")
+
+    eb = 0
+    L.append("*ELEMENT, TYPE=C3D8, ELSET=BOT")
+    for j in range(ny):
+        for i in range(nx):
+            eb += 1
+            L.append(f" {eb}," + hexc(nb, i, j))
+    et = 1000000
+    L.append("*ELEMENT, TYPE=C3D8, ELSET=TOP")
+    for j in range(ny):
+        for i in range(nx):
+            et += 1
+            L.append(f" {et}," + hexc(nt, i, j))
+
+    # cohesive COH3D8: bottom face = bottom sublaminate top surface (k=1),
+    # top face = top sublaminate bottom surface (k=0); bonded region x >= a0.
+    L.append("*ELEMENT, TYPE=COH3D8, ELSET=COH")
+    ce = 2000000
+    for j in range(ny):
+        for i in range(nx):
+            if 0.5 * (xs[i] + xs[i + 1]) >= a0:
+                ce += 1
+                bot = (f" {nb(i,j,1)}, {nb(i+1,j,1)}, {nb(i+1,j+1,1)}, {nb(i,j+1,1)}")
+                top = (f" {nt(i,j,0)}, {nt(i+1,j,0)}, {nt(i+1,j+1,0)}, {nt(i,j+1,0)}")
+                L.append(f" {ce}," + bot + "," + top)
+
+    L += ["**",
+          "*SOLID SECTION, ELSET=BOT, MATERIAL=PLY",
+          "*SOLID SECTION, ELSET=TOP, MATERIAL=PLY",
+          "*SECTION CONTROLS, NAME=COHVISC, VISCOSITY=1.0e-5",
+          "*COHESIVE SECTION, ELSET=COH, MATERIAL=INTERFACE, RESPONSE=TRACTION SEPARATION,"
+          " THICKNESS=SPECIFIED, CONTROLS=COHVISC",
+          " 1.0",
+          "**",
+          "*MATERIAL, NAME=PLY",
+          "*ELASTIC",
+          " 60.0e9, 0.30",
+          "*MATERIAL, NAME=INTERFACE",
+          "*ELASTIC, TYPE=TRACTION",
+          " 1.0e14, 1.0e14, 1.0e14",
+          "*DAMAGE INITIATION, CRITERION=QUADS",
+          " 12.0e6, 18.0e6, 18.0e6",
+          "*DAMAGE EVOLUTION, TYPE=ENERGY, MIXED MODE BEHAVIOR=BK, POWER=1.6",
+          " 200.0, 600.0, 600.0"]
+
+    # BCs: clamp far end (x=Lx) of both sublaminates; drive top near-end edge
+    clamp = [nb(nx, j, k) for k in range(2) for j in range(NY)] + \
+            [nt(nx, j, k) for k in range(2) for j in range(NY)]
+    tipnodes = [nt(0, j, k) for k in range(2) for j in range(NY)]  # top arm, x=0 edge
+    L.append("**")
+    L.append("*NSET, NSET=CLAMP")
+    for c0 in range(0, len(clamp), 8):
+        L.append(" " + ", ".join(str(n) for n in clamp[c0:c0 + 8]))
+    L.append("*NSET, NSET=TIP")
+    for c0 in range(0, len(tipnodes), 8):
+        L.append(" " + ", ".join(str(n) for n in tipnodes[c0:c0 + 8]))
+    L += ["*BOUNDARY",
+          " CLAMP, 1, 3, 0.0"]
+
+    th = math.radians(theta_deg)
+    uz = 6.0e-4 * math.cos(th); ux = 6.0e-4 * math.sin(th)   # mode I (z) + shear (x)
+    L += ["**",
+          "*STEP, NLGEOM=YES, INC=1000",
+          "*STATIC",
+          " 0.002, 1.0, 1.0e-8, 0.02",
+          "*BOUNDARY",
+          f" TIP, 1, 1, {ux:.6e}",
+          " TIP, 2, 2, 0.0",
+          f" TIP, 3, 3, {uz:.6e}",
+          "*CONTROLS, ANALYSIS=DISCONTINUOUS",
+          "*OUTPUT, FIELD",
+          "*ELEMENT OUTPUT, ELSET=COH",
+          " SDEG, STATUS",
+          "*NODE OUTPUT",
+          " U, RF",
+          "*END STEP"]
+    open(path, "w").write("\n".join(L) + "\n")
+    return dict(nodes=2 * NB, els=2 * nx * ny, coh=ce - 2000000)
+
+
 if __name__ == "__main__":
     import os
     here = os.path.dirname(os.path.abspath(__file__))
     c = gen_cure(os.path.join(here, "cfrtp_cure_residual.inp"))
+    cve = gen_cure_ve(os.path.join(here, "cfrtp_cure_residual_ve.inp"))
     d = gen_delam(os.path.join(here, "cfrtp_delamination_mixedmode.inp"))
+    d3 = gen_delam3d(os.path.join(here, "cfrtp_delamination_3d.inp"))
     s = gen_1elem_sanity(os.path.join(here, "cfrtp_1elem_sanity.inp"))
-    print(f"cure  : {c['nodes']} nodes, {c['els']} C3D8 elements")
-    print(f"delam : {d['nodes']} nodes, {d['els']} CPE4 + {d['coh']} COH2D4 elements")
-    print(f"sanity: {s['nodes']} nodes, {s['els']} C3D8 element")
+    print(f"cure   : {c['nodes']} nodes, {c['els']} C3D8 elements")
+    print(f"cure_ve: {cve['nodes']} nodes, {cve['els']} C3D8 (viscoelastic UMAT)")
+    print(f"delam  : {d['nodes']} nodes, {d['els']} CPE4 + {d['coh']} COH2D4 elements")
+    print(f"delam3d: {d3['nodes']} nodes, {d3['els']} C3D8 + {d3['coh']} COH3D8 elements")
+    print(f"sanity : {s['nodes']} nodes, {s['els']} C3D8 element")

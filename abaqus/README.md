@@ -22,7 +22,10 @@ inverse-design pipeline. For a real project the physics moves to a commercial so
 | `cfrtp_cure_residual.inp` | **complete** 3D [0/90] laminate (105 nodes, 48 C3D8) residual stress driven by a cure cycle, using the UMAT | same |
 | `cfrtp_delamination_mixedmode.inp` | **complete** 2D plane-strain bilayer (366 nodes, 240 CPE4 + 45 COH2D4) with **built-in cohesive** + **Benzeggagh-Kenane** mixed-mode, pre-crack + mixed-mode loading | `cfrtp_cohesive_mixedmode.py`, `cfrtp_delamination_2d_fe.py` |
 | `cfrtp_1elem_sanity.inp` | **complete** single-C3D8 UMAT free-contraction sanity test (3-2-1 support, same cure cycle) | the `[validate]` line each Python seed prints |
-| `gen_inp.py` | regenerates all three decks (change mesh size / geometry / layup / mixity here); pure-Python, no Abaqus/numpy needed | — |
+| `cfrtp_cure_umat_ve.f` | UMAT: CHILE **+ thermo-viscoelastic** (generalized-Maxwell / Prony + WLF shift). Hot → fast relaxation, cold → frozen residual stress. 30 constants, 22 STATEV | `cfrtp_viscoelastic_residual_stress.py` |
+| `cfrtp_cure_residual_ve.inp` | **complete** 3D [0/90] (105 nodes, 48 C3D8) driven by the **viscoelastic** UMAT | same |
+| `cfrtp_delamination_3d.inp` | **complete** 3D bilayer (656 nodes, 240 C3D8 + 90 COH3D8), built-in cohesive + B-K; a curved delamination **front** develops across the width | `cfrtp_delamination_2d_fe.py` (3D extension) |
+| `gen_inp.py` | regenerates **all** decks (mesh size / geometry / layup / mixity / Prony); pure-Python, no Abaqus/numpy needed | — |
 
 ## Physics mapping (Python → Abaqus)
 
@@ -33,10 +36,13 @@ inverse-design pipeline. For a real project the physics moves to a commercial so
   1-element free-contraction test → ~0 residual stress (the composite free-expansion check
   the Python demos also use).
   - Thermoplastic CFRTP (Daikin): reinterpret α as **solidification/crystallinity**, β as
-    **crystallization shrinkage**, and drive with a **melt → cool** cycle. Add viscoelastic
-    stress relaxation (→ measurement-grade magnitudes, cf. `cfrtp_viscoelastic_residual_stress.py`)
-    via a UMAT with a Prony series / `*VISCOELASTIC` + WLF shift, or a state-variable
-    relaxation in the UMAT.
+    **crystallization shrinkage**, and drive with a **melt → cool** cycle. For
+    measurement-grade magnitudes add viscoelastic stress relaxation — implemented in
+    **`cfrtp_cure_umat_ve.f`** (`cfrtp_cure_residual_ve.inp`): a generalized-Maxwell / Prony
+    series with a WLF temperature shift `a_T(T)` (hot → fast relaxation, cold → frozen), the
+    Abaqus counterpart of `cfrtp_viscoelastic_residual_stress.py`. Prony `τ_k` are in the
+    deck's time unit — co-calibrate them with the cure-cycle duration (and re-tune the
+    kinetics `AK`) before trusting magnitudes.
 - **Mixed-mode delamination** — Abaqus has this built in, so it is mostly an `.inp`:
   `*COHESIVE SECTION` + `*DAMAGE INITIATION, CRITERION=QUADS` + `*DAMAGE EVOLUTION,
   TYPE=ENERGY, MIXED MODE BEHAVIOR=BK, POWER=η`. This reproduces the Camanho-Davila
@@ -47,6 +53,9 @@ inverse-design pipeline. For a real project the physics moves to a commercial so
   `TRACTION SEPARATION` cohesive elements in Abaqus 2024 (see "Verified results" below);
   the Python demo uses a secant scheme + small steps for the same stabilization purpose.
   VCCT (`*DEBOND`, `*FRACTURE CRITERION, TYPE=VCCT`) is the alternative.
+  **`cfrtp_delamination_3d.inp`** is the 3D extension (COH3D8 between two C3D8
+  sublaminates), where a curved delamination **front** can develop across the width — the
+  next step toward the 3D mixed-mode front noted in the roadmap.
 - **Impregnation / voids (開繊)** — Darcy/Gebart flow (`cfrtp_impregnation_void.py`) is not
   a structural-FE job; use a resin-flow tool (Moldflow, PAM-RTM) or an Abaqus/Ansys porous-
   flow model. No skeleton here — noted for completeness.

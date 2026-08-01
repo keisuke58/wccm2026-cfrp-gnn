@@ -13,6 +13,8 @@ __pycache__/
 !abaqus/cfrtp_cure_residual.inp
 !abaqus/cfrtp_delamination_mixedmode.inp
 !abaqus/cfrtp_1elem_sanity.inp
+!abaqus/cfrtp_cure_residual_ve.inp
+!abaqus/cfrtp_delamination_3d.inp
 *.dat
 *.msg
 *.sta
