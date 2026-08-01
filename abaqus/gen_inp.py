@@ -658,6 +658,125 @@ def gen_cryst_peek_hl(path, nx=6, ny=4, Lx=20.0e-3, Ly=12.0e-3, tply=0.6e-3):
     return dict(nodes=NX * NY * NZ, els=nx * ny * nz)
 
 
+# ------------------------------ Daikin fluoropolymer (PFA-representative) HL deck
+def gen_daikin_pfa_hl(path, nx=6, ny=4, Lx=20.0e-3, Ly=12.0e-3, tply=0.6e-3):
+    """Daikin CFRTP (fluoropolymer matrix) on the Hoffman-Lauritzen UMAT.
+
+    *** PLACEHOLDER PARAMETERS -- NOT VALIDATED. ***
+    The Daikin fluoropolymer-CF system is proprietary and fluoropolymer (PFA/FEP/
+    ETFE) crystallization kinetics are poorly characterized in the open literature
+    (PEEK is the validated reference, see cfrtp_cryst_peek_hl.inp). Every constant
+    below is a rough PFA-representative ESTIMATE, to be replaced once Daikin supplies
+    data (DSC crystallization vs cooling rate, DMA relaxation spectrum, CTE(T), Tg/
+    Tm, ILSS, residual-stress/warpage). Key fluoropolymer trait kept: a HIGH matrix
+    CTE (~100e-6 /K transverse) and a lower matrix-dominated modulus -> larger
+    residual stress than PEEK. Physical time (10 C/min); K0 [1/s], tau_k [s]."""
+    nz = 2
+    NX, NY, NZ = nx + 1, ny + 1, nz + 1
+    xs = [Lx * i / nx for i in range(NX)]
+    ys = [Ly * j / ny for j in range(NY)]
+    zs = [tply * k for k in range(NZ)]
+
+    def nid(i, j, k):
+        return 1 + (k * NY + j) * NX + i
+
+    def eid(i, j, k):
+        return 1 + (k * ny + j) * nx + i
+
+    L = ["*HEADING",
+         " Daikin CFRTP (fluoropolymer/CF) residual stress -- HOFFMAN-LAURITZEN UMAT",
+         " *** PLACEHOLDER PARAMS (PFA-representative estimates, NOT validated) ***",
+         " cfrtp_cryst_umat_hl.f, physical time. Replace consts with Daikin data.",
+         "**", "*NODE, NSET=NALL"]
+    for k in range(NZ):
+        for j in range(NY):
+            for i in range(NX):
+                L.append(f" {nid(i,j,k)}, {xs[i]:.6e}, {ys[j]:.6e}, {zs[k]:.6e}")
+
+    ely0, ely90 = [], []
+    L.append("*ELEMENT, TYPE=C3D8, ELSET=EALL")
+    for k in range(nz):
+        for j in range(ny):
+            for i in range(nx):
+                n0 = nid(i, j, k); n1 = nid(i + 1, j, k); n2 = nid(i + 1, j + 1, k); n3 = nid(i, j + 1, k)
+                m0 = nid(i, j, k + 1); m1 = nid(i + 1, j, k + 1); m2 = nid(i + 1, j + 1, k + 1); m3 = nid(i, j + 1, k + 1)
+                e = eid(i, j, k)
+                L.append(f" {e}, {n0}, {n1}, {n2}, {n3}, {m0}, {m1}, {m2}, {m3}")
+                (ely0 if k == 0 else ely90).append(e)
+    L.append("*ELSET, ELSET=PLY0, GENERATE")
+    L.append(f" {ely0[0]}, {ely0[-1]}, 1")
+    L.append("*ELSET, ELSET=PLY90, GENERATE")
+    L.append(f" {ely90[0]}, {ely90[-1]}, 1")
+
+    L += ["**",
+          "*ORIENTATION, NAME=ORI0, DEFINITION=COORDINATES",
+          " 1.0, 0.0, 0.0,  0.0, 1.0, 0.0",
+          " 3, 0.0",
+          "*ORIENTATION, NAME=ORI90, DEFINITION=COORDINATES",
+          " 0.0, 1.0, 0.0, -1.0, 0.0, 0.0",
+          " 3, 0.0",
+          "*SOLID SECTION, ELSET=PLY0,  MATERIAL=DAIKINPFA, ORIENTATION=ORI0",
+          "*SOLID SECTION, ELSET=PLY90, MATERIAL=DAIKINPFA, ORIENTATION=ORI90"]
+
+    # HL crystallization-coupled VE UMAT: 32 constants, 23 SDV. Pack 8/8/8/8.
+    # *** ALL VALUES PLACEHOLDER (PFA estimate); replace with Daikin data. ***
+    L += ["**",
+          "*MATERIAL, NAME=DAIKINPFA",
+          "*DEPVAR",
+          " 23,",
+          "1, alpha, relative crystallinity",
+          "2, g_chile, stiffness fraction",
+          "3, smax, max abs sigma11",
+          "4, aT, WLF shift",
+          "5, aX, crystallinity shift",
+          "*USER MATERIAL, CONSTANTS=32",
+          "** E1 E2 E3  NU12 NU13 NU23  G12 G13   (CF/PFA, matrix-dominated E2)",
+          " 120.0e9, 7.0e9, 7.0e9, 0.30, 0.30, 0.45, 3.5e9, 3.5e9,",
+          "** G23  A1 A2 A3  BETA  NAVRAMI K0[1/s] USTAR[K]  (A2=A3 HIGH fluoro CTE)",
+          " 2.4e9, -0.3e-6, 100.0e-6, 100.0e-6, -5.0e-3, 2.5, 1.0e6, 755.0,",
+          "** KG[K^2] TM0[C] TINF[C]  AGEL G0 GINF  G1 TAU1[s]   (PFA: Tm~305, Tg~90)",
+          " 2.0e5, 315.0, 60.0, 0.1, 0.01, 0.3, 0.4, 5.0,",
+          "** G2 TAU2[s] G3 TAU3[s]  WLF_C1 WLF_C2 WLF_TREF(Tg,C)  BX",
+          " 0.2, 50.0, 0.1, 500.0, 17.4, 51.6, 90.0, 2.0",
+          "*INITIAL CONDITIONS, TYPE=TEMPERATURE",
+          " NALL, 330.0",
+          "*INITIAL CONDITIONS, TYPE=SOLUTION",
+          " EALL, 1.0e-3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,",
+          " 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,",
+          " 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0"]
+
+    nA = nid(0, 0, 0); nB = nid(nx, 0, 0); nC = nid(0, ny, 0)
+    L += ["**",
+          f"*NSET, NSET=NA\n {nA},",
+          f"*NSET, NSET=NB\n {nB},",
+          f"*NSET, NSET=NC\n {nC},",
+          "*BOUNDARY",
+          " NA, 1, 3, 0.0",
+          " NB, 2, 2, 0.0",
+          " NB, 3, 3, 0.0",
+          " NC, 1, 1, 0.0",
+          " NC, 3, 3, 0.0"]
+
+    # PHYSICAL-time melt->cool: hold 60 s at 330 C (>Tm0=315), then 10 C/min to 25 C
+    # ((330-25)/0.16667 = 1830 s) -> 1890 s total.
+    L += ["**",
+          "*AMPLITUDE, NAME=MELTCOOL, TIME=TOTAL TIME",
+          " 0.0, 330.0, 60.0, 330.0, 1890.0, 25.0",
+          "*STEP, NLGEOM=NO, INC=2000",
+          "*STATIC",
+          " 5.0, 1890.0, 1.0e-2, 30.0",
+          "*TEMPERATURE, AMPLITUDE=MELTCOOL",
+          " NALL, 1.0",
+          "*OUTPUT, FIELD",
+          "*ELEMENT OUTPUT",
+          " S, E, SDV",
+          "*NODE OUTPUT",
+          " U",
+          "*END STEP"]
+    open(path, "w").write("\n".join(L) + "\n")
+    return dict(nodes=NX * NY * NZ, els=nx * ny * nz)
+
+
 # --------------------------------------------------------------- delamination (2D)
 def gen_delam(path, nx=60, nzl=2, Lx=60.0e-3, t=0.6e-3, a0=15.0e-3, theta_deg=25.0):
     """2D plane-strain bilayer + cohesive interface (built-in COH2D4 + B-K).
@@ -885,6 +1004,7 @@ if __name__ == "__main__":
     cx = gen_cryst_ve(os.path.join(here, "cfrtp_cryst_residual_ve.inp"))
     cp = gen_cryst_peek(os.path.join(here, "cfrtp_cryst_peek_validation.inp"))
     cph = gen_cryst_peek_hl(os.path.join(here, "cfrtp_cryst_peek_hl.inp"))
+    dpf = gen_daikin_pfa_hl(os.path.join(here, "cfrtp_daikin_pfa_hl.inp"))
     d = gen_delam(os.path.join(here, "cfrtp_delamination_mixedmode.inp"))
     d3 = gen_delam3d(os.path.join(here, "cfrtp_delamination_3d.inp"))
     s = gen_1elem_sanity(os.path.join(here, "cfrtp_1elem_sanity.inp"))
@@ -893,6 +1013,7 @@ if __name__ == "__main__":
     print(f"cryst_ve: {cx['nodes']} nodes, {cx['els']} C3D8 (crystallization+VE UMAT)")
     print(f"cryst_pk: {cp['nodes']} nodes, {cp['els']} C3D8 (PEEK validation)")
     print(f"cryst_hl: {cph['nodes']} nodes, {cph['els']} C3D8 (PEEK Hoffman-Lauritzen)")
+    print(f"daikinpfa: {dpf['nodes']} nodes, {dpf['els']} C3D8 (Daikin PFA HL, PLACEHOLDER)")
     print(f"delam   : {d['nodes']} nodes, {d['els']} CPE4 + {d['coh']} COH2D4 elements")
     print(f"delam3d : {d3['nodes']} nodes, {d3['els']} C3D8 + {d3['coh']} COH3D8 elements")
     print(f"sanity  : {s['nodes']} nodes, {s['els']} C3D8 element")

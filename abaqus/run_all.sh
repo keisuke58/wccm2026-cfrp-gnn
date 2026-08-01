@@ -12,6 +12,7 @@
 #   bash run_all.sh crystve                                # crystallization-coupled VE job
 #   bash run_all.sh crystpeek                              # carbon/PEEK crystallization validation
 #   bash run_all.sh crystpeekhl                            # carbon/PEEK Hoffman-Lauritzen (physical time)
+#   bash run_all.sh daikinpfa                              # Daikin fluoropolymer (PFA) HL -- PLACEHOLDER params
 #   bash run_all.sh delam3d                                # 3D mixed-mode delamination
 #
 # Nothing here reaches back to the sandbox; it runs entirely on your machine.
@@ -56,6 +57,11 @@ run_crystpeekhl() {
   "$ABQ" job=cfrtp_cryst_peek_hl user=cfrtp_cryst_umat_hl.f interactive double
   echo "  -> cfrtp_cryst_peek_hl.odb"
 }
+run_daikinpfa() {
+  echo "=== Daikin fluoropolymer (PFA) HL crystallization -- PLACEHOLDER params ==="
+  "$ABQ" job=cfrtp_daikin_pfa_hl user=cfrtp_cryst_umat_hl.f interactive double
+  echo "  -> cfrtp_daikin_pfa_hl.odb"
+}
 run_delam3d() {
   echo "=== 3D mixed-mode delamination (COH3D8 + B-K) ==="
   "$ABQ" job=cfrtp_delamination_3d interactive double
@@ -70,9 +76,10 @@ case "$WHICH" in
   crystve)   run_crystve ;;
   crystpeek) run_crystpeek ;;
   crystpeekhl) run_crystpeekhl ;;
+  daikinpfa) run_daikinpfa ;;
   delam3d)   run_delam3d ;;
   all)       run_cure; run_delam ;;
-  *) echo "usage: bash run_all.sh [cure|delam|sanity|ve|crystve|crystpeek|crystpeekhl|delam3d|all]"; exit 2 ;;
+  *) echo "usage: bash run_all.sh [cure|delam|sanity|ve|crystve|crystpeek|crystpeekhl|daikinpfa|delam3d|all]"; exit 2 ;;
 esac
 
 echo "=== post-processing (odb -> summary) ==="

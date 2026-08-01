@@ -17,6 +17,7 @@ __pycache__/
 !abaqus/cfrtp_cryst_residual_ve.inp
 !abaqus/cfrtp_cryst_peek_validation.inp
 !abaqus/cfrtp_cryst_peek_hl.inp
+!abaqus/cfrtp_daikin_pfa_hl.inp
 !abaqus/cfrtp_delamination_3d.inp
 *.dat
 *.msg
