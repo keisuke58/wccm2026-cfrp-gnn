@@ -24,6 +24,8 @@ inverse-design pipeline. For a real project the physics moves to a commercial so
 | `cfrtp_1elem_sanity.inp` | **complete** single-C3D8 UMAT free-contraction sanity test (3-2-1 support, same cure cycle) | the `[validate]` line each Python seed prints |
 | `cfrtp_cure_umat_ve.f` | UMAT: CHILE **+ thermo-viscoelastic** (generalized-Maxwell / Prony + WLF shift). Hot → fast relaxation, cold → frozen residual stress. 30 constants, 22 STATEV | `cfrtp_viscoelastic_residual_stress.py` |
 | `cfrtp_cure_residual_ve.inp` | **complete** 3D [0/90] (105 nodes, 48 C3D8) driven by the **viscoelastic** UMAT | same |
+| `cfrtp_cryst_umat_ve.f` | UMAT: viscoelastic **+ non-isothermal crystallization** (Nakamura). α = relative crystallinity develops on melt→cool and drives stiffness, shrinkage and the relaxation shift `a_X(α)`. 30 constants, 23 STATEV | `cfrtp_residual_stress_fe.py` (cooling-rate → crystallinity → residual) |
+| `cfrtp_cryst_residual_ve.inp` | **complete** 3D [0/90] (105 nodes, 48 C3D8) driven by the **crystallization-coupled VE** UMAT on a melt→cool cycle | same |
 | `cfrtp_delamination_3d.inp` | **complete** 3D bilayer (656 nodes, 240 C3D8 + 90 COH3D8), built-in cohesive + B-K; a curved delamination **front** develops across the width | `cfrtp_delamination_2d_fe.py` (3D extension) |
 | `gen_inp.py` | regenerates **all** decks (mesh size / geometry / layup / mixity / Prony); pure-Python, no Abaqus/numpy needed | — |
 
@@ -43,6 +45,16 @@ inverse-design pipeline. For a real project the physics moves to a commercial so
     Abaqus counterpart of `cfrtp_viscoelastic_residual_stress.py`. Prony `τ_k` are in the
     deck's time unit — co-calibrate them with the cure-cycle duration (and re-tune the
     kinetics `AK`) before trusting magnitudes.
+  - **Semi-crystalline upgrade** — for a fluoropolymer-matrix (semi-crystalline)
+    CFRTP the most defensible model couples the viscoelasticity with
+    **crystallization kinetics**: **`cfrtp_cryst_umat_ve.f`** (`cfrtp_cryst_residual_ve.inp`)
+    makes α the **relative crystallinity** from a Nakamura non-isothermal law
+    (`dα/dt = n K(T)(1−α)[−ln(1−α)]^((n−1)/n)`, bell-shaped `K(T)` window),
+    developed on a **melt→cool** cycle, driving stiffness `g(α)`, crystallization
+    shrinkage `β·dα` and a crystallinity relaxation shift `a_X = 10^{BX·α}` (crystals
+    freeze relaxation as α→1). This generates the cooling-rate → crystallinity →
+    residual-stress pathway of `cfrtp_residual_stress_fe.py`. The Nakamura integrator
+    is checked against the closed-form isothermal Avrami `α = 1 − exp(−(K t)^n)`.
 - **Mixed-mode delamination** — Abaqus has this built in, so it is mostly an `.inp`:
   `*COHESIVE SECTION` + `*DAMAGE INITIATION, CRITERION=QUADS` + `*DAMAGE EVOLUTION,
   TYPE=ENERGY, MIXED MODE BEHAVIOR=BK, POWER=η`. This reproduces the Camanho-Davila

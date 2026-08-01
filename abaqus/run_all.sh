@@ -9,6 +9,7 @@
 #   bash run_all.sh delam                                  # delamination job only
 #   bash run_all.sh sanity                                 # 1-element free-contraction check
 #   bash run_all.sh ve                                     # viscoelastic cure job
+#   bash run_all.sh crystve                                # crystallization-coupled VE job
 #   bash run_all.sh delam3d                                # 3D mixed-mode delamination
 #
 # Nothing here reaches back to the sandbox; it runs entirely on your machine.
@@ -38,6 +39,11 @@ run_ve() {
   "$ABQ" job=cfrtp_cure_residual_ve user=cfrtp_cure_umat_ve.f interactive double
   echo "  -> cfrtp_cure_residual_ve.odb"
 }
+run_crystve() {
+  echo "=== residual stress (CRYSTALLIZATION-COUPLED VISCOELASTIC UMAT) ==="
+  "$ABQ" job=cfrtp_cryst_residual_ve user=cfrtp_cryst_umat_ve.f interactive double
+  echo "  -> cfrtp_cryst_residual_ve.odb"
+}
 run_delam3d() {
   echo "=== 3D mixed-mode delamination (COH3D8 + B-K) ==="
   "$ABQ" job=cfrtp_delamination_3d interactive double
@@ -49,9 +55,10 @@ case "$WHICH" in
   delam)   run_delam ;;
   sanity)  run_sanity ;;
   ve)      run_ve ;;
+  crystve) run_crystve ;;
   delam3d) run_delam3d ;;
   all)     run_cure; run_delam ;;
-  *) echo "usage: bash run_all.sh [cure|delam|sanity|ve|delam3d|all]"; exit 2 ;;
+  *) echo "usage: bash run_all.sh [cure|delam|sanity|ve|crystve|delam3d|all]"; exit 2 ;;
 esac
 
 echo "=== post-processing (odb -> summary) ==="
