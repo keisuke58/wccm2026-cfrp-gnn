@@ -30,15 +30,19 @@ The bare bell `K(T) = KMAX·exp(−((T−TCRYST)/WCRYST)²)` used in the UMAT/de
 This harness adds an **undercooling cutoff** (`K = 0 for T ≥ Tm`), after which Tp
 stays below Tm and the trends come out right.
 
-**Status / next step (physics deepening):**
-1. ✅ **Done** — the `Tm` undercooling cutoff is now in `cfrtp_cryst_umat_ve.f`
-   (new prop `TMELT` = PROPS(31), `CONSTANTS=31`; `K=0` for `T ≥ Tm`). Both
-   crystallization decks pass `TMELT` (250 °C fluoro, 343 °C PEEK). **Needs a
-   re-verify run on the Abaqus box** (new Fortran).
-2. ⏳ Move `K(T)` to the **Hoffman–Lauritzen** form (transport × nucleation factors,
-   vanishing at **both** Tg and Tm) for quantitative Tp. The bell+cutoff reproduces
-   the qualitative laws but predicts slow-cool Tp too close to Tm (~338 vs the
-   literature PEEK ~305–310 °C) — do this alongside a digitized-data fit.
+**Status (physics deepening):**
+1. ✅ **Done** — the `Tm` undercooling cutoff is in `cfrtp_cryst_umat_ve.f`
+   (`TMELT` = PROPS(31), `CONSTANTS=31`; `K=0` for `T ≥ Tm`).
+2. ✅ **Done** — **Hoffman–Lauritzen** `K(T)` implemented in `cfrtp_cryst_umat_hl.f`
+   (transport × nucleation, vanishing at **both** Tg and Tm0). The script now runs
+   **bell+cutoff vs HL** side by side: the bell predicts slow-cool Tp ~332 °C (**out**
+   of the literature ~305–312 °C band), HL predicts **~305 °C (in band)** with the
+   intrinsic `K(T)` peak at ~249 °C (PEEK's isothermal optimum). Physical-time deck:
+   `abaqus/cfrtp_cryst_peek_hl.inp` (10 °C/min real cooling; `K0` in 1/s, `τ_k` in s).
+   **Both UMATs need a re-verify run on the Abaqus box** (new Fortran).
+
+HL parameters (PEEK, literature-typical; confirm/refine with digitized DSC):
+`n=2.5, K0=1e6 /s, U*/R=755 K, Kg=7.0e5 K², Tm0=395 °C, T∞=Tg−30`.
 
 ## Quantitative comparison hook
 
