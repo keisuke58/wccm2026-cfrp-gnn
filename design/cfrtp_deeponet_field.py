@@ -87,7 +87,7 @@ def main():
     Xte, Yte, Rte, Lte = make_dataset(40, zetas)
     ymu, ysd = Ytr.mean(), Ytr.std() + 1e-9
 
-    dev = "cpu"
+    dev = "cuda" if torch.cuda.is_available() else "cpu"
     xb = torch.tensor(Xtr, device=dev); yb = torch.tensor((Ytr - ymu) / ysd, device=dev)
     zt = torch.tensor(zetas.reshape(-1, 1).astype(np.float32), device=dev)
     model = DeepONet(p=32).to(dev)
@@ -133,7 +133,7 @@ def main():
     Xg = np.stack([(np.log10(Rs)-np.log10(R_LO))/(np.log10(R_HI)-np.log10(R_LO)),
                    np.full_like(Rs, (Lfix-L_LO)/(L_HI-L_LO))], axis=1).astype(np.float32)
     with torch.no_grad():
-        F = model(torch.tensor(Xg), zt).cpu().numpy() * ysd + ymu    # (60, NZ)
+        F = model(torch.tensor(Xg, device=dev), zt).cpu().numpy() * ysd + ymu    # (60, NZ)
     im = axh.pcolormesh(zetas, Rs, F, shading="auto", cmap="magma")
     axh.set_yscale("log"); fig.colorbar(im, ax=axh, label="residual |σ₁₁| [MPa]*")
     axh.set_xlabel("normalized depth ζ"); axh.set_ylabel("cooling rate R [°C/min, log]")
