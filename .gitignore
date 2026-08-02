@@ -19,6 +19,7 @@ __pycache__/
 !abaqus/cfrtp_cryst_peek_hl.inp
 !abaqus/cfrtp_daikin_pfa_hl.inp
 !abaqus/cfrtp_delamination_3d.inp
+!abaqus/cfrtp_lbracket_springin.inp
 *.dat
 *.msg
 *.sta

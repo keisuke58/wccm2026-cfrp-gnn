@@ -996,6 +996,139 @@ def gen_delam3d(path, nx=40, ny=3, Lx=60.0e-3, Ly=20.0e-3, t=0.6e-3,
     return dict(nodes=2 * NB, els=2 * nx * ny, coh=ce - 2000000)
 
 
+# ------------------------------------- L-bracket spring-in (real 3D FE, Daikin CFRTP)
+def gen_lbracket_springin(path, Lf=30.0e-3, Rm=6.0e-3, t=3.0e-3, W=20.0e-3,
+                          nleg=8, narc=6, nt=3, nw=3):
+    """Real 3D FE of an L-bracket to capture SPRING-IN (the process-residual-stress
+    warpage of a curved composite part -- the classic, measurable validation量).
+
+    Two perpendicular flanges joined by a quarter-circle corner (mid-radius Rm,
+    thickness t, width W), meshed with C3D8. Driven by a melt->cool cycle through
+    the Hoffman-Lauritzen crystallization + VE UMAT (cfrtp_cryst_umat_hl.f,
+    Daikin PFA-representative PLACEHOLDER props). A statically-determinate 3-2-1
+    support lets the part warp freely, so residual stresses close the corner
+    (spring-in). Node sets A_TIP/A_ROOT/B_TIP/B_ROOT let springin_angle.py measure
+    the enclosed flange angle vs the initial 90 deg. Physical time; magnitudes
+    illustrative (placeholder params) until Daikin data.
+
+    NB: single global material orientation (layup-resolved orientation is a
+    refinement); spring-in still arises from CTE + crystallization shrinkage +
+    the corner. Connectivity uses the same positive-volume ordering as gen_cure."""
+    import math
+    segA, segArc, segB = Lf, Rm * math.pi / 2.0, Lf
+    S = segA + segArc + segB
+    NS = nleg + narc + nleg                      # path elements
+    NT1, NW1 = nt + 1, nw + 1
+
+    def pathpt(s):                               # -> (Xc, Yc, nx, ny) mid-surface + in-plane normal
+        if s <= segA:
+            return Rm, -(segA - s), 1.0, 0.0                     # vertical leg A (x=Rm)
+        if s <= segA + segArc:
+            a = (s - segA) / Rm                                  # arc, a in [0, pi/2]
+            return Rm*math.cos(a), Rm*math.sin(a), math.cos(a), math.sin(a)
+        u = s - segA - segArc
+        return -u, Rm, 0.0, 1.0                                  # horizontal leg B (y=Rm)
+
+    # non-uniform s sampling: leg A (nleg), arc (narc), leg B (nleg)
+    svals = ([segA * i / nleg for i in range(nleg)] +
+             [segA + segArc * i / narc for i in range(narc)] +
+             [segA + segArc + segB * i / nleg for i in range(nleg + 1)])
+
+    def nid(isx, it, iw):
+        return 1 + (isx * NT1 + it) * NW1 + iw
+
+    L = ["*HEADING",
+         " CFRTP L-bracket spring-in (real 3D FE) -- residual-stress warpage",
+         " Hoffman-Lauritzen crystallization+VE UMAT (cfrtp_cryst_umat_hl.f).",
+         " *** Daikin PFA-representative PLACEHOLDER props (not validated). ***",
+         "**", "*NODE, NSET=NALL"]
+    for isx, s in enumerate(svals):
+        Xc, Yc, nx, ny = pathpt(s)
+        for it in range(NT1):
+            tau = -0.5 * t + t * it / nt
+            for iw in range(NW1):
+                z = W * iw / nw
+                L.append(f" {nid(isx,it,iw)}, {Xc+tau*nx:.6e}, {Yc+tau*ny:.6e}, {z:.6e}")
+
+    L.append("*ELEMENT, TYPE=C3D8, ELSET=EALL")
+    e = 0
+    for isx in range(NS):
+        for it in range(nt):
+            for iw in range(nw):
+                e += 1
+                c = [nid(isx, it, iw), nid(isx+1, it, iw), nid(isx+1, it, iw+1), nid(isx, it, iw+1),
+                     nid(isx, it+1, iw), nid(isx+1, it+1, iw), nid(isx+1, it+1, iw+1), nid(isx, it+1, iw+1)]
+                L.append(" " + ", ".join(str(v) for v in [e] + c))
+
+    L += ["**",
+          "*ORIENTATION, NAME=ORI0, DEFINITION=COORDINATES",
+          " 1.0, 0.0, 0.0,  0.0, 1.0, 0.0",
+          " 3, 0.0",
+          "*SOLID SECTION, ELSET=EALL, MATERIAL=DAIKINPFA, ORIENTATION=ORI0"]
+
+    # HL crystallization-coupled VE UMAT, 32 constants (PFA placeholder), 23 SDV.
+    L += ["**",
+          "*MATERIAL, NAME=DAIKINPFA",
+          "*DEPVAR",
+          " 23,",
+          "1, alpha, relative crystallinity",
+          "2, g_chile, stiffness fraction",
+          "3, smax, max abs sigma11",
+          "4, aT, WLF shift",
+          "5, aX, crystallinity shift",
+          "*USER MATERIAL, CONSTANTS=32",
+          "** E1 E2 E3  NU12 NU13 NU23  G12 G13   (CF/PFA, matrix-dominated E2)",
+          " 120.0e9, 7.0e9, 7.0e9, 0.30, 0.30, 0.45, 3.5e9, 3.5e9,",
+          "** G23  A1 A2 A3  BETA  NAVRAMI K0[1/s] USTAR[K]  (A2=A3 HIGH fluoro CTE)",
+          " 2.4e9, -0.3e-6, 100.0e-6, 100.0e-6, -5.0e-3, 2.5, 1.0e6, 755.0,",
+          "** KG[K^2] TM0[C] TINF[C]  AGEL G0 GINF  G1 TAU1[s]   (PFA: Tm~305, Tg~90)",
+          " 2.0e5, 315.0, 60.0, 0.1, 0.01, 0.3, 0.4, 5.0,",
+          "** G2 TAU2[s] G3 TAU3[s]  WLF_C1 WLF_C2 WLF_TREF(Tg,C)  BX",
+          " 0.2, 50.0, 0.1, 500.0, 17.4, 51.6, 90.0, 2.0",
+          "*INITIAL CONDITIONS, TYPE=TEMPERATURE",
+          " NALL, 330.0",
+          "*INITIAL CONDITIONS, TYPE=SOLUTION",
+          " EALL, 1.0e-3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,",
+          " 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,",
+          " 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0"]
+
+    # 3-2-1 support at tip A (free to warp): NA(all), NB(+x thickness), NC(+path)
+    mt, mwid = nt // 2, nw // 2
+    isa = nleg                                   # index where the arc starts (s=segA)
+    isb = nleg + narc                            # index where the arc ends (s=segA+segArc)
+    NA = nid(0, 0, 0); NB = nid(0, nt, 0); NC = nid(1, 0, 0)
+    L += ["**",
+          f"*NSET, NSET=NA\n {NA},",
+          f"*NSET, NSET=NB\n {NB},",
+          f"*NSET, NSET=NC\n {NC},",
+          f"*NSET, NSET=A_TIP\n {nid(0, mt, mwid)},",
+          f"*NSET, NSET=A_ROOT\n {nid(isa, mt, mwid)},",
+          f"*NSET, NSET=B_ROOT\n {nid(isb, mt, mwid)},",
+          f"*NSET, NSET=B_TIP\n {nid(NS, mt, mwid)},",
+          "*BOUNDARY",
+          " NA, 1, 3, 0.0",
+          " NB, 2, 3, 0.0",
+          " NC, 3, 3, 0.0"]
+
+    # physical-time melt -> hold -> cool (10 C/min): 60 s hold + 1830 s = 1890 s
+    L += ["**",
+          "*AMPLITUDE, NAME=MELTCOOL, TIME=TOTAL TIME",
+          " 0.0, 330.0, 60.0, 330.0, 1890.0, 25.0",
+          "*STEP, NLGEOM=YES, INC=2000",
+          "*STATIC",
+          " 5.0, 1890.0, 1.0e-2, 30.0",
+          "*TEMPERATURE, AMPLITUDE=MELTCOOL",
+          " NALL, 1.0",
+          "*OUTPUT, FIELD",
+          "*ELEMENT OUTPUT",
+          " S, E, SDV",
+          "*NODE OUTPUT",
+          " U",
+          "*END STEP"]
+    open(path, "w").write("\n".join(L) + "\n")
+    return dict(nodes=(NS + 1) * NT1 * NW1, els=NS * nt * nw)
+
+
 if __name__ == "__main__":
     import os
     here = os.path.dirname(os.path.abspath(__file__))
@@ -1007,6 +1140,7 @@ if __name__ == "__main__":
     dpf = gen_daikin_pfa_hl(os.path.join(here, "cfrtp_daikin_pfa_hl.inp"))
     d = gen_delam(os.path.join(here, "cfrtp_delamination_mixedmode.inp"))
     d3 = gen_delam3d(os.path.join(here, "cfrtp_delamination_3d.inp"))
+    lb = gen_lbracket_springin(os.path.join(here, "cfrtp_lbracket_springin.inp"))
     s = gen_1elem_sanity(os.path.join(here, "cfrtp_1elem_sanity.inp"))
     print(f"cure    : {c['nodes']} nodes, {c['els']} C3D8 elements")
     print(f"cure_ve : {cve['nodes']} nodes, {cve['els']} C3D8 (viscoelastic UMAT)")
@@ -1016,4 +1150,5 @@ if __name__ == "__main__":
     print(f"daikinpfa: {dpf['nodes']} nodes, {dpf['els']} C3D8 (Daikin PFA HL, PLACEHOLDER)")
     print(f"delam   : {d['nodes']} nodes, {d['els']} CPE4 + {d['coh']} COH2D4 elements")
     print(f"delam3d : {d3['nodes']} nodes, {d3['els']} C3D8 + {d3['coh']} COH3D8 elements")
+    print(f"lbracket: {lb['nodes']} nodes, {lb['els']} C3D8 (spring-in, Daikin PFA HL, PLACEHOLDER)")
     print(f"sanity  : {s['nodes']} nodes, {s['els']} C3D8 element")

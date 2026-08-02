@@ -39,6 +39,9 @@ inverse-design pipeline. For a real project the physics moves to a commercial so
 | `cfrtp_cryst_umat_hl.f` | UMAT: crystallization-coupled VE with a **Hoffman–Lauritzen** K(T) (transport × nucleation, vanishes at both Tg and Tm0) — quantitative Tp. 32 constants, 23 STATEV | `../validation/cfrtp_peek_validation.py` |
 | `cfrtp_cryst_peek_hl.inp` | **complete** carbon/PEEK deck (105 nodes, 48 C3D8) driven by the **HL** UMAT in **physical time** (10 °C/min); Tp lands in the documented ~305 °C band | same |
 | `cfrtp_delamination_3d.inp` | **complete** 3D bilayer (656 nodes, 240 C3D8 + 90 COH3D8), built-in cohesive + B-K; a curved delamination **front** develops across the width | `cfrtp_delamination_2d_fe.py` (3D extension) |
+| `cfrtp_daikin_pfa_hl.inp` | **complete** carbon/**Daikin-PFA** deck (105 nodes, 48 C3D8) driven by the **HL** UMAT — fluoropolymer-representative **PLACEHOLDER** params (high CTE, Tm≈305 °C, Tg≈90 °C); magnitudes illustrative until DSC/DMA data | `../design/*` |
+| `cfrtp_lbracket_springin.inp` | **complete** 3D **L-bracket** (368 nodes, 198 C3D8): two perpendicular flanges + quarter-corner (Rm=6 mm, t=3 mm, W=20 mm), HL crystallization+VE UMAT, statically-determinate 3-2-1 support so the part warps freely → **spring-in** (corner closes on cool-down). Daikin-PFA **PLACEHOLDER** params | `springin_angle.py` |
+| `springin_angle.py` | odbAccess post-processor: computes the L-bracket spring-in angle from deformed `A_TIP/A_ROOT/B_ROOT/B_TIP` node sets (enclosed-flange-angle change vs 90°) | — |
 | `gen_inp.py` | regenerates **all** decks (mesh size / geometry / layup / mixity / Prony); pure-Python, no Abaqus/numpy needed | — |
 
 ## Physics mapping (Python → Abaqus)
