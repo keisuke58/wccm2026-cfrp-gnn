@@ -14,6 +14,7 @@
 #   bash run_all.sh crystpeekhl                            # carbon/PEEK Hoffman-Lauritzen (physical time)
 #   bash run_all.sh daikinpfa                              # Daikin fluoropolymer (PFA) HL -- PLACEHOLDER params
 #   bash run_all.sh delam3d                                # 3D mixed-mode delamination
+#   bash run_all.sh lbracket                               # L-bracket spring-in (3D, HL UMAT) -- PLACEHOLDER params
 #
 # Nothing here reaches back to the sandbox; it runs entirely on your machine.
 set -euo pipefail
@@ -67,6 +68,13 @@ run_delam3d() {
   "$ABQ" job=cfrtp_delamination_3d interactive double
   echo "  -> cfrtp_delamination_3d.odb"
 }
+run_lbracket() {
+  echo "=== L-bracket SPRING-IN (3D, HL crystallization+VE UMAT) -- PLACEHOLDER params ==="
+  "$ABQ" job=cfrtp_lbracket_springin user=cfrtp_cryst_umat_hl.f interactive double
+  echo "  -> cfrtp_lbracket_springin.odb"
+  echo "  -> spring-in angle:"
+  "$ABQ" python springin_angle.py
+}
 
 case "$WHICH" in
   cure)      run_cure ;;
@@ -78,8 +86,9 @@ case "$WHICH" in
   crystpeekhl) run_crystpeekhl ;;
   daikinpfa) run_daikinpfa ;;
   delam3d)   run_delam3d ;;
+  lbracket)  run_lbracket ;;
   all)       run_cure; run_delam ;;
-  *) echo "usage: bash run_all.sh [cure|delam|sanity|ve|crystve|crystpeek|crystpeekhl|daikinpfa|delam3d|all]"; exit 2 ;;
+  *) echo "usage: bash run_all.sh [cure|delam|sanity|ve|crystve|crystpeek|crystpeekhl|daikinpfa|delam3d|lbracket|all]"; exit 2 ;;
 esac
 
 echo "=== post-processing (odb -> summary) ==="
