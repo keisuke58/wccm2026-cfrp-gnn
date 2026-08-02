@@ -20,10 +20,22 @@ Metrics:
           range [MPa], warpage max|U3| [mm], SDV_alpha range (degree of cure /
           relative crystallinity)
           -> compare with cfrp_cure_residual_stress_fe.py / cfrtp_residual_stress_fe.py
+  crystve/crystpeek/crystpeekhl/daikinpfa additionally report an FE-derived
+          crystallization peak temperature Tp: the temperature at which
+          d(alpha)/dt -- finite-differenced across output frames, using the
+          *AMPLITUDE, NAME=MELTCOOL table in the matching .inp for the
+          frame-time -> temperature lookup -- is maximal. This is the FE
+          analogue of Tp in validation/cfrtp_peek_validation.py, and is
+          comparable across decks even when their time axes are pseudo- vs.
+          physical-time, since the melt->cool amplitude is monotonic: the
+          (alpha, T) location of the rate peak doesn't depend on the time
+          scaling, only on temperature.
+          -> compare with validation/cfrtp_peek_validation.py
   delam/delam3d : peak reaction at the loaded tip, delamination front
           (max x with SDEG>0.5)
           -> compare with cfrtp_delamination_2d_fe.py
 """
+import os
 import sys
 
 try:
@@ -38,6 +50,69 @@ def last_step_frame(odb):
     return odb.steps[stepname], odb.steps[stepname].frames[-1]
 
 
+def _amplitude_table(inpname, ampname="MELTCOOL"):
+    """Parse a `*AMPLITUDE, NAME=<ampname>, TIME=TOTAL TIME` (time, value)
+    table out of an .inp file. Returns a time-sorted list of (time, value)
+    pairs, or [] if the file/amplitude isn't found."""
+    if not os.path.exists(inpname):
+        return []
+    pairs = []
+    in_block = False
+    with open(inpname) as f:
+        for line in f:
+            s = line.strip()
+            if s.upper().startswith("*AMPLITUDE"):
+                in_block = ("NAME=%s" % ampname).upper() in s.upper()
+                continue
+            if in_block:
+                if s.startswith("*"):
+                    break
+                nums = [float(x) for x in s.split(",") if x.strip()]
+                pairs.extend(zip(nums[0::2], nums[1::2]))
+    return sorted(pairs)
+
+
+def _temp_at(t, table):
+    """Piecewise-linear lookup of an amplitude (time, value) table at time t."""
+    if t <= table[0][0]:
+        return table[0][1]
+    if t >= table[-1][0]:
+        return table[-1][1]
+    for (t0, v0), (t1, v1) in zip(table, table[1:]):
+        if t0 <= t <= t1:
+            return v0 if t1 == t0 else v0 + (t - t0) / (t1 - t0) * (v1 - v0)
+    return table[-1][1]
+
+
+def crystallization_tp(step, inpname, ampname="MELTCOOL"):
+    """FE analogue of Tp in validation/cfrtp_peek_validation.py: the
+    temperature at which d(alpha)/dt -- finite-differenced across this step's
+    output frames -- is maximal. Returns None if SDV_alpha or the amplitude
+    table isn't available."""
+    table = _amplitude_table(inpname, ampname)
+    if len(table) < 2:
+        return None
+    ts, alphas = [], []
+    for fr in step.frames:
+        if "SDV_alpha" not in fr.fieldOutputs.keys():
+            continue
+        a = [v.data for v in fr.fieldOutputs["SDV_alpha"].values]
+        ts.append(fr.frameValue)
+        alphas.append(sum(a) / len(a))
+    if len(ts) < 3:
+        return None
+    best_rate, best_t = -1.0, None
+    for i in range(1, len(ts)):
+        dt = ts[i] - ts[i - 1]
+        if dt <= 0:
+            continue
+        rate = (alphas[i] - alphas[i - 1]) / dt
+        tmid = 0.5 * (ts[i] + ts[i - 1])
+        if rate > best_rate:
+            best_rate, best_t = rate, tmid
+    return _temp_at(best_t, table) if best_t is not None else None
+
+
 def node_coords(odb):
     """label -> (x,y,z) over all instances."""
     xyz = {}
@@ -47,7 +122,8 @@ def node_coords(odb):
     return xyz
 
 
-def cure(odbname="cfrtp_cure_residual.odb", label="cure", alpha_desc="degree of cure"):
+def cure(odbname="cfrtp_cure_residual.odb", label="cure", alpha_desc="degree of cure",
+         find_tp=False, inpname=None, ampname="MELTCOOL"):
     odb = openOdb(odbname, readOnly=True)
     step, fr = last_step_frame(odb)
     s11 = [v.data[0] for v in fr.fieldOutputs["S"].values]      # 11-component
@@ -59,6 +135,11 @@ def cure(odbname="cfrtp_cure_residual.odb", label="cure", alpha_desc="degree of 
     if "SDV_alpha" in fr.fieldOutputs.keys():
         a = [v.data for v in fr.fieldOutputs["SDV_alpha"].values]
         print("  %s alpha: [%.3f, %.3f]" % (alpha_desc, min(a), max(a)))
+    if find_tp:
+        tp = crystallization_tp(step, inpname or odbname.replace(".odb", ".inp"), ampname)
+        if tp is not None:
+            print("  FE crystallization Tp (peak d-alpha/dt): %.1f C  "
+                  "-- cf. validation/cfrtp_peek_validation.py" % tp)
     odb.close()
 
 
@@ -111,13 +192,13 @@ JOBS = [
     ("cure",      "cfrtp_cure_residual.odb", cure, {}),
     ("ve",        "cfrtp_cure_residual_ve.odb", cure, {"label": "ve"}),
     ("crystve",   "cfrtp_cryst_residual_ve.odb", cure,
-     {"label": "crystve", "alpha_desc": "relative crystallinity"}),
+     {"label": "crystve", "alpha_desc": "relative crystallinity", "find_tp": True}),
     ("crystpeek", "cfrtp_cryst_peek_validation.odb", cure,
-     {"label": "crystpeek", "alpha_desc": "relative crystallinity"}),
+     {"label": "crystpeek", "alpha_desc": "relative crystallinity", "find_tp": True}),
     ("crystpeekhl", "cfrtp_cryst_peek_hl.odb", cure,
-     {"label": "crystpeekhl", "alpha_desc": "relative crystallinity"}),
+     {"label": "crystpeekhl", "alpha_desc": "relative crystallinity", "find_tp": True}),
     ("daikinpfa", "cfrtp_daikin_pfa_hl.odb", cure,
-     {"label": "daikinpfa", "alpha_desc": "relative crystallinity"}),
+     {"label": "daikinpfa", "alpha_desc": "relative crystallinity", "find_tp": True}),
     ("delam",     "cfrtp_delamination_mixedmode.odb", delam, {}),
     ("delam3d",   "cfrtp_delamination_3d.odb", delam, {"label": "delam3d"}),
 ]
