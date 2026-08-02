@@ -37,7 +37,7 @@ inverse-design pipeline. For a real project the physics moves to a commercial so
 | `cfrtp_cryst_residual_ve.inp` | **complete** 3D [0/90] (105 nodes, 48 C3D8) driven by the **crystallization-coupled VE** UMAT on a melt→cool cycle | same |
 | `cfrtp_cryst_peek_validation.inp` | **complete** carbon/**PEEK** validation case (105 nodes, 48 C3D8) — literature-typical AS4/PEEK values so the method can be checked against **public** crystallization + residual-stress data (fluoropolymer-CF data are proprietary) | same |
 | `cfrtp_cryst_umat_hl.f` | UMAT: crystallization-coupled VE with a **Hoffman–Lauritzen** K(T) (transport × nucleation, vanishes at both Tg and Tm0) — quantitative Tp. 32 constants, 23 STATEV | `../validation/cfrtp_peek_validation.py` |
-| `cfrtp_cryst_peek_hl.inp` | **complete** carbon/PEEK deck (105 nodes, 48 C3D8) driven by the **HL** UMAT in **physical time** (10 °C/min); Tp lands in the documented ~305 °C band | same |
+| `cfrtp_cryst_peek_hl.inp` | **complete** carbon/PEEK deck (105 nodes, 48 C3D8) driven by the **HL** UMAT in **physical time** (10 °C/min); `postprocess.py`'s FE-derived Tp (finite-differenced `SDV_alpha` vs. the `*AMPLITUDE=MELTCOOL` schedule) measures **299.2 °C**, matching the Python HL sweep's own 10 °C/min prediction (299.4 °C) to within 0.2 °C — needs `*STATIC` increment ≤2 s (the default 30 s under-resolves the transition and reads ~296 °C) | same |
 | `cfrtp_delamination_3d.inp` | **complete** 3D bilayer (656 nodes, 240 C3D8 + 90 COH3D8), built-in cohesive + B-K; a curved delamination **front** develops across the width | `cfrtp_delamination_2d_fe.py` (3D extension) |
 | `cfrtp_daikin_pfa_hl.inp` | **complete** carbon/**Daikin-PFA** deck (105 nodes, 48 C3D8) driven by the **HL** UMAT — fluoropolymer-representative **PLACEHOLDER** params (high CTE, Tm≈305 °C, Tg≈90 °C); magnitudes illustrative until DSC/DMA data | `../design/*` |
 | `cfrtp_lbracket_springin.inp` | **complete** 3D **L-bracket** (368 nodes, 198 C3D8): two perpendicular flanges + quarter-corner (Rm=6 mm, t=3 mm, W=20 mm), HL crystallization+VE UMAT, statically-determinate 3-2-1 support so the part warps freely → **spring-in** (corner closes on cool-down). Daikin-PFA **PLACEHOLDER** params | `springin_angle.py` |
@@ -314,6 +314,30 @@ crystallization temperature window), but the same qualitative conclusion: crysta
 + VE relaxation brings residual stress down from a purely-elastic hundreds-of-MPa
 prediction to a measurement-grade tens-of-MPa
 range.
+
+**`crystpeek`'s Tp is not comparable to the Python bell sweep at any real cooling
+rate — caveat.** `postprocess.py` can also report an FE-derived crystallization peak
+temperature Tp (finite-difference `SDV_alpha` across output frames against the
+`*AMPLITUDE=MELTCOOL` time→temperature table) for any crystallization job, as the FE
+analogue of Tp in `../validation/cfrtp_peek_validation.py`. For `crystpeekhl` this
+lines up with the Python HL sweep almost exactly (see the table row above). For
+`crystpeek` it does **not**, and shouldn't be expected to: `cfrtp_cryst_peek_validation.inp`
+drives its `*STEP` on a **normalized pseudo-time axis** (`*AMPLITUDE=MELTCOOL` spans
+step-time `[0.15, 1.0]`, not seconds), with `KMAX=12.0` calibrated purely to reach
+`α=1.0` within that compressed pseudo-time window (per the note above). The Python
+bell model's `KMAX=0.02` (1/s) is calibrated for **real seconds** at realistic
+2-160 °C/min cooling rates — a different clock and a different rate constant, so the
+two Tp values (FE ≈294 °C vs. Python bell sweep ≈305-333 °C over that rate range)
+answer different questions and their disagreement is expected, not a bug. Verified
+directly: replaying `cfrtp_cryst_peek_validation.inp`'s exact pseudo-time schedule with
+its `KMAX=12.0` reproduces the FE's α≈1.0 / Tp≈294-298 °C; replaying the *same*
+schedule with the Python seed's `KMAX=0.02` barely crystallizes at all (α_final≈0),
+since 0.02/s is far too slow a rate constant for a ramp compressed into ~0.85
+pseudo-time-units. If a genuine, quantitative bell-vs-HL Tp comparison at a matched
+real cooling rate is ever needed, `cfrtp_cryst_peek_validation.inp` would need to be
+recalibrated onto real physical seconds (like `crystpeekhl` already is) with `KMAX`
+re-tuned for a chosen target rate — not done here, since `crystpeek` was always meant
+as the illustrative/pseudo-time counterpart, not a rate-matched validation deck.
 
 **`cfrtp_delamination_3d.inp` (3D mixed-mode front, COH3D8 + B-K)**:
 ```
