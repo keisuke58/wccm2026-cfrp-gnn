@@ -212,6 +212,17 @@ def _plot(out, nodes, tris, sig_p, t, T, hist_e, hist_s, hist_p, rates, ps_r, pp
           pe, ps, pp):
     import matplotlib
     matplotlib.use("Agg")
+    import os, shutil, sys
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                    "slides", "figure_sources"))
+    try:                                   # repo convention: thesis_style, graceful fallback
+        from thesis_style import use
+        use(width_frac=1.0, aspect=0.45)
+        if shutil.which("latex") is None:  # style turns usetex on; no TeX here -> plain text
+            matplotlib.rcParams["text.usetex"] = False
+            matplotlib.rcParams["font.family"] = "sans-serif"   # lmodern is unavailable too
+    except Exception:
+        pass
     import matplotlib.pyplot as plt
     import matplotlib.tri as mtri
     triang = mtri.Triangulation(nodes[:, 0] * 1e3, nodes[:, 1] * 1e3, tris)
