@@ -27,6 +27,7 @@
 | 残留応力(FE) | `cfrp_cure_residual_stress_fe.py` | 弱形式FE＋硬化度(DoC)＋CHILE 増分連成、σとε両場 | 単一プライ自由収縮→残留≈0 検証、σxx[−139,77]MPa |
 | CFRTP版 | `cfrtp_residual_stress_fe.py` | 熱可塑(溶融→結晶化→冷却)＋**冷却速度→結晶化度→残留応力感度** | 高CTEフッ素樹脂系で残留応力大、冷却速度依存を提示 |
 | 粘弾性 | `cfrtp_viscoelastic_residual_stress.py` | 熱粘弾性緩和 τ(T) 導入で**実測級**に | **弾性500→粘弾性131 MPa（74%緩和）**、速い冷却ほど残留応力増（実験的既知） |
+| Prony多緩和 | `cfrtp_prony_viscoelastic_residual_stress.py` | 単一τを4項Pronyスペクトル(g∞含む)に一般化 | 弾性500→単一τ131→Prony176 MPa、冷却速度感度は単一τよりなだらか（スペクトルが広い分） |
 | 界面 ILSS | `cfrtp_ilss_interface.py` | 凝集域(cohesive)界面要素（mode-II shear-lag） | **弱い界面13.8 vs 表面処理38.1 MPa（2.8倍）**、残留せん断が容量を食い ILSS 13.8→3.9 |
 | 混合モード | `cfrtp_cohesive_mixedmode.py` | Camanho–Davila＋Benzeggagh–Kenane | **消散エネルギー＝Gc(B) を機械精度検証**、破壊包絡線、モード比依存 |
 | 2D剥離FE | `cfrtp_delamination_2d_fe.py` | メッシュ上の混合モード剥離**前縁進展** | 前縁 a0 5→19.8mm、伝播ピーク10.3kN/m→軟化、cohesive過程帯 |
@@ -54,7 +55,7 @@
 
 ## 7. 正直な限界と次段
 - 例示スケール／未校正（実測データ差し替えで確定）、線形微小変形・簡約構成則が中心。
-- 次段：**3D 混合モード剥離前縁**、**非等温2キャリアではなく**（それは半導体側）CFRTP なら**Prony 級数粘弾性・工具拘束**、
+- 次段：**3D 混合モード剥離前縁**、**工具拘束**、Prony 級数の**実測 DMA 校正**（項数・τ_k・w_k を差し替え）、
   **開繊/含浸のボイド→力学特性**連成、実測校正の本番化、逆設計（アンチスティクション/低残留応力の成形条件）。
 
 ## 8. 一言

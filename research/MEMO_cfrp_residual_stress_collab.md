@@ -45,7 +45,14 @@
   熱粘弾性緩和（Arrhenius/TTS 的な τ(T)＝高温で速く緩和・冷却で凍結）を増分に導入。**弾性 500 MPa → 粘弾性 131 MPa
   （74%緩和＝実測級）**。凍結温度 TREF≈120℃（フッ素樹脂 Tg 相当）。物理時間 dt=|ΔT|/rate ゆえ**冷却速度依存が発現**：
   粘弾性は**速い冷却ほど残留応力が増大**（緩和時間不足＝実験的に既知の CFRTP 挙動）。単一プライ→残留≈0 検証。
-  次段：Prony 級数（多緩和）、実測校正。
+  次段：実測校正。
+- **Prony 級数（多緩和）版（作成済み）**：[`cfrtp_prony_viscoelastic_residual_stress.py`](../cfrtp_prony_viscoelastic_residual_stress.py) —
+  単一緩和時間 τ を **4本の対数間隔 Prony 項**（w_k, τ_k0＝Tref で 0.01〜1e4 s）＋**凍結率 g∞**（Σw_k+g∞=1）に一般化。
+  同じ TTS シフトを全項で共有（thermorheologically simple）。緩和弾性率 G(t)/G0 は単一指数よりブロード（stretched-exponential 的）。
+  ピーク残留応力：弾性500 → 単一緩和131 → Prony 176 MPa（速い冷却では単一緩和とProny が収束、遅い冷却では単一緩和よりProny が高く残る＝
+  短時間緩和項だけでは緩和しきらない長時間項が残るため）。**冷却速度 0.5〜64 ℃/s の間のピーク応力の変化幅**は単一緩和100 MPa→Prony 80 MPa
+  （緩和スペクトルがより多くの時間桁に広がる分、同じ速度レンジでの感度はなだらかになる）。単一プライ→残留≈0 検証。
+  次段：実測 DMA 緩和スペクトルへの τ_k・w_k の較正。
 - **界面接着 ILSS（作成済み・②）**：[`cfrtp_ilss_interface.py`](../cfrtp_ilss_interface.py) — **凝集域(cohesive)界面要素**（mode-II
   shear-lag, 双線形則）で課題①＝界面接着を定量化。**弱い界面（フッ素樹脂・低表面エネルギー）ILSS 13.8 MPa vs
   表面処理界面 38.1 MPa（2.8倍）**。せん断ラグ応力集中ゆえ ILSS < τ_max。**残留応力との連成**：残留界面せん断が
