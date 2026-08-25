@@ -192,6 +192,23 @@ NEDO の CFRTP 系事業として最有力候補だった同事業の**事業原
 - 逆に言うと、両テーマの**律速は同じ「実データ」**であり、片方でも通れば「物理主役＋ML従属」の主張が
   例示から**検証済み**に格上げされる。ロードマップ上の優先度は高い。
 
+### 未確認項目の「確認先」リンク集（2026-08-25 調べ）
+
+> ⚠️ **調査環境からは `nedo.go.jp` / `aist.go.jp` / `daikinchemicals.com` がいずれも egress proxy で
+> ブロックされており、以下は開けていない**（検索結果に現れた URL）。NEDO 事業原簿のときと同様、
+> **手元で開いて内容を貼れば解析・確定できる**。優先度順。
+
+| # | 埋めたい穴 | 確認先 | 何が分かるか |
+|---|---|---|---|
+| ★1 | ダイキン CFRTP の**材料同定と物性**（[`DAIKIN_DATA_NEEDED.md`](./DAIKIN_DATA_NEEDED.md) の項目1・4） | [フッ素樹脂／炭素繊維 複合材料 製品PDF](https://www.daikinchemicals.com/library/pb_common/pdf/magazine/202110_cfrtp/product-information-cfrtp-under-development-J_ver03_Jul_2022.pdf) / [航空機構造材料](https://www.daikinchemicals.com/jp/solutions/industries/aerospace/aircraft-structural-materials.html) | 樹脂系（PFA/FEP/ETFE?）・CF種・Vf・積層・機械特性・成形温度。**`abaqus/` の PLACEHOLDER を実値に替えられる可能性** |
+| ★2 | 産総研 GAA ラインの**利用制度**（大学が使えるか＝実データ入手経路） | [ASMA 先端半導体製造技術コンソーシアム](https://unit.aist.go.jp/cpo-eleman2022/ASMA/) / [設立プレスリリース](https://www.aist.go.jp/aist_j/news/pr20210331.html) / [共用研究開発施設パンフレット(PDF)](https://www.aist.go.jp/pdf/aist_j/business/orp/OpenFacility_pamphlet.pdf) | **第二種会員＝「パイロットラインを活用して研究開発を行う法人」**が該当枠。会費・申込・大学の可否 |
+| ★3 | JST ASPIRE が本件の枠か | [ASPIRE 公募情報（採択課題一覧つき）](https://www.jst.go.jp/aspire/program/announce/) / [事業情報](https://www.jst.go.jp/aspire/about.html) / [2026年度単独公募](https://www.jst.go.jp/aspire/program/announce/announce_aspire2026.html) | 2023-25年度の採択課題一覧。Top用(最大5億/5年)・次世代用(最大9千万/3年)の別 |
+| ★4 | デンソー/ダイセル/神戸製鋼の座組がどの制度か | [2025年度 先導研究 実施体制の決定](https://www.nedo.go.jp/koubo/SM3_100001_00084.html) / [2024年度 同](https://www.nedo.go.jp/koubo/SM3_100001_00062.html) / [先導研究プログラム 事業ページ](https://www.nedo.go.jp/activities/ZZJP_100100.html) / [2024年度パンフ(PDF)](https://www.nedo.go.jp/content/100982034.pdf) | 各年度「別紙1 採択テーマ及び実施体制」に**企業名入りの一覧**。ここに4社が出れば確定 |
+| 5 | 別の枠の可能性（航空機用樹脂・CFRP） | [JST SIP 革新的構造材料 航空機用樹脂・CFRP材料(PDF)](https://www.jst.go.jp/sip/k03/sm4i/dl/pamph_a_j.pdf) | SIP 側に類似テーマがあるか |
+| 6 | 産総研の大学連携の全体像 | [アカデミアにおける半導体研究推進と産総研の活用（文科省資料PDF）](https://www.mext.go.jp/content/20240531-mx_kankyou-000036299_4.pdf) / [先端半導体研究センター](https://unit.aist.go.jp/sfrc/about.html) | 大学がどう産総研を使えるかの制度説明 |
+| 7 | 神戸製鋼の CFRTP 関与 | [KOBELCO 研究開発成果](https://www.kobelco.co.jp/products/r-d/achieve/index.html) | CFRTP／異材接合の具体的な開発テーマ |
+| 8 | 市場・競合の俯瞰 | [富士経済 CFRP/CFRTP 世界市場調査](https://www.fuji-keizai.co.jp/press/detail.html?cid=25067&la=ja) | 用途別の伸び。提案書の背景に使える |
+
 ### 出典（二次情報。一次は要再確認）
 - NEDO 次世代複合材創製・成形技術開発プロジェクト: <https://www.nedo.go.jp/activities/ZZJP_100171.html>
 - NEDO CFRTP 開発プレスリリース: <https://www.nedo.go.jp/news/press/AA5_100221.html>
