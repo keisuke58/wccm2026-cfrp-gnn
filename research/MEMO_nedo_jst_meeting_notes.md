@@ -192,6 +192,55 @@ NEDO の CFRTP 系事業として最有力候補だった同事業の**事業原
 - 逆に言うと、両テーマの**律速は同じ「実データ」**であり、片方でも通れば「物理主役＋ML従属」の主張が
   例示から**検証済み**に格上げされる。ロードマップ上の優先度は高い。
 
+#### ✅ 確認済：産総研の共用施設制度（パンフレット PDF を入手・全文検索）
+**★重要な区別が判明：このパンフレットの共用施設と、目当ての GAA パイロットラインは別物。**
+「GAA」「ナノシート」「2nm」「パイロットライン」「ASMA」「先端半導体」は**全て 0 件**。
+＝ 共用施設パンフは**既設の一般共用施設**の制度説明であり、**新設 GAA ラインの利用条件は別途 ASMA 側の確認が必要**。
+
+**(a) スーパークリーンルーム（SCR）＝半導体側で該当する既設施設**
+- スーパークリーンルーム産学官連携研究棟。清浄度 JIS/ISO クラス3・3,000 ㎡、**φ300mm Si ウェハ試作ライン**、
+  半導体製造/評価・分析装置 **100台以上**。用途は CMOS デバイス、シリコンフォトニクス、**Cu配線・3次元実装**、装置開発用テストウェハ。
+- **外部からの利用は2形態**（いずれも利用内容は**非開示**、打合せ前の NDA 締結可、見学可）：
+  1. **共用施設等利用制度**：約款に基づく簡便な申込＋**単価表課金**。単工程試作や標準プロセスの小規模試作向け。
+     **300mm 装置は操作が複雑なため、原則 SCR 技術者が試作する「技術代行」**。
+  2. **共同研究**：長い試作工程・複雑な条件出しが必要な開発はこちら。
+- **大学の利用実績あり**（パンフ掲載例：大阪大学福井研・産総研共同研究／北陸先端大学水田研・産総研共同研究）。
+- **試作例に TSV がある**（2018年度〜、NEDO「IoT技術開発加速のためのオープンイノベーション推進事業」で整備した
+  3次元実装装置を利用公開。深掘りエッチング／ホール加工／Cu埋め込み）→ **本リポの TSV 系（`tsv_3d_stress.py`,
+  `tsv_interface_fracture.py`, `tsv_layout_gnn.py`）に直接対応する実データ取得先になりうる**。
+  ArF 液浸の標準 CMOS フロー（STI/ポリSiゲート/浅接合/Niサリサイド/Wプラグ/Al配線、ゲート長 60nm 級）も公開。
+  ＝ **GAA(2nm世代)ではないが、TSV・3次元実装なら今すぐ使える制度がある**、というのが実務的な要点。
+- 留意点：φ300mm SEMI M1 準拠以外（小片〜φ8インチ・非Si）は困難→ NPF/MEMS 施設へ。持込ウェハは汚染評価が必要。
+  マスクは標準 TEG マスク以外は利用者作製・持込（**マスク設計の技術代行なし**）。大量試作・納期保証は不可。
+- 窓口：`scr_contact-ml@aist.go.jp` / TEL 029-849-1530（**約款・単価表は SCR ページに掲載**）
+  <https://www.aist.go.jp/aist_j/information/organization/tia-co/orp/scr/index.html>
+
+**(b) 利用手続き（共通・8ステップ）**
+STEP1 事前相談（施設の管理責任者に技術的・スケジュール的可否を相談）→ STEP2 **内諾通知**（※契約ではない）→
+STEP3 利用申込書提出 → STEP4 審査（約款第3条第2項各号に基づく、**原則10営業日以内に回答**）→ STEP5 回答書発行 →
+STEP6 利用開始 → STEP7 **利用実績に基づく利用料金請求** → STEP8 利用報告書（ARIM 支援利用時のみ、A4 1枚）
+- 約款 PDF: <https://www.aist.go.jp/pdf/aist_j/tia/OpenFacilityAgreement.pdf>
+- 共用施設の利用サービス: <https://www.aist.go.jp/aist_j/information/organization/tia-co/orp/>
+
+**(c) 資金的支援：文科省 ARIM（マテリアル先端リサーチインフラ）**
+- 先端ナノ計測施設(ANCF)・ナノプロセシング施設(NPF)の利用に**ARIM 事業の支援**が使える。
+  **ARIM「試行的利用」**という資金的支援制度と、産総研独自の中小企業割引制度あり。
+- ARIM は**利用報告書・データ提供による利用結果公開が原則**だが、特許・論文発表の理由があれば**最大2年間の公開猶予**可。
+  **産総研自主運用として利用結果非公開での利用も可能**。
+- → 大学が費用を抑えて使う場合、まず ARIM 枠が現実的。ただし対象は ANCF/NPF であり **SCR が対象かは要確認**。
+
+#### ✅ 確定：2025年度 NEDO先導研究プログラムも**本件ではない**（別紙1 を入手・全数確認）
+「2025年度公募 NEDO先導研究プログラム／新技術先導研究プログラム／新産業・革新技術創出に向けた
+先導研究プログラム 採択テーマ及び実施体制一覧」（別紙1）を入手し、**採択20テーマ全数**を確認。
+- **ダイキン・デンソー・ダイセル・神戸製鋼：いずれも 0 件**。
+- **CFRTP・炭素繊維・熱可塑・残留応力：いずれも 0 件**（「複合材」1件はバイオプラスチック複合材料で無関係）。
+- 採択の中身は Ⅰ系14件（超高耐圧SiC、永久磁石、PFAS分解、CO2→BTX、合成生物学、バイオマス構造材料、
+  燃料アンモニア、酸素水素燃焼、SAF、リザバーコンピューティング、ミリ波・テラヘルツ、ケミカルリサイクル）＋
+  Ⅱ系6件（ロボティクス、AI、量子計測、DBTL非破壊計測、希少金属、インフラモニタリング）。
+- → **先導研究（2025年度）も除外**。残る候補は **2024年度以前の先導研究**、**NEDO の助成事業（別制度）**、
+  または **JST ASPIRE 側**。ダイキンとの有償共同研究＋NEDO 半額負担という形は、
+  公募型の研究プログラムよりも**助成金型の制度**の可能性が高い（要確認）。
+
 ### 未確認項目の「確認先」リンク集（2026-08-25 調べ）
 
 > ⚠️ **調査環境からは `nedo.go.jp` / `aist.go.jp` / `daikinchemicals.com` がいずれも egress proxy で
@@ -201,9 +250,9 @@ NEDO の CFRTP 系事業として最有力候補だった同事業の**事業原
 | # | 埋めたい穴 | 確認先 | 何が分かるか |
 |---|---|---|---|
 | ★1 | ダイキン CFRTP の**材料同定と物性**（[`DAIKIN_DATA_NEEDED.md`](./DAIKIN_DATA_NEEDED.md) の項目1・4） | [フッ素樹脂／炭素繊維 複合材料 製品PDF](https://www.daikinchemicals.com/library/pb_common/pdf/magazine/202110_cfrtp/product-information-cfrtp-under-development-J_ver03_Jul_2022.pdf) / [航空機構造材料](https://www.daikinchemicals.com/jp/solutions/industries/aerospace/aircraft-structural-materials.html) | 樹脂系（PFA/FEP/ETFE?）・CF種・Vf・積層・機械特性・成形温度。**`abaqus/` の PLACEHOLDER を実値に替えられる可能性** |
-| ★2 | 産総研 GAA ラインの**利用制度**（大学が使えるか＝実データ入手経路） | [ASMA 先端半導体製造技術コンソーシアム](https://unit.aist.go.jp/cpo-eleman2022/ASMA/) / [設立プレスリリース](https://www.aist.go.jp/aist_j/news/pr20210331.html) / [共用研究開発施設パンフレット(PDF)](https://www.aist.go.jp/pdf/aist_j/business/orp/OpenFacility_pamphlet.pdf) | **第二種会員＝「パイロットラインを活用して研究開発を行う法人」**が該当枠。会費・申込・大学の可否 |
+| ★2 | 産総研 **GAA ライン**の利用制度（大学が使えるか＝実データ入手経路） | [ASMA 先端半導体製造技術コンソーシアム](https://unit.aist.go.jp/cpo-eleman2022/ASMA/) / [設立プレスリリース](https://www.aist.go.jp/aist_j/news/pr20210331.html) / [SCR ページ（約款・単価表）](https://www.aist.go.jp/aist_j/information/organization/tia-co/orp/scr/index.html) | **第二種会員＝「パイロットラインを活用して研究開発を行う法人」**が該当枠。会費・申込・大学の可否。<br>※[共用施設パンフ(PDF)](https://www.aist.go.jp/pdf/aist_j/business/orp/OpenFacility_pamphlet.pdf) は**確認済＝GAA ラインは非掲載**（上記(a)(b)(c)）。**残る穴は ASMA 側だけ** |
 | ★3 | JST ASPIRE が本件の枠か | [ASPIRE 公募情報（採択課題一覧つき）](https://www.jst.go.jp/aspire/program/announce/) / [事業情報](https://www.jst.go.jp/aspire/about.html) / [2026年度単独公募](https://www.jst.go.jp/aspire/program/announce/announce_aspire2026.html) | 2023-25年度の採択課題一覧。Top用(最大5億/5年)・次世代用(最大9千万/3年)の別 |
-| ★4 | デンソー/ダイセル/神戸製鋼の座組がどの制度か | [2025年度 先導研究 実施体制の決定](https://www.nedo.go.jp/koubo/SM3_100001_00084.html) / [2024年度 同](https://www.nedo.go.jp/koubo/SM3_100001_00062.html) / [先導研究プログラム 事業ページ](https://www.nedo.go.jp/activities/ZZJP_100100.html) / [2024年度パンフ(PDF)](https://www.nedo.go.jp/content/100982034.pdf) | 各年度「別紙1 採択テーマ及び実施体制」に**企業名入りの一覧**。ここに4社が出れば確定 |
+| ★4 | デンソー/ダイセル/神戸製鋼の座組がどの制度か | ~~[2025年度 先導研究](https://www.nedo.go.jp/koubo/SM3_100001_00084.html)~~ **確認済＝該当なし**。<br>次に見るべき：[2024年度 実施体制の決定](https://www.nedo.go.jp/koubo/SM3_100001_00062.html) / [2024年度パンフ(PDF)](https://www.nedo.go.jp/content/100982034.pdf) / **[NEDO 助成事業の一覧](https://www.nedo.go.jp/activities/index.html)**（公募型でなく**助成金型**が本命の可能性） | 各年度「別紙1 採択テーマ及び実施体制」の企業名一覧。2025年度は20テーマ全数確認して4社なし |
 | 5 | 別の枠の可能性（航空機用樹脂・CFRP） | [JST SIP 革新的構造材料 航空機用樹脂・CFRP材料(PDF)](https://www.jst.go.jp/sip/k03/sm4i/dl/pamph_a_j.pdf) | SIP 側に類似テーマがあるか |
 | 6 | 産総研の大学連携の全体像 | [アカデミアにおける半導体研究推進と産総研の活用（文科省資料PDF）](https://www.mext.go.jp/content/20240531-mx_kankyou-000036299_4.pdf) / [先端半導体研究センター](https://unit.aist.go.jp/sfrc/about.html) | 大学がどう産総研を使えるかの制度説明 |
 | 7 | 神戸製鋼の CFRTP 関与 | [KOBELCO 研究開発成果](https://www.kobelco.co.jp/products/r-d/achieve/index.html) | CFRTP／異材接合の具体的な開発テーマ |
