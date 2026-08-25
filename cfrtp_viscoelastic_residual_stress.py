@@ -29,10 +29,12 @@ vs VISCOELASTIC (relaxation pulls the locked-in stress down to a realistic level
 viscoelastic residual stress field; and peak residual stress vs cooling rate for both
 models (relaxation makes it markedly rate sensitive).
 
-Honest scope: single-relaxation (not a full Prony series), scalar relaxation of the
-element stress, illustrative fluoropolymer-CFRTP-like properties and relaxation
-parameters; the magnitude is now plausible but still a seed, not calibrated to data.
-Physics leads; a process->residual surrogate (cf. ㉑) is the subordinate layer. No ML.
+Honest scope: single-relaxation (not a full Prony series -- see
+cfrtp_prony_viscoelastic_residual_stress.py for a multi-relaxation generalization),
+scalar relaxation of the element stress, illustrative fluoropolymer-CFRTP-like
+properties and relaxation parameters; the magnitude is now plausible but still a seed,
+not calibrated to data. Physics leads; a process->residual surrogate (cf. ㉑) is the
+subordinate layer. No ML.
 
 Run:  python3 cfrtp_viscoelastic_residual_stress.py
       python3 cfrtp_viscoelastic_residual_stress.py --help
