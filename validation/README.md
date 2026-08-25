@@ -14,11 +14,26 @@ python3 validation/cfrtp_peek_validation.py   # prints PASS/FAIL + writes the fi
 Running the same Nakamura law as the UMAT in **physical time** over a sweep of
 cooling rates (2–160 °C/min):
 
-| check | law | result |
-|---|---|---|
-| **V1** | crystallization peak Tp **decreases** with cooling rate | ✅ PASS (338 → 273 °C over 2 → 160 °C/min) |
-| **V2** | α(T) curves **shift to lower T** with faster cooling | ✅ PASS |
-| **V3** | final crystallinity **non-increasing**, collapses at high rate | ✅ PASS (1.0 → 0.27 at 160 °C/min) |
+| check | law | bell + cutoff | Hoffman–Lauritzen |
+|---|---|---|---|
+| **V1** | crystallization peak Tp **decreases** with cooling rate | ✅ PASS (338 → 273 °C) | ✅ PASS (312 → 262 °C) |
+| **V2** | α(T) **shifts to lower T** with faster cooling (via T_half) | ❌ **FAIL** — α never reaches 0.5 above 80 °C/min | ✅ PASS (313 → 263 °C) |
+| **V3** | final crystallinity **non-increasing** | ✅ PASS (1.0 → 0.27 at 160 °C/min) | ✅ PASS — but **vacuously**: α_f = 1.000 at every DSC rate |
+| **quant** | slow-cool Tp in the literature band ~305–312 °C | ❌ 332 °C, out of band | ✅ 305 °C, in band |
+| **quench** | α_f collapses at the rate PEEK actually quenches amorphous (order 10³ °C/min) | ❌ ~160 °C/min — already half-suppressed at a routine DSC rate | ✅ ~640 °C/min, right order |
+
+> ⚠️ **Corrected 2026-08-25.** This table previously recorded "V2 ✅ PASS" for a check
+> that `checks()` never computed — only V1 and V3 were ever returned. V2 is implemented
+> now, and it is **not** redundant: it fails the bell model.
+>
+> Two further honesty notes from that pass:
+> - **V3 is vacuous on the DSC rates for HL** (α_f = 1.000 throughout), so "non-increasing"
+>   passes while discriminating nothing. Real suppression needs quench rates, which is why
+>   the separate high-rate sweep (`QUENCH_RATES`) now carries that test.
+> - That quench sweep became a **third independent discriminator**, agreeing with the Tp
+>   band: HL loses crystallinity at the right order of magnitude, the bell model an order
+>   too early. The literature anchor here is only order-of-magnitude, so it is a weaker
+>   check than the Tp band — like `LIT_TP_BAND`, still to be pinned to a specific paper.
 
 ![PEEK crystallization validation](peek_crystallization_validation.png)
 
