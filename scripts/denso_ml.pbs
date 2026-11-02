@@ -4,7 +4,8 @@
 ##PBS -q QUEUE_NAME
 ## Resources. Torque syntax (same as inverse_rigor.pbs). If copaam runs PBS Pro and rejects
 ## this line, comment it out and use the select line below instead.
-#PBS -l nodes=1:ppn=16:gpus=1
+## copaam (Keio, Torque): nodes have 10-12 cores, so ppn=16 never starts. Pin a node (celtic03 has a dead GPU).
+#PBS -l nodes=1:ppn=10:gpus=1:vancouver01
 ##PBS -l select=1:ncpus=16:ngpus=1
 #PBS -l walltime=04:00:00
 #PBS -j oe
@@ -15,6 +16,10 @@
 set -e
 cd "${PBS_O_WORKDIR:-$(pwd)}"
 PY=${PY:-python3}
+unset LD_LIBRARY_PATH   # PBS sets the system CUDA libs, which clash with the pip CUDA wheels
+if [ -n "${PBS_GPUFILE:-}" ] && [ -f "$PBS_GPUFILE" ]; then
+  export CUDA_VISIBLE_DEVICES=$(grep -oE "gpu[0-9]+" "$PBS_GPUFILE" | head -1 | grep -oE "[0-9]+")
+fi
 NCPU=${PBS_NUM_PPN:-${NCPUS:-8}}
 OUT=results/denso_ml_$(date +%Y%m%d_%H%M)
 echo "[$(date '+%F %T')] denso_ml on $(hostname), cpus=$NCPU, out=$OUT"
