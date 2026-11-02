@@ -176,10 +176,13 @@ def write_deck(path, job, title, lay, c):
         L.append(f"*NSET, NSET={nm}"); _labels(L, lab)
     ab = {"D1111": (0, 0), "D1122": (0, 1), "D2222": (1, 1), "D1133": (0, 2),
           "D2233": (1, 2), "D3333": (2, 2), "D1212": (5, 5), "D1313": (4, 4), "D2323": (3, 3)}
+    # Abaqus requires a local orientation for anisotropic materials (fifa, 3 Nov 2026: "Anisotropic material
+    # properties without a local orientation system"); this one equals the global axes, so nothing else changes
+    L += ["*ORIENTATION, NAME=GLOBAL", " 1.0, 0.0, 0.0, 0.0, 1.0, 0.0"]
     for k in range(NL):
         C = lay["C"][k]; ae = lay["estar"][k] / lay["dT"]
         v = [C[ij] for ij in ab.values()]
-        L += [f"*SOLID SECTION, ELSET=L{k+1:02d}, MATERIAL=M{k+1:02d}",
+        L += [f"*SOLID SECTION, ELSET=L{k+1:02d}, MATERIAL=M{k+1:02d}, ORIENTATION=GLOBAL",
               f"*MATERIAL, NAME=M{k+1:02d}",
               f"** z/(H/2) = {lay['zm'][k]:+.4f}: a11 {lay['a11'][k]:.4f}, a22 {lay['a22'][k]:.4f}, "
               f"a33 {lay['a33'][k]:.4f}, X_c {lay['Xc'][k]:.4f}",
