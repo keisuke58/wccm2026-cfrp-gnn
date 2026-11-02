@@ -5,6 +5,7 @@ lamination-theory reference (<job>_ref.json from gen_denso_plate.py). Plain pyth
     python3 ../compare_denso_plate.py                        # every <job>_abaqus.json here
     python3 ../compare_denso_plate.py denso_asymmetric --fig  # also write <job>_compare.png
     python3 ../compare_denso_plate.py denso_asymmetric --calculix denso_asymmetric_ccx.dat
+    cd ansys/denso_plate/jobs && python3 ../../../abaqus/denso_plate/compare_denso_plate.py --ansys --fig
 
 Quantities compared:
   * residual (elastic) strain e_xx, e_yy of the centre-column elements vs the reference at the
@@ -57,6 +58,17 @@ def read_calculix(path, ref):
     ux = {int(r[0]): r[3] for r in block("set MIDX")}
     uy = {int(r[0]): r[3] for r in block("set MIDY")}
     return dict(job=ref["job"], solver="calculix", ee_xx=m[:, 0].tolist(), ee_yy=m[:, 1].tolist(),
+                u3_midx=[ux[n] for n in ref["midx_nodes"]], u3_midy=[uy[n] for n in ref["midy_nodes"]])
+
+
+def read_ansys(job, ref):
+    """CSV files written by the APDL input of ansys/denso_plate/gen_denso_plate_ansys.py."""
+    def rows(name):
+        return [[float(v) for v in l.split(",")] for l in open(f"{job}_ansys_{name}.csv") if l.strip()]
+    col = {int(r[0]): r[1:] for r in rows("col")}
+    ux = {int(r[0]): r[1] for r in rows("midx")}; uy = {int(r[0]): r[1] for r in rows("midy")}
+    return dict(job=job, solver="ansys", ee_xx=[col[e][0] for e in ref["col_elements"]],
+                ee_yy=[col[e][1] for e in ref["col_elements"]],
                 u3_midx=[ux[n] for n in ref["midx_nodes"]], u3_midy=[uy[n] for n in ref["midy_nodes"]])
 
 
@@ -116,15 +128,23 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("jobs", nargs="*")
     ap.add_argument("--calculix", help="read this CalculiX .dat instead of <job>_abaqus.json")
+    ap.add_argument("--ansys", action="store_true",
+                    help="read <job>_ansys_{col,midx,midy}.csv (ansys/denso_plate) instead")
     ap.add_argument("--fig", action="store_true")
     a = ap.parse_args()
-    jobs = a.jobs or sorted(p[:-len("_abaqus.json")] for p in glob.glob("*_abaqus.json"))
+    pat = "_ansys_col.csv" if a.ansys else "_abaqus.json"
+    jobs = a.jobs or sorted(p[:-len(pat)] for p in glob.glob("*" + pat))
     if not jobs:
         sys.exit("no <job>_abaqus.json found (run extract_denso_plate.py first)")
     nfail = 0
     for job in jobs:
         ref = json.load(open(job + "_ref.json"))
-        fe = read_calculix(a.calculix, ref) if a.calculix else json.load(open(job + "_abaqus.json"))
+        if a.calculix:
+            fe = read_calculix(a.calculix, ref)
+        elif a.ansys:
+            fe = read_ansys(job, ref)
+        else:
+            fe = json.load(open(job + "_abaqus.json"))
         r = compare(ref, fe)
         nfail += not r["ok"]
         print(f"{job:28s} [{fe.get('solver')}] strain err {r['strain_err']:.1e} | sag x "
