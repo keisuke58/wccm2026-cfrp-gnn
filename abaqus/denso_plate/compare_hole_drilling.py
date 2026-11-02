@@ -84,8 +84,8 @@ def main():
     summ = {}
     for ch, g in (("1", "GCH1"), ("3", "GCH3")):
         mine = np.max(np.abs(rel[g])); ex = np.max(np.abs(f12[f"Ch{ch}_exp"])); si = np.max(np.abs(f12[f"Ch{ch}_sim"]))
-        summ[g] = dict(peak=mine, peak_exp=ex, peak_paper_fe=si, ratio_to_exp=mine / ex, ratio_to_paper_fe=mine / si,
-                       depth_of_peak_mm=depth[int(np.argmax(np.abs(rel[g])))])
+        summ[g] = dict(peak=float(mine), peak_exp=float(ex), peak_paper_fe=float(si), ratio_to_exp=float(mine / ex),
+                       ratio_to_paper_fe=float(mine / si), depth_of_peak_mm=float(depth[int(np.argmax(np.abs(rel[g])))]))
         print(f"Ch{ch}: peak |e| {mine:.0f} (at {summ[g]['depth_of_peak_mm']:.2f} mm) vs measured {ex:.0f} "
               f"(x{mine/ex:.2f}) and paper FE {si:.0f} (x{mine/si:.2f}); paper FE / measured = x{si/ex:.2f}")
     json.dump(dict(job=a.job, solver=res["solver"], depth_mm=depth, released=rel, summary=summ),
