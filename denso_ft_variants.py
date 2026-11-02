@@ -177,6 +177,7 @@ def main():
     res = dict(args=vars(a), device=str(dev), source_only=src_only, variants=summ,
                lambda_cv={n: [float(v) for v in l] for n, l in lam_chosen.items()},
                raw={v: {n: [float(t) for t in x] for n, x in d.items()} for v, d in curve.items()})
+    os.makedirs(a.out, exist_ok=True)               # the folder may have been removed while running
     with open(os.path.join(a.out, "results.json"), "w") as f:
         json.dump(res, f, indent=1)
     print(f"\ntarget RMSE [x1e-3], mean +- sd over {a.repeats} repeats; source-only {src_only:.3f}; "

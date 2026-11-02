@@ -93,6 +93,7 @@ def main():
               " | ".join(f"ft n_t={nt} {row[f'target_ft_{nt}']['mean']:.3f}" for nt in nt_list) +
               f"  ({row['train_s']:.0f} s)")
     out["target_std"] = float(np.std(Ytt))
+    os.makedirs(a.out, exist_ok=True)               # the folder may have been removed while running
     with open(os.path.join(a.out, "results.json"), "w") as f:
         json.dump(out, f, indent=1)
     _plot(os.path.join(a.out, "denso_data_size.png"), out, nt_list)
