@@ -27,17 +27,20 @@ Validated here (no Abaqus in this environment):
   G3 the piecewise-constant reference differs from the 41-point trapezoid model used by the ML
      script by 2-4 % of the strain range (layer midpoints vs nodes across the steep skin; a
      discretisation difference, printed, not asserted);
-  G4 the same deck, converted to CalculiX 2.21 syntax (to_calculix.sh: keyword spellings only),
+  G4 the same deck, converted to CalculiX 2.21 syntax (to_calculix.py: keyword spellings only),
      agrees with the reference: strain error 6.9e-4 (asymmetric) / 5.5e-4 (symmetric), sag_y
      -1.3619 vs -1.3618 mm (calculix_check/).
-NOT validated: the decks have not been run in Abaqus itself. Run them on the Abaqus host
-(run_denso_plate.sh) and check with compare_denso_plate.py before using them for anything.
+  G5 Abaqus 2024 on fifa (2026-11-03, research/GUIDE_fifa_abaqus.md table 2): all six decks
+     (total / thermal / cryst x symmetric / asymmetric) PASS, strain error <= 7.4e-4, sag_y
+     -1.3619 vs -1.3618 mm, total = thermal + cryst to 1.3e-10. Abaqus needs the global
+     *ORIENTATION on each section for the orthotropic material (CalculiX does not).
 
 Honest scope: the physics is the same linear elastic eigenstrain model as the Python seed
 (no heat transfer, no crystallisation kinetics or viscoelasticity inside Abaqus; X_c comes
 from the Python 1-D cooling run). Running it in Abaqus checks the lamination model and builds
 the solver-to-dataset pipeline; it adds no new physics except finite-plate edge effects. The
-next step is a sequential heat-transfer + HL-UMAT deck (../cfrtp_cryst_umat_hl.f). All
+process analysis with heat transfer and the crystallisation-coupled viscoelastic UMAT is in
+gen_denso_process.py. All
 constants are ILLUSTRATIVE (uncalibrated), as in the Python seeds.
 
 Usage (any machine with python3 + numpy + matplotlib; Abaqus is NOT needed for this step):
