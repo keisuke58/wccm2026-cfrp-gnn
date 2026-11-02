@@ -118,10 +118,27 @@ fifa に qsub などのスケジューラがある場合は、サーバの規定
 - 残留ひずみの誤差：max |FE − 参照| / max |参照| < 5×10<sup>−3</sup>
 - そり量の差：max(5×10<sup>−3</sup> |参照|, 0.001 mm) 未満
 
-### 4.2 参照値（CalculiX による事前確認）
-本リポジトリの環境には Abaqus が無い。そこで同じ入力ファイルを CalculiX 2.21 で解いて確かめた。
+### 4.2 参照値（CalculiX による事前確認と fifa の Abaqus）
+クラウドの環境には Abaqus が無いので、まず同じ入力ファイルを CalculiX 2.21 で解いて確かめた（表1）。
 - 変換は `abaqus/denso_plate/to_calculix.sh` で行う。変えたのはキーワードの綴りと出力要求だけである。
-- **Abaqus 自身での実行はまだである。**
+- その後、fifa の Abaqus 2024 で解いた（表2）。
+
+**表2** fifa の Abaqus 2024 による照合（2026-11-03、`CPUS=4`、同じ 1/4 板 25 × 25 × 40 要素）
+
+| ケース | ひずみ誤差 | そり量 *x* [mm]（参照） | そり量 *y* [mm]（参照） | 判定 |
+|---|---|---|---|---|
+| `denso_symmetric` | 5.5×10<sup>−4</sup> | −0.0000（−0.0000） | −0.0000（−0.0000） | PASS |
+| `denso_asymmetric` | 6.9×10<sup>−4</sup> | −0.0562（−0.0563） | −1.3619（−1.3618） | PASS |
+| `denso_symmetric_thermal` | 7.4×10<sup>−4</sup> | −0.0000（−0.0000） | −0.0000（+0.0000） | PASS |
+| `denso_asymmetric_thermal` | 7.4×10<sup>−4</sup> | −0.0000（−0.0000） | −0.0000（+0.0000） | PASS |
+| `denso_symmetric_cryst` | 4.7×10<sup>−4</sup> | −0.0000（−0.0000） | −0.0000（+0.0000） | PASS |
+| `denso_asymmetric_cryst` | 5.0×10<sup>−4</sup> | −0.0562（−0.0563） | −1.3619（−1.3618） | PASS |
+
+- total と thermal + cryst の差は、`EE11`, `EE22`, 中央面の *u<sub>z</sub>* のどれも 1.3×10<sup>−10</sup> 以下で、重ね合わせが成り立つ。
+- 最初の実行は入力の段階で止まった（`***ERROR: Anisotropic material properties without a local orientation system`）。
+  Abaqus は直交異方性の材料に局所座標系を求めるが、CalculiX は求めないためである。
+  そこで `gen_denso_plate.py` で全体座標と同じ向きの `*ORIENTATION` を定義し、各層の `*SOLID SECTION` から参照した（`eeb8a71`）。
+  局所座標が全体座標と一致するので、剛性・荷重・出力の向きは変わらない。
 
 **表1** CalculiX による照合（例示定数、1/4 板 25 × 25 × 40 要素、4 コアで 30〜55 s）
 
@@ -131,7 +148,7 @@ fifa に qsub などのスケジューラがある場合は、サーバの規定
 | `denso_asymmetric` | 6.9×10<sup>−4</sup> | −0.0562（−0.0563） | −1.3619（−1.3618） | PASS |
 
 - 図：`abaqus/denso_plate/calculix_check/denso_asymmetric_calculix.png`
-- Abaqus でも表1と同程度（誤差 10<sup>−3</sup> 未満）になるはずである。ただし未確認である。
+- Abaqus でも表1と同じ値になった（表2、誤差 10<sup>−3</sup> 未満）。
 - 合格しない場合は、パラメータを合わせにいかずに、出力（`*.dat`, `*.msg`, 照合の数値）をそのまま報告する。
 
 ### 4.3 生成器自身の検証（`gen_denso_plate.py` が毎回表示）
