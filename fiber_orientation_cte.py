@@ -263,9 +263,12 @@ def _plot(out, Cud, closure):
     try:                                   # repo convention: thesis_style, graceful fallback
         from thesis_style import use
         use(width_frac=1.0, aspect=0.45)
-        if shutil.which("latex") is None:
+        if shutil.which("latex") is None:          # no TeX: Times-compatible text + STIX math
             matplotlib.rcParams["text.usetex"] = False
-            matplotlib.rcParams["font.family"] = "sans-serif"
+            matplotlib.rcParams["font.family"] = "serif"
+            matplotlib.rcParams["font.serif"] = ["Times New Roman", "Liberation Serif",
+                                                 "STIXGeneral", "DejaVu Serif"]
+            matplotlib.rcParams["mathtext.fontset"] = "stix"
     except Exception:
         pass
     import matplotlib.pyplot as plt
@@ -277,17 +280,17 @@ def _plot(out, Cud, closure):
 
     # (a) correct vs naive
     a = ax[0, 0]
-    a.plot(a11s, cor[:, 0, 0] * 1e6, "-", color="#1f77b4", lw=2, label=r"$\alpha_{11}$ correct")
-    a.plot(a11s, nai[:, 0, 0] * 1e6, "--", color="#1f77b4", lw=1.5, label=r"$\alpha_{11}$ naive")
-    a.plot(a11s, cor[:, 1, 1] * 1e6, "-", color="#d62728", lw=2, label=r"$\alpha_{22}$ correct")
-    a.plot(a11s, nai[:, 1, 1] * 1e6, "--", color="#d62728", lw=1.5, label=r"$\alpha_{22}$ naive")
+    a.plot(a11s, cor[:, 0, 0] * 1e6, "-", color="#1f77b4", lw=2, label=r"$\alpha_{11}$, stress-averaged")
+    a.plot(a11s, nai[:, 0, 0] * 1e6, "--", color="#1f77b4", lw=1.5, label=r"$\alpha_{11}$, direct average")
+    a.plot(a11s, cor[:, 1, 1] * 1e6, "-", color="#d62728", lw=2, label=r"$\alpha_{22}$, stress-averaged")
+    a.plot(a11s, nai[:, 1, 1] * 1e6, "--", color="#d62728", lw=1.5, label=r"$\alpha_{22}$, direct average")
     a.axhline(A_L * 1e6, color="k", ls=":", lw=1); a.axhline(A_T * 1e6, color="k", ls=":", lw=1)
     a.text(0.34, A_L * 1e6 + 1.5, "UD axial", fontsize=7)
     a.text(0.34, A_T * 1e6 - 4, "UD transverse", fontsize=7)
     a.set_xlabel(r"$a_{11}$  (1/3 = 3-D random, 1 = aligned)")
     a.set_ylabel(r"$\alpha$ [ppm/K]")
     a.set_title("averaging the thermal STRESS, not the expansion\n"
-                "(the naive direct average of alpha is the dashed line)")
+                "(dashed: direct average of alpha, which neglects mutual constraint)")
     a.legend(fontsize=7); a.grid(True, alpha=0.3)
 
     # (b) closure sensitivity
