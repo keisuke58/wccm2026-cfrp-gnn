@@ -1,127 +1,80 @@
-# 指示書（fifa）：Abaqus による残留ひずみモデルの照合
+# 指示書（fifa）：Abaqus による残留ひずみ解析
 
 > **対象サーバ**：fifa（Abaqus のライセンスがあるサーバ）。
-> **対象スクリプト**：`abaqus/denso_plate/` 以下。
-> - `gen_denso_plate.py`：入力ファイルと参照解を書き出す。
-> - `run_denso_plate.sh`：一括実行する。
-> - `extract_denso_plate.py`：odb から抽出する。
-> - `compare_denso_plate.py`：参照解と照合する。
->
-> **関連**：学習（機械学習）は copaam サーバで行う（[`GUIDE_copaam_ml_training.md`](./GUIDE_copaam_ml_training.md)）。
->
-> 本手順の目的：学習データの生成に使っている Python の積層理論モデルが、**同じ板を Abaqus の 3 次元固体要素で解いた結果と一致するか**を確かめること。
-> あわせて「Abaqus で解く → 結果を抽出 → 学習データにする」という経路を用意する。
+> **対象**：`abaqus/denso_plate/` 以下。
+> **関連**：学習（機械学習）は copaam で行う（[`GUIDE_copaam_ml_training.md`](./GUIDE_copaam_ml_training.md)）。
 > 定数はすべて例示値（未校正）である。
 
----
+## 0. 何を、どの順で行うか
 
-## 1. 解く問題
+| 順 | 内容 | 実行するもの | 必要なもの | 目安 |
+|---|---|---|---|---|
+| 1 | **弾性照合**（第 I 部）：学習データ生成に使う積層理論を、3 次元固体要素で確かめる | `run_denso_plate.sh` | Abaqus | **実施済み**（2026-11-03、6 ケースすべて PASS、§4 表2） |
+| 2 | **成形プロセス解析**（第 II 部）：熱伝導 → 結晶化を連成した粘弾性応力の逐次解析 | `run_denso_process.sh` | Abaqus ＋ UMAT 用 Fortran コンパイラ | **次に行う**。2 ケース、所要時間は未計測 |
 
-### 1.1 モデル
-- **形状**：100 mm × 100 mm × 3 mm の自由な平板である。対称性を使って 1/4（50 mm × 50 mm）を解く。
-- **要素**：C3D8I（非適合モード要素。曲げを精度よく表す）。分割は面内 25 × 25、板厚方向 40 層とする。
-- **材料**：層ごとに一つの材料を割り当てる。
-  - 剛性は、配向テンソル *a<sub>ij</sub>* で配向平均した ⟨***C***⟩（ハイブリッド閉包）である。
-  - *a<sub>ij</sub>* は対角なので、この剛性は全体座標で直交異方性になる。そのため `*ELASTIC, TYPE=ORTHOTROPIC` で表す。
-- **固有ひずみ**：層 *k* の固有ひずみ（eigenstrain）を次式で与える。
+第 I 部は物理を足さない確認である。**Abaqus が新しい物理（粘弾性緩和、脱型前後の拘束の変化、空冷中の結晶化）を加えるのは第 II 部**である。
 
-  *ε*\*<sub>*k*</sub> = ⟨***α***⟩<sub>*k*</sub> Δ*T* + ⟨***β***⟩<sub>*k*</sub> *X*<sub>c,*k*</sub>,  Δ*T* = *T*<sub>room</sub> − *T*<sub>lock</sub>  (1)
-
-  Abaqus には、これを等価な熱膨張係数 *α*<sub>eff,*k*</sub> = *ε*\*<sub>*k*</sub> / Δ*T* として与える。そのうえで、板全体を一様に *T*<sub>lock</sub> から *T*<sub>room</sub> へ冷やす。
-  - 線形弾性なので、この置き換えで固有ひずみは厳密に再現される。
-  - これは荷重を与えるための手段であり、結晶化収縮が熱的だと主張するものではない。
-  - *X*<sub>c</sub> は Python 側の 1 次元冷却・結晶化計算から取る。**Abaqus の中では熱伝導も結晶化も解いていない。**
-- **境界条件**：対称面は *x* = 0 で *u<sub>x</sub>* = 0、*y* = 0 で *u<sub>y</sub>* = 0 とする。中心の下面 1 点で *u<sub>z</sub>* = 0 とする。これ以外は自由である。
-
-### 1.2 参照解（積層理論）
-同じ区分一定の層について、自由な板のつり合いを厳密に積分して解く。
-
-[***A*** ***B***; ***B*** ***D***] [***ε***<sub>0</sub>; ***κ***] = [***N***\*; ***M***\*]  (2)
-
-残留ひずみ（弾性ひずみ）は次式で与えられる。
-
-***ε***<sub>res</sub>(*z*) = ***ε***<sub>0</sub> + *z* ***κ*** − ***ε***\*(*z*)  (3)
-
-これと Abaqus の比較量は次のとおりである。
-- 中心列の要素の弾性ひずみ `EE11`, `EE22`（積分点 8 点の平均 = 要素中心の値）。
-- 中央面の *u<sub>z</sub>* から求めた曲率。ここから板全体のそり量（矢高）*κ L*²/8 を得る。
-
----
-
-## 2. 準備（初回のみ）
+## 1. 準備（初回のみ）
 
 ```bash
 git clone https://github.com/keisuke58/wccm2026-cfrp-gnn.git   # 既にあれば: cd wccm2026-cfrp-gnn && git pull
 cd wccm2026-cfrp-gnn
 
-# Abaqus のコマンド名と版を確認（abaqus 以外の名前なら、以降 ABAQUS=<名前> で指定）
+# Abaqus のコマンド名と版（abaqus 以外の名前なら、以降 ABAQUS=<名前> を前につける）
 which abaqus && abaqus information=release
 
-# 入力ファイル生成用の Python（numpy と matplotlib が要る。Abaqus 付属の Python は使わない）
-python3 -c "import numpy, matplotlib; print('ok')" \
-  || python3 -m pip install --user numpy matplotlib
+# UMAT のコンパイル確認（第 II 部のみ）。"PASS" が出ればよい
+abaqus verify -user_std
+
+# 入力ファイル生成用の Python（numpy と matplotlib。Abaqus 付属の Python は使わない）
+python3 -c "import numpy, matplotlib; print('ok')" || python3 -m pip install --user numpy matplotlib
 ```
-- ユーザサブルーチン（UMAT）は使わないので、Fortran コンパイラは不要である。
 
 ---
+
+# 第 I 部 弾性照合
+
+## 2. 解く問題
+
+- **形状**：100 mm × 100 mm × 3 mm の自由な平板である。対称性を使って 1/4（50 mm × 50 mm）を解く。
+- **要素**：C3D8I（非適合モード要素）。分割は面内 25 × 25、板厚方向 40 層とする。
+- **材料**：層ごとに、配向テンソル *a<sub>ij</sub>* で配向平均した剛性 ⟨***C***⟩（ハイブリッド閉包）を与える。*a<sub>ij</sub>* が対角なので直交異方性になり、`*ELASTIC, TYPE=ORTHOTROPIC` で表せる。
+- **固有ひずみ**：層 *k* について次式で与える。
+
+  *ε*\*<sub>*k*</sub> = ⟨***α***⟩<sub>*k*</sub> Δ*T* + ⟨***β***⟩<sub>*k*</sub> *X*<sub>c,*k*</sub>,  Δ*T* = *T*<sub>room</sub> − *T*<sub>lock</sub>  (1)
+
+  これを等価な熱膨張係数 *α*<sub>eff,*k*</sub> = *ε*\*<sub>*k*</sub> / Δ*T* として与え、板全体を一様に冷やす。線形弾性なので、固有ひずみは厳密に再現される。
+  *X*<sub>c</sub> は Python 側の 1 次元計算から取る。
+- **参照解**：同じ区分一定の層について、つり合い式 (2) を厳密に積分して求める。残留ひずみは式 (3) で与える。
+
+  [***A*** ***B***; ***B*** ***D***] [***ε***<sub>0</sub>; ***κ***] = [***N***\*; ***M***\*]  (2)
+
+  ***ε***<sub>res</sub>(*z*) = ***ε***<sub>0</sub> + *z* ***κ*** − ***ε***\*(*z*)  (3)
 
 ## 3. 実行
-
-### 3.1 一括実行（推奨）
 ```bash
-cd wccm2026-cfrp-gnn
-CPUS=4 bash abaqus/denso_plate/run_denso_plate.sh
+CPUS=4 bash abaqus/denso_plate/run_denso_plate.sh                 # 対称・非対称の2ケース
+bash abaqus/denso_plate/run_denso_plate.sh --part thermal          # 熱の項だけ（任意）
+bash abaqus/denso_plate/run_denso_plate.sh --part cryst            # 結晶化の項だけ（任意）
 ```
-処理は次の4段階である。
-
-1. `gen_denso_plate.py` が `abaqus/denso_plate/jobs/` に次の2ケースを書き出す。
-   - `denso_symmetric`：金型 185 / 185 °C。
-   - `denso_asymmetric`：金型 170 / 200 °C。
-
-   書き出すファイルは、ケースごとに入力ファイル（約 3 MB）と参照解 `*_ref.json` である。
-2. 各ケースを `abaqus job=... interactive double` で解く。
-3. `abaqus python extract_denso_plate.py` で `*_abaqus.json` を書き出す。
-4. `compare_denso_plate.py` で照合し、`*_compare.png` を描く。不合格があれば終了コード 1 を返す。
-
-| 環境変数 | 既定値 | 意味 |
-|---|---|---|
-| `ABAQUS` | `abaqus` | Abaqus のコマンド名（例：`abq2024`） |
-| `CPUS` | 4 | Abaqus の並列数 |
-| `PY` | `python3` | 入力ファイル生成と照合に使う Python |
-
-### 3.2 熱と結晶化の寄与を分けて解く
-式 (1) は線形なので、熱の項と結晶化の項は重ね合わせられる。
-```bash
-bash abaqus/denso_plate/run_denso_plate.sh --part thermal   # 熱の項だけ
-bash abaqus/denso_plate/run_denso_plate.sh --part cryst     # 結晶化の項だけ
-```
-total = thermal + cryst が成り立つことは、`*_abaqus.json` を足して確かめられる。
-
-### 3.3 手で1ケースずつ回す場合
-```bash
-python3 abaqus/denso_plate/gen_denso_plate.py
-cd abaqus/denso_plate/jobs
-abaqus job=denso_asymmetric cpus=4 interactive double
-abaqus python ../extract_denso_plate.py denso_asymmetric
-python3 ../compare_denso_plate.py denso_asymmetric --fig
-```
-
-### 3.4 ジョブスケジューラ
-fifa に qsub などのスケジューラがある場合は、サーバの規定に従ってジョブにする。中身は §3.1 の1行でよい。
-
----
+スクリプトは次の4段階を順に行う。
+1. 入力ファイルと参照解を `abaqus/denso_plate/jobs/` に書き出す。
+2. Abaqus で解く。
+3. odb から抽出する（`abaqus python`）。
+4. 参照解と照合し、`*_compare.png` を描く。
 
 ## 4. 判定と参照値
 
-### 4.1 合格基準
-次の2つを満たせば合格とする（`compare_denso_plate.py` が `PASS` を出す）。
-- 残留ひずみの誤差：max |FE − 参照| / max |参照| < 5×10<sup>−3</sup>
+**合格基準**：次の2つを満たすこと。
+- ひずみの誤差：max |FE − 参照| / max |参照| < 5×10<sup>−3</sup>
 - そり量の差：max(5×10<sup>−3</sup> |参照|, 0.001 mm) 未満
 
-### 4.2 参照値（CalculiX による事前確認と fifa の Abaqus）
-クラウドの環境には Abaqus が無いので、まず同じ入力ファイルを CalculiX 2.21 で解いて確かめた（表1）。
-- 変換は `abaqus/denso_plate/to_calculix.sh` で行う。変えたのはキーワードの綴りと出力要求だけである。
-- その後、fifa の Abaqus 2024 で解いた（表2）。
+**表1** CalculiX 2.21 による事前確認。同じ入力ファイルを `to_calculix.py` で変換した（キーワードの綴りのみ変更）。
+
+| ケース | ひずみ誤差 | そり量 *y* [mm]（参照） | 判定 |
+|---|---|---|---|
+| `denso_symmetric` | 5.5×10<sup>−4</sup> | −0.0000（−0.0000） | PASS |
+| `denso_asymmetric` | 6.9×10<sup>−4</sup> | −1.3619（−1.3618） | PASS |
 
 **表2** fifa の Abaqus 2024 による照合（2026-11-03、`CPUS=4`、同じ 1/4 板 25 × 25 × 40 要素）
 
@@ -137,48 +90,112 @@ fifa に qsub などのスケジューラがある場合は、サーバの規定
 - total と thermal + cryst の差は、`EE11`, `EE22`, 中央面の *u<sub>z</sub>* のどれも 1.3×10<sup>−10</sup> 以下で、重ね合わせが成り立つ。
 - 最初の実行は入力の段階で止まった（`***ERROR: Anisotropic material properties without a local orientation system`）。
   Abaqus は直交異方性の材料に局所座標系を求めるが、CalculiX は求めないためである。
-  そこで `gen_denso_plate.py` で全体座標と同じ向きの `*ORIENTATION` を定義し、各層の `*SOLID SECTION` から参照した（`eeb8a71`）。
-  局所座標が全体座標と一致するので、剛性・荷重・出力の向きは変わらない。
-
-**表1** CalculiX による照合（例示定数、1/4 板 25 × 25 × 40 要素、4 コアで 30〜55 s）
-
-| ケース | ひずみ誤差 | そり量 *x* [mm]（参照） | そり量 *y* [mm]（参照） | 判定 |
-|---|---|---|---|---|
-| `denso_symmetric` | 5.5×10<sup>−4</sup> | −0.0000（−0.0000） | −0.0000（−0.0000） | PASS |
-| `denso_asymmetric` | 6.9×10<sup>−4</sup> | −0.0562（−0.0563） | −1.3619（−1.3618） | PASS |
-
+  そこで全体座標と同じ向きの `*ORIENTATION` を定義し、各層の `*SOLID SECTION` から参照した（`eeb8a71`）。
+  局所座標が全体座標と一致するので、剛性・荷重・出力の向きは変わらない。第 II 部の応力ジョブにも同じ定義を入れてある。
 - 図：`abaqus/denso_plate/calculix_check/denso_asymmetric_calculix.png`
-- Abaqus でも表1と同じ値になった（表2、誤差 10<sup>−3</sup> 未満）。
-- 合格しない場合は、パラメータを合わせにいかずに、出力（`*.dat`, `*.msg`, 照合の数値）をそのまま報告する。
 
-### 4.3 生成器自身の検証（`gen_denso_plate.py` が毎回表示）
-- **G1**：層剛性の直交異方性からのずれ。0 であること。
-- **G2**：参照解の力・モーメントのつり合い。10<sup>−16</sup> 程度であること。
-- **G3**：学習に使っている 41 点の台形則モデルとの差。ひずみ幅の 2〜4 % である。
-  - これは層の中点で評価するか節点で評価するかの離散化の差であり、誤りではない。
-  - 表層の急な配向変化の部分で差が出る。
+**示せたこと**：学習データの生成に使う積層理論は、同じ層構成の 3 次元固体要素（Abaqus）と、ひずみで 10<sup>−3</sup> 未満、そり量で 10<sup>−4</sup> mm の桁まで一致する。
 
 ---
 
-## 5. 次の段階（未実施）
+# 第 II 部 成形プロセス解析（熱伝導 → 粘弾性応力の逐次解析）
 
-1. **学習データの Abaqus 化。** `gen_denso_plate.py --sample N --seed S` で、学習に使うのと同じ乱数で N 枚の入力ファイルを作れる。
-   これを §3.3 の要領で解き、抽出する。
-   - copaam の学習スクリプトが Abaqus の結果を読み込む部分は、まだ書いていない。
-   - 現在のモデルでは、Abaqus の結果は積層理論と一致する（§4）。したがって学習データの中身はほぼ変わらない。
-     この段階の意味は、経路を整えることにある。
-2. **物理を Abaqus 側に移す。** 次の逐次解析に置き換えると、Abaqus が初めて新しい物理を足す。
-   - 熱伝導解析で、板厚方向の温度履歴を求める。
-   - 結晶化を連成した粘弾性 UMAT（`abaqus/cfrtp_cryst_umat_hl.f`）で、残留応力を求める。
-   - 加える物理は、粘弾性緩和、端部、実形状である。
-3. デンソー様の Ansys 解析と同じ量（ひずみの定義、評価位置）に合わせる。
+## 5. 解く問題
 
----
+同じ 1/4 板を、2 つのジョブで解く。節点・要素の番号は両ジョブで同一である。
 
-## 6. fifa 上の Claude Code に頼む場合の指示文
+**熱伝導ジョブ** `denso_heat_<case>`（DC3D8）
+- 初期温度：380 °C。
+- 次の3ステップを、固定増分で解く。
 
-> リポジトリ wccm2026-cfrp-gnn の `research/GUIDE_fifa_abaqus.md` に従って、Abaqus による照合を実行してください。
-> 1. §2 の手順で Abaqus のコマンド名と版、python3 の numpy と matplotlib を確認する。
-> 2. §3.1 の一括実行を行い、`compare_denso_plate.py` の出力を §4.2 の表1の形式にまとめる。`*_compare.png` も確認する。
-> 3. 余裕があれば §3.2（`--part thermal` と `--part cryst`）も実行し、total = thermal + cryst が成り立つかを確かめる。
-> 4. 不合格や Abaqus のエラーが出た場合は、`.msg` と `.dat` の該当箇所を添えて報告する。合格させるために設定や許容値を変えないこと。
+| ステップ | 時間 | 増分 | 熱境界条件 | 力学境界条件（応力ジョブ） |
+|---|---|---|---|---|
+| MOULD | 40 s | 0.05 s | 上下面を金型温度に固定（170 / 200 °C、対称ケースは 185 / 185 °C） | 外周面の面内変位を拘束（キャビティによる拘束）、厚さ方向は自由 |
+| EJECT | 0.01 s | 0.01 s | 固定を外し、上下面に熱伝達（*h* = 10 W/(m² K)、25 °C） | 外周の拘束を外す（反力は増分内で 0 に戻る） |
+| AIR | 1800 s | 5 s | 熱伝達のまま空冷 | 自由な板 |
+
+**応力ジョブ** `denso_proc_<case>`（C3D8I ＋ UMAT `denso_cryst_umat.f`）
+- 温度は熱伝導ジョブの odb から、ステップごとに読む（`*TEMPERATURE, FILE=...`）。
+- UMAT の構成は次のとおりである。
+  - 結晶化：Nakamura 則と Hoffman–Lauritzen の *K*(*T*) による。
+  - 粘弾性：一般化 Maxwell 模型（Prony 級数 3 項 ＋ 平衡項）とし、緩和時間を温度（WLF）と結晶化度の両方でずらす。
+  - 固有ひずみ：熱膨張と結晶化収縮を直交異方性で与える。
+- 増分の式は次のとおりである。
+
+  Δ*ε*\*<sub>*i*</sub> = *A<sub>i</sub>* Δ*T* + *B<sub>i</sub>* Δ*α*,  *B<sub>i</sub>* = ⟨*β*⟩<sub>*ii*</sub> *X*<sub>∞</sub>  (4)
+
+  *τ*<sub>*k*</sub>\* = *a<sub>T</sub>*(*T*) *a<sub>X</sub>*(*α*) *τ<sub>k</sub>*,  log<sub>10</sub> *a<sub>T</sub>* = −*C*<sub>1</sub>(*T* − *T*<sub>ref</sub>) / (*C*<sub>2</sub> + *T* − *T*<sub>ref</sub>),  *a<sub>X</sub>* = 10<sup>*B*<sub>X</sub> *α*</sup>  (5)
+
+- 定数（例示値）は次のとおりである。
+  - Prony 級数：*g*<sub>∞</sub> = 0.01、*g<sub>k</sub>* = 0.50 / 0.30 / 0.19、*τ<sub>k</sub>* = 5 / 50 / 500 s。
+  - WLF：*C*<sub>1</sub> = 17.4、*C*<sub>2</sub> = 51.6、*T*<sub>ref</sub> = 143 °C。
+  - 結晶化度による移動：*B*<sub>X</sub> = 2。
+- UMAT は、Abaqus 2024 で動作を確認済みの `abaqus/cfrtp_cryst_umat_hl.f` からの派生である。変更点は 1 箇所だけで、結晶化収縮を 3 方向別々に与えるようにした（親は一方向材用で、直交 2 方向に同じ値を与える）。
+
+## 6. 実行
+
+```bash
+cd wccm2026-cfrp-gnn
+CPUS=4 bash abaqus/denso_plate/run_denso_process.sh               # 対称・非対称の2ケース
+bash abaqus/denso_plate/run_denso_process.sh asymmetric            # 1ケースだけ
+```
+各ケースで、次を順に行う。
+1. 熱伝導ジョブを解く。
+2. 応力ジョブを解く（`user=denso_cryst_umat.f`）。
+3. 抽出する（`extract_denso_process.py`）。
+
+最後に照合（`compare_denso_process.py`）を行う。
+
+**時間の目安**：熱伝導は 1161 増分、応力も 1161 増分である（各増分は線形なので 1 回の反復で収束するはず）。
+- 参考として CalculiX では、熱伝導の全メッシュが 1 増分あたり約 7 s だった。Abaqus での時間は未計測である。
+- 長い場合は、スケジューラ（あれば）でジョブにする。中身は上の1行でよい。
+
+**よくあるエラーと対処**
+
+| 症状 | 対処 |
+|---|---|
+| `*TEMPERATURE` でファイルが見つからない | `FILE=denso_heat_<case>.odb` の `.odb` を外す。熱伝導ジョブの odb と同じディレクトリで実行しているかも確かめる |
+| UMAT のコンパイルに失敗する | §1 の `abaqus verify -user_std` を確かめる。Fortran 環境の設定は管理者に確認する |
+| 増分数の上限で止まる | 入力ファイルの `*STEP, INC=` を増やす。固定増分なので、必要数は 800 / 1 / 360 である |
+
+## 7. 判定と参照値
+
+`compare_denso_process.py` は、熱と応力を分けて照合する。
+
+- **(H) 熱**：中心列の温度履歴を、1 次元有限要素の参照解と比べる。合格は、1 s 以降の最大差が 0.5 K 未満であることとする。
+  - 金型に接した直後の数増分は、容量行列の積分法で差が出るので、合格判定から除く（最大差は表示される）。
+- **(M) 応力**：Python の参照解を、**Abaqus 自身が出した温度で計算し直して**比べる。比べる量と合格基準は次のとおりである。
+  - 応力：max |*σ*| の 2 % 未満。
+  - 結晶化度：差 0.01 未満。
+  - そり量：差が max(2 %, 0.01 mm) 未満。
+
+**表3** 事前確認（Abaqus なし）
+
+| 確認 | 結果 |
+|---|---|
+| UMAT（Fortran）と Python 移植の一致（gfortran で単点を駆動） | 応力 1.8×10<sup>−15</sup>、結晶化度 1.1×10<sup>−16</sup> |
+| 弾性極限（*g*<sub>∞</sub> = 1、結晶化なし）と積層理論の一致 | ひずみ 1.8×10<sup>−15</sup>、曲率は 10 桁一致 |
+| 熱と結晶化の重ね合わせ | 1.7×10<sup>−15</sup> |
+| 熱伝導の入力ファイル（CalculiX、面内 1 × 1 に縮約、全 3 ステップ） | 1 s 以降の最大差 0.31 K、終了時の最高温度 25.24 °C（参照解も 25.24 °C） |
+| 応力の入力ファイル | **未確認**（標準の CalculiX は UMAT を扱えない）。fifa での実行が最初の確認になる |
+
+**表4** Python 参照解による予測（Abaqus での確認前、例示定数）
+
+| ケース | 残留ひずみ *ε*<sub>res,*xx*</sub> の幅 [×10<sup>−3</sup>]（ロックイン模型） | そり量 *y* [mm]（ロックイン模型） |
+|---|---|---|
+| 対称 185 / 185 °C | 4.82（6.54） | 0.000（0.000） |
+| 非対称 170 / 200 °C | 4.83（6.66） | −1.652（−1.362） |
+
+Abaqus の結果が表4から大きく外れた場合は、パラメータを合わせにいかずに、`*.msg`、`*.dat` と照合の数値をそのまま報告すること。
+
+## 8. Claude Code に頼む場合の指示文（fifa 上で渡す）
+
+> リポジトリ wccm2026-cfrp-gnn の `research/GUIDE_fifa_abaqus.md` に従って、Abaqus の解析を実行してください。
+> 1. §1 の準備を行う。Abaqus のコマンド名と版、`abaqus verify -user_std` の結果、python3 の numpy と matplotlib を確認する。
+> 2. 第 I 部は実施済みなので飛ばしてよい（§4 表2）。入力ファイルの生成器を変えた場合だけ、§3 を回して表2と同じ結果になることを確かめる。
+> 3. 第 II 部（§6）を実行し、`compare_denso_process.py` の (H) と (M) の出力、各ジョブの所要時間、`denso_proc_*_compare.png` を報告する。
+>    あわせて、残留ひずみの幅とそり量を §7 の表4と並べる。
+> 4. エラーや不合格が出た場合は、§6 の表で対処できるものは対処し、それ以外は `.msg` と `.dat` の該当箇所を添えて報告する。
+>    合格させるために、材料定数・増分・許容値を変えないこと。
+> 5. `jobs/` は git の管理外である。結果のファイル（`jobs/` 以下の `*_abaqus.json` と `*_compare.png`）を `abaqus/denso_plate/abaqus_results/` にコピーし、
+>    ブランチを切ってコミットし、プッシュする。odb と inp は容量が大きいのでコミットしない。
