@@ -1,18 +1,19 @@
-// build_denso_purpose_slide.js — one slide: the purpose of the DENSO residual-strain study as an
-// algorithm flow, set against the procedure of the DENSO / Polyplastics paper it builds on
-// (Tsuda et al., J. Jpn. Soc. Compos. Mater. 52(3) 88–96, 2026; values in
-// data/literature/tsuda2026_jscm52_88.json). Academic register (CLAUDE.md): white background,
-// one accent colour (used only for the boxes this study adds), Mincho / Times via the theme patch.
-//
-// Run:  NODE_PATH="$(npm root -g)" PPTX_SKILL=/mnt/skills/public/pptx \
-//       node slides/build_denso_purpose_slide.js slides/denso_purpose_flow.pptx
+// build_denso_purpose_slide.js — one slide: the purpose of the DENSO residual-strain study as a
+// four-step flow with an evidence panel under each step, built on the DENSO / Polyplastics paper
+// (Tsuda et al., J. Jpn. Soc. Compos. Mater. 52(3) 88–96, 2026). Academic register (CLAUDE.md):
+// white background, one accent colour (only for what this study adds), Mincho / Times through the
+// theme patch, numbered equation, every panel captioned with its source.
+// Panels: python3 slides/figure_sources/denso_purpose_panels.py
+// Run:    NODE_PATH="$(npm root -g)" PPTX_SKILL=/mnt/skills/public/pptx \
+//         node slides/build_denso_purpose_slide.js slides/denso_purpose_flow.pptx
 const pptxgen = require("pptxgenjs");
 const fs = require("fs");
 const path = require("path");
 
 const OUT = process.argv[2] || "denso_purpose_flow.pptx";
-const LATIN = "Times New Roman", EA = "游明朝", BRACKET = "Cambria Math";
-const INK = "111111", MUTED = "555555", RULE = "8C8C8C", ACCENT = "1F3A5F";
+const FIG = (n) => path.join(__dirname, "figures_paper", n);
+const LATIN = "Times New Roman", EA = "游明朝";
+const INK = "111111", MUTED = "5A5A5A", RULE = "BFBFBF", ACCENT = "1F3A5F";
 const THEME = { name: "Academic Mincho Times", headFontFace: LATIN, bodyFontFace: LATIN,
   colors: { dk1: "111111", lt1: "FFFFFF", dk2: "444444", lt2: "F3F3F3", accent1: "333333",
     accent2: "555555", accent3: "777777", accent4: "999999", accent5: "BBBBBB", accent6: "DDDDDD",
@@ -24,90 +25,92 @@ pres.theme = { headFontFace: LATIN, bodyFontFace: LATIN };
 pres.author = "西岡 佳祐";
 pres.title = "本研究の目的";
 
-const it = (t) => ({ text: t, options: { italic: true } });
-const bi = (t) => ({ text: t, options: { italic: true, bold: true } });
+const it = (t, o = {}) => ({ text: t, options: Object.assign({ italic: true }, o) });
+const bi = (t, o = {}) => ({ text: t, options: Object.assign({ italic: true, bold: true }, o) });
 const ro = (t, o = {}) => ({ text: t, options: Object.assign({ italic: false }, o) });
-const si = (t) => ({ text: t, options: { italic: true, subscript: true } });
-const sr = (t) => ({ text: t, options: { italic: false, subscript: true } });
-const sup = (t) => ({ text: t, options: { italic: false, superscript: true } });
-const lb = () => ({ text: "⟨", options: { italic: false, fontFace: BRACKET } });
-const rb = () => ({ text: "⟩", options: { italic: false, fontFace: BRACKET } });
+const si = (t, o = {}) => ({ text: t, options: Object.assign({ italic: true, subscript: true }, o) });
+const sr = (t, o = {}) => ({ text: t, options: Object.assign({ italic: false, subscript: true }, o) });
 const tx = (t, o = {}) => ({ text: t, options: o });
 const br = (t, o = {}) => ({ text: t, options: Object.assign({ breakLine: true }, o) });
+const line = (s, x, y, w, color = RULE, width = 0.75) =>
+  s.addShape(pres.ShapeType.line, { x, y, w, h: 0, line: { color, width } });
 
 const s = pres.addSlide();
 s.background = { color: "FFFFFF" };
-s.addText("本研究の目的 — 既報の解析手順と、本研究で加える要素", { x: 0.6, y: 0.32, w: 12.1, h: 0.55,
-  fontSize: 23, bold: true, color: INK, isTextBox: true, margin: 0 });
-s.addShape(pres.ShapeType.line, { x: 0.6, y: 0.92, w: 12.1, h: 0, line: { color: "BFBFBF", width: 0.75 } });
 
-// ---------------------------------------------------------------- flow helpers ----
-const BW = 2.2, GAP = 0.27, X0 = 0.6;
-const bx = (i) => X0 + i * (BW + GAP);
-function box(i, y, h, head, body, accent = false) {
-  s.addShape(pres.ShapeType.rect, { x: bx(i), y, w: BW, h,
-    line: { color: accent ? ACCENT : RULE, width: accent ? 2.0 : 0.75 }, fill: { color: "FFFFFF" } });
-  s.addText([br(head, { bold: true, fontSize: 12.5, color: accent ? ACCENT : INK }), ...body],
-    { x: bx(i) + 0.08, y: y + 0.05, w: BW - 0.16, h: h - 0.1, fontSize: 11, color: INK,
-      isTextBox: true, margin: 0, valign: "top", lineSpacing: 15 });
-}
-function arrowH(i, y) {
-  s.addShape(pres.ShapeType.line, { x: bx(i) + BW + 0.03, y, w: GAP - 0.06, h: 0,
-    line: { color: INK, width: 1.0, endArrowType: "triangle" } });
-}
-function arrowV(x, y1, y2, dashed = false) {
-  s.addShape(pres.ShapeType.line, { x, y: y1, w: 0, h: y2 - y1,
-    line: { color: ACCENT, width: 1.0, endArrowType: "triangle", dashType: dashed ? "dash" : "solid" } });
-}
-
-// ------------------------------------------------------------- (a) the paper ------
-s.addText([tx("(a)　既報の手順", { bold: true }), tx("　津田ら（デンソー・ポリプラスチックス），日本複合材料学会誌 52(3), 88–96, 2026", { color: MUTED, fontSize: 11 })],
-  { x: 0.6, y: 1.05, w: 12.1, h: 0.32, fontSize: 13.5, color: INK, isTextBox: true, margin: 0 });
-const yA = 1.42, hA = 1.12;
-box(0, yA, hA, "配向の実測", [tx("X線マイクロCT で板厚方向の "), it("a"), si("ij"), ro("("), it("z"), ro(")")]);
-box(1, yA, hA, "平均場均質化", [tx("Mori–Tanaka（Digimat-MF）で層ごとの "), lb(), bi("C"), rb(), ro(", "), lb(), bi("α"), rb()]);
-box(2, yA, hA, "多層の有限要素解析", [tx("Abaqus、20 µm × 154 層、熱弾性、"), it("T"), sr("0"), tx(" = 180 °C から一様冷却")]);
-box(3, yA, hA, "残留応力", [tx("表面中心で "), it("σ"), si("xx"), tx(" = −24.3 MPa、"), it("σ"), si("yy"), tx(" = +15.2 MPa")]);
-box(4, yA, hA, "穿孔法による検証", [tx("φ1.6 mm、深さ 2.0 mm まで 0.2 mm ごとに解放ひずみを計測")]);
-for (let i = 0; i < 4; i++) arrowH(i, yA + hA / 2);
-s.addText([tx("結果：", { bold: true }), tx("符号と深さ方向の傾向は一致（定性的に一致）。定量的には、解析の解放ひずみが約 40 % 大きい。"),
-  tx("著者らの挙げる原因：", { bold: true }), tx("応力 0 とする温度 "), it("T"), sr("0"),
-  tx(" の仮定（冷却過程の温度変化と応力緩和）、および結晶化度の分布（金型 150 °C・アニールでは小さいと判断）。")],
-  { x: 0.6, y: 2.62, w: 12.1, h: 0.55, fontSize: 11.5, color: INK, isTextBox: true, margin: 0, lineSpacing: 16, valign: "top" });
-
-// ------------------------------------------------------------- (b) this study -----
-s.addText([tx("(b)　本研究の手順（計画）", { bold: true }), tx("　太枠は既報に対して本研究で加える要素", { color: MUTED, fontSize: 11 })],
-  { x: 0.6, y: 3.25, w: 12.1, h: 0.32, fontSize: 13.5, color: INK, isTextBox: true, margin: 0 });
-const yB = 4.05, hB = 1.25;
-box(0, yB, hB, "入力", [it("X"), sr("c"), ro("("), it("z"), ro(")"), tx("：結晶化度"), ro("", { breakLine: true }),
-  it("a"), si("ij"), ro("("), it("z"), ro(")"), tx("：繊維配向"), ro("", { breakLine: true }), tx("成形条件（金型温度など）")], true);
-box(1, yB, hB, "数値解析", [tx("Ansys により条件を変えて残留ひずみの場を計算する（多数・ノイズなし）")]);
-box(2, yB, hB, "事前学習", [tx("場のデータで予測モデル "), it("f"), si("θ"), tx(" を学習する")], true);
-box(3, yB, hB, "転移学習（較正）", [tx("デンソー様の点計測（少数、穿孔法を想定）で "), it("f"), si("θ"), tx(" を合わせ込む")], true);
-box(4, yB, hB, "予測", [tx("成形後の残留ひずみ "), it("ε"), sr("res"), ro("", { breakLine: true }),
-  tx("→ 変形・強度（段階②）、成形条件の設計（段階③）へ")]);
-for (let i = 0; i < 4; i++) arrowH(i, yB + hB / 2);
-// links from the paper's open issues to the added elements
-arrowV(bx(0) + BW / 2, 3.6, yB - 0.02, true);
-arrowV(bx(3) + BW / 2, 3.6, yB - 0.02, true);
-s.addText("既報の課題：結晶化度の分布", { x: bx(0) + BW / 2 + 0.08, y: 3.66, w: 2.5, h: 0.28, fontSize: 10, color: ACCENT, isTextBox: true, margin: 0 });
-s.addText("既報の課題：計算と実測の定量差（約 40 %）", { x: bx(3) + BW / 2 + 0.08, y: 3.66, w: 3.2, h: 0.28, fontSize: 10, color: ACCENT, isTextBox: true, margin: 0 });
-
-// ------------------------------------------------------------- purpose + eq. ------
-s.addShape(pres.ShapeType.line, { x: 0.6, y: 5.42, w: 12.1, h: 0, line: { color: "BFBFBF", width: 0.75 } });
+// ---------------------------------------------------------------- title + purpose ----
+s.addText([tx("本研究の目的", { bold: true, fontSize: 25 }),
+  tx("　結晶化度と繊維配向からの残留ひずみ予測", { fontSize: 15, color: MUTED })],
+  { x: 0.6, y: 0.28, w: 10.0, h: 0.55, color: INK, isTextBox: true, margin: 0, valign: "bottom" });
+s.addText([tx("太字・紺は本研究で加える要素", { color: ACCENT })],
+  { x: 9.6, y: 0.46, w: 3.14, h: 0.3, fontSize: 10, align: "right", isTextBox: true, margin: 0 });
+line(s, 0.6, 0.9, 12.14);
 s.addText([tx("目的：", { bold: true }),
-  tx("結晶化度と繊維配向から射出成形後の残留ひずみを予測するモデルを、数値解析による事前学習と少数の実測点による転移学習により構築し、計算と実測の定量差を補正する。")],
-  { x: 0.6, y: 5.52, w: 12.1, h: 0.6, fontSize: 13.5, color: INK, isTextBox: true, margin: 0, lineSpacing: 20, valign: "top" });
-s.addText([it("ε"), sr("res"), ro("("), it("z"), ro(") = "), it("f"), si("θ"), ro("("), it("X"), sr("c"), ro("("), it("z"), ro("), "),
-  it("a"), si("ij"), ro("("), it("z"), ro("), "), bi("m"), ro("; "), bi("s"), ro(")")],
-  { x: 0.6, y: 6.16, w: 5.6, h: 0.45, fontSize: 17, color: INK, align: "center", valign: "middle", isTextBox: true, margin: 0 });
-s.addText("(1)", { x: 6.0, y: 6.16, w: 0.6, h: 0.45, fontSize: 14, color: INK, align: "right", valign: "middle", isTextBox: true, margin: 0 });
-s.addText([bi("m"), tx("：断面の要約量（板厚平均・一次モーメント）。残留ひずみは断面全体のつり合いで決まるため、点の量だけでは不足する（予備検討、合成データ）。"),
-  bi("s"), tx("：成形条件。")],
-  { x: 6.8, y: 6.12, w: 5.9, h: 0.6, fontSize: 10.5, color: INK, isTextBox: true, margin: 0, lineSpacing: 14, valign: "top" });
-s.addText("注：(b) は計画であり、実データでは未実施。予備検討は合成データと例示値（未校正）による。既報の数値は同論文の本文・表による。",
-  { x: 0.6, y: 6.9, w: 12.1, h: 0.3, fontSize: 9.5, color: MUTED, isTextBox: true, margin: 0 });
-s.addNotes("上段は既報（津田ら 2026）の手順と、著者らが挙げた課題。下段は本研究の計画。課題から本研究で加える要素へ点線で結んだ。");
+  tx("射出成形した短繊維強化樹脂について、結晶化度と繊維配向から成形後の残留ひずみを予測するモデルを、数値解析による事前学習と少数の実測点による転移学習で構築し、計算と実測の定量差を補正する。")],
+  { x: 0.6, y: 0.98, w: 12.14, h: 0.6, fontSize: 13.5, color: INK, isTextBox: true, margin: 0, lineSpacing: 19, valign: "top" });
+
+// ---------------------------------------------------------------- four-step flow -----
+const X0 = 0.6, CW = 2.86, CG = 0.233;
+const cx = (i) => X0 + i * (CW + CG);
+const steps = [
+  { no: "1", head: "入力", added: true,
+    desc: [it("X"), sr("c"), ro("("), it("z"), ro(")"), tx(" 結晶化度、"), it("a"), si("ij"), ro("("), it("z"), ro(")"), tx(" 繊維配向（X線CT または流動解析）、成形条件 "), bi("s")],
+    fig: "purpose_p1_orientation.png",
+    cap: [tx("繊維配向の板厚方向分布（GF30/PPS、3.08 mm 板）。既報 図8(a) の読み取り値。")] },
+  { no: "2", head: "数値解析", added: false,
+    desc: [tx("Ansys で残留ひずみの場を多数の条件で計算し、事前学習のデータとする")],
+    fig: "purpose_p2_stress.png",
+    cap: [tx("既報の入力による残留応力（本リポジトリの計算、全量形式）。× は既報の表面値 −24.3／+15.2 MPa。")] },
+  { no: "3", head: "計算と実測の差", added: false,
+    desc: [tx("穿孔法の解放ひずみと比べると、傾向は一致するが、解析は約 40 % 大きい")],
+    fig: "purpose_p4_hole_drilling.png",
+    cap: [tx("穿孔法の解放ひずみと深さ。実測と既報の有限要素解析。既報 図12 の読み取り値。")] },
+  { no: "4", head: "転移学習による補正", added: true,
+    desc: [tx("数値解析で事前学習した "), it("f"), si("θ"), tx(" を、デンソー様の少数の点計測で合わせ込む")],
+    fig: "purpose_p3_transfer.png",
+    cap: [tx("測定枚数と予測誤差。合成データによる予備検討（定数は例示値、実データでは未実施）。")] },
+];
+const yH = 1.72, yD = 2.12, yF = 2.66, FA = 896 / 594, yC = yF + CW / FA + 0.04;
+steps.forEach((st, i) => {
+  const col = st.added ? ACCENT : INK;
+  s.addText([tx(st.no + "　", { bold: true, color: col }), tx(st.head, { bold: true, color: col })],
+    { x: cx(i), y: yH, w: CW, h: 0.34, fontSize: 15, isTextBox: true, margin: 0, valign: "middle" });
+  line(s, cx(i), yH + 0.37, CW, st.added ? ACCENT : "8C8C8C", st.added ? 1.75 : 0.75);
+  s.addText(st.desc, { x: cx(i), y: yD, w: CW, h: 0.52, fontSize: 11, color: INK, isTextBox: true,
+    margin: 0, lineSpacing: 14.5, valign: "top" });
+  s.addImage({ path: FIG(st.fig), x: cx(i), y: yF, w: CW, h: CW / FA });
+  s.addText([tx(`図${i + 1}　`, { bold: true }), ...st.cap], { x: cx(i), y: yC, w: CW, h: 0.5,
+    fontSize: 9, color: MUTED, isTextBox: true, margin: 0, lineSpacing: 12, valign: "top" });
+  if (i < steps.length - 1) s.addShape(pres.ShapeType.line, { x: cx(i) + CW + 0.02, y: yH + 0.17,
+    w: CG - 0.1, h: 0, line: { color: INK, width: 1.25, endArrowType: "triangle" } });
+});
+
+// ---------------------------------------------------------------- equation + additions
+const yB = 5.25;
+line(s, 0.6, yB - 0.08, 12.14);
+s.addText([it("ε"), sr("res"), ro("("), it("z"), ro(")  =  "), it("f"), si("θ"), ro("( "),
+  it("X"), sr("c"), ro("("), it("z"), ro("), "), it("a"), si("ij"), ro("("), it("z"), ro("), "),
+  bi("m", { color: ACCENT }), ro(" ; "), bi("s"), ro(" )")],
+  { x: 0.6, y: yB + 0.05, w: 5.3, h: 0.55, fontSize: 19, color: INK, align: "center", valign: "middle", isTextBox: true, margin: 0 });
+s.addText("(1)", { x: 5.9, y: yB + 0.05, w: 0.55, h: 0.55, fontSize: 14, color: INK, align: "right", valign: "middle", isTextBox: true, margin: 0 });
+s.addText([it("f"), si("θ"), tx("：予測モデル（"), it("θ"), tx(" は学習パラメータ）、"),
+  bi("m", { color: ACCENT }), tx("：断面の要約量（板厚平均と一次モーメント）、"), bi("s"), tx("：成形条件（金型温度など）。"),
+  tx("残留ひずみは断面全体のつり合いで決まるので、点の量に加えて "), bi("m", { color: ACCENT }), tx(" を入力とする。")],
+  { x: 0.6, y: yB + 0.68, w: 5.9, h: 0.9, fontSize: 10.5, color: INK, isTextBox: true, margin: 0, lineSpacing: 14, valign: "top" });
+
+s.addShape(pres.ShapeType.line, { x: 6.78, y: yB, w: 0, h: 1.52, line: { color: RULE, width: 0.75 } });
+s.addText("既報に対して本研究で加える要素", { x: 7.0, y: yB, w: 5.74, h: 0.3, fontSize: 12.5, bold: true, color: ACCENT, isTextBox: true, margin: 0 });
+s.addText([
+  tx("(i)　結晶化度の入力：", { bold: true, color: ACCENT }), br("既報は金型 150 °C・アニールで影響小と判断。金型温度の低い条件まで対象を広げる。"),
+  tx("(ii)　断面の情報 ", { bold: true, color: ACCENT }), bi("m", { color: ACCENT }), tx("：", { bold: true, color: ACCENT }),
+  br("点の量だけでは不足（予備検討で決定係数 0.914 → 0.9995、合成データ）。"),
+  tx("(iii)　転移学習：", { bold: true, color: ACCENT }), tx("計算と実測の定量差（既報で約 40 %）を、少数の点計測で補正する。"),
+], { x: 7.0, y: yB + 0.33, w: 5.74, h: 1.2, fontSize: 10.5, color: INK, isTextBox: true, margin: 0, lineSpacing: 14, paraSpaceAfter: 2, valign: "top" });
+
+// ---------------------------------------------------------------- footer -------------
+s.addText("既報：津田・白桃・田中・國立・望月、日本複合材料学会誌 52(3), 88–96 (2026)。既報の図の値は読み取り値（data/literature/tsuda2026_jscm52_88.json）。手順 4 は計画であり、実データでは未実施。以後、段階② 変形・強度、段階③ 成形条件の設計へ展開する。",
+  { x: 0.6, y: 6.9, w: 12.14, h: 0.4, fontSize: 9, color: MUTED, isTextBox: true, margin: 0, lineSpacing: 12 });
+s.addNotes("左から：1 入力（配向の実測例）、2 数値解析（既報の入力での残留応力）、3 計算と実測の差（既報で約 40 %）、4 転移学習による補正（合成データでの予備検討）。紺は本研究で加える要素。");
 
 // ----------------------------------------------- write, theme, Mincho patch ----
 function loadJSZip() { return require(require.resolve("jszip", { paths: [require.resolve("pptxgenjs")] })); }
