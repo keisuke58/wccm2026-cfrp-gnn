@@ -1,0 +1,24 @@
+#!/bin/bash
+#PBS -N denso_ml
+## Queue: check the GPU queue name on copaam with `qstat -Q`, then uncomment and set it.
+##PBS -q QUEUE_NAME
+## Resources. Torque syntax (same as inverse_rigor.pbs). If copaam runs PBS Pro and rejects
+## this line, comment it out and use the select line below instead.
+#PBS -l nodes=1:ppn=16:gpus=1
+##PBS -l select=1:ncpus=16:ngpus=1
+#PBS -l walltime=04:00:00
+#PBS -j oe
+#
+# Residual-strain ML rehearsal for the Denso theme. Guide: research/GUIDE_copaam_ml_training.md
+# Submit from the repository root:
+#   qsub -v PY=$HOME/venvs/denso/bin/python scripts/denso_ml.pbs
+set -e
+cd "${PBS_O_WORKDIR:-$(pwd)}"
+PY=${PY:-python3}
+NCPU=${PBS_NUM_PPN:-${NCPUS:-8}}
+OUT=results/denso_ml_$(date +%Y%m%d_%H%M)
+echo "[$(date '+%F %T')] denso_ml on $(hostname), cpus=$NCPU, out=$OUT"
+nvidia-smi || echo "nvidia-smi not available (no GPU on this node?)"
+$PY -c "import torch; print('torch', torch.__version__, 'cuda', torch.cuda.is_available())"
+$PY denso_residual_strain_ml.py --workers "$NCPU" --out "$OUT"
+echo "[$(date '+%F %T')] done"

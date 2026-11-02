@@ -14,6 +14,20 @@ an end-to-end pipeline. Open it locally, or use the hosted artifact:
 - **https://claude.ai/code/artifact/b29c6bc0-e534-4715-9a1a-952926b68b22**
   (private by default — share from the page's share menu).
 
+`denso_plate_viewer.html` — 3-D view of an injection-moulded short-fibre plate for the
+Denso residual-strain theme: fibres sampled to match the through-thickness orientation
+tensor (skin / shell / core), the orientation-tensor ellipsoid at a chosen depth,
+through-thickness crystallinity, orientation-averaged CTE and residual strain, warpage
+for symmetric vs asymmetric mould temperatures, and an exact split of the residual
+strain into its thermal (orientation-driven) and crystallisation parts. Data from
+`denso_plate_features.py` (validated kernels; illustrative constants; orientation
+profile assumed, not simulated). Hosted artifact:
+
+- **https://claude.ai/artifact/UxNvMza6Swiihe9XjZUM6e** (private by default).
+
+Rebuild: `python3 viz/denso_plate_features.py`, then substitute
+`viz/denso_plate_features.json` for `__DATA__` in `denso_plate_viewer.template.html`.
+
 ## Animated GIFs (drop straight into slides / the thesis)
 
 | file | shows |
