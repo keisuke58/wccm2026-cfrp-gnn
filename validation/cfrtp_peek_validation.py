@@ -14,10 +14,22 @@ time over a cooling-rate sweep:
 
 Checks (universal non-isothermal laws):
   V1 peak temperature Tp DECREASES with cooling rate,
-  V2 alpha(T) shifts to LOWER T with cooling rate,
+  V2 alpha(T) shifts to LOWER T with cooling rate (measured by the half-crystallization
+     temperature T_half),
   V3 final crystallinity non-increasing (quench at very high rate).
 Quantitative (B-2): slow-cool Tp should sit in the literature PEEK band ~305-310 C.
 The bell misses this (Tp too near Tm); HL hits it.
+
+Two caveats found while tightening these (2026-08-25):
+  * V2 was documented from the start but NEVER actually computed -- checks() only ever
+    returned V1 and V3. It is implemented now, and it is not redundant: it fails the bell
+    model, whose alpha never even reaches 0.5 above 80 C/min.
+  * V3 is VACUOUS on the DSC rate list: alpha_f = 1.000 at every rate there for HL, so
+    "non-increasing" passes without discriminating anything. Suppression only appears at
+    quench rates, so a separate high-rate sweep (QUENCH_RATES) now carries that test. It
+    turns into a third, independent discriminator: HL loses crystallinity at ~640 C/min
+    (right order -- PEEK quenches amorphous around 1e3), while the bell model is already
+    half-suppressed at 160 C/min, a routine DSC rate at which real PEEK crystallizes fully.
 
 Drop validation/peek_reference_Tp.csv ('rate_C_per_min,Tp_C', digitized DSC) to
 auto-compute RMSE against a specific paper.
@@ -41,6 +53,12 @@ TG, TM = 143.0, 343.0          # PEEK glass / (bell cutoff) melt [C]
 COOL_RATES = [2.0, 5.0, 10.0, 20.0, 40.0, 80.0, 160.0]
 T_START, T_END = 390.0, 150.0
 LIT_TP_BAND = (305.0, 312.0)   # literature-typical slow-cool PEEK Tp [C] (confirm w/ data)
+# High-rate sweep for the quench check (DSC rates never suppress crystallinity).
+QUENCH_RATES = [160.0, 320.0, 640.0, 1280.0, 2560.0, 5120.0, 10240.0]
+# PEEK is known to be quenchable from the melt to a largely amorphous state, which needs
+# cooling of ORDER 1e3 C/min. This is a coarse order-of-magnitude anchor only -- much
+# weaker than LIT_TP_BAND, and like it, to be confirmed against a specific paper.
+LIT_QUENCH_DECADE = (300.0, 3000.0)   # C/min: where alpha_f should collapse
 
 # ---- bell K(T) + Tm cutoff (matches cfrtp_cryst_umat_ve.f) ----
 BELL = dict(KMAX=0.02, TCRYST=290.0, WCRYST=45.0, TM=TM)
@@ -74,37 +92,84 @@ def run_cooling(Kfun, rate_C_per_min, dt=0.02, a0=1e-3):
     return np.array(Ts), np.array(As), np.array(Rs)
 
 
+def t_half(T, A):
+    """Temperature at which relative crystallinity crosses 0.5 (nan if never)."""
+    return T[int(np.argmax(A >= 0.5))] if (A >= 0.5).any() else float("nan")
+
+
 def sweep(Kfun):
-    curves = {}; Tps = []; Xf = []
+    curves = {}; Tps = []; Xf = []; Th = []
     for rate in COOL_RATES:
         T, A, R = run_cooling(Kfun, rate)
         curves[rate] = (T, A, R)
         Tps.append(T[int(np.argmax(R))] if R.max() > 0 else float("nan"))
-        Xf.append(A[-1])
-    return curves, np.array(Tps), np.array(Xf)
+        Xf.append(A[-1]); Th.append(t_half(T, A))
+    return curves, np.array(Tps), np.array(Xf), np.array(Th)
 
 
-def checks(Tps, Xf, name):
+def checks(Tps, Xf, Th, name):
     v1 = all(Tps[i] >= Tps[i + 1] - 1e-6 for i in range(len(Tps) - 1))
+    # V2: the alpha(T) curve shifts to LOWER temperature as cooling rate rises, measured
+    # by the half-crystallization temperature (documented since the first version but
+    # never actually checked until now). A nan means alpha never reached 0.5 at that
+    # rate, which is a distinct failure from "shifted the wrong way" -- so say which.
+    finite = np.isfinite(Th)
+    Thf = Th[finite]
+    monotone = all(Thf[i] >= Thf[i + 1] - 1e-6 for i in range(len(Thf) - 1))
+    v2 = monotone and finite.all()
+    v2_txt = "PASS" if v2 else ("FAIL(never reaches 0.5 above %g C/min)" % COOL_RATES[
+        int(np.argmax(~finite)) - 1] if monotone else "FAIL(non-monotone)")
     v3 = all(Xf[i] >= Xf[i + 1] - 1e-6 for i in range(len(Xf) - 1))
     tp_slow = Tps[1]  # 5 C/min
     inband = LIT_TP_BAND[0] - 8 <= tp_slow <= LIT_TP_BAND[1] + 8
-    print("  [%s] V1 Tp decreasing: %s | V3 Xf non-increasing: %s | slow-cool Tp=%.0f C "
-          "(lit ~%g-%g) -> %s" % (name, "PASS" if v1 else "FAIL", "PASS" if v3 else "FAIL",
-          tp_slow, LIT_TP_BAND[0], LIT_TP_BAND[1], "IN BAND" if inband else "OUT of band"))
-    return v1, v3, inband
+    print("  [%s] V1 Tp decr: %s | V2 T_half decr: %s | V3 Xf non-incr: %s | slow-cool "
+          "Tp=%.0f C (lit ~%g-%g) -> %s"
+          % (name, "PASS" if v1 else "FAIL", v2_txt,
+             "PASS" if v3 else "FAIL", tp_slow, LIT_TP_BAND[0], LIT_TP_BAND[1],
+             "IN BAND" if inband else "OUT of band"))
+    return v1, v2, v3, inband
+
+
+def quench_sweep(Kfun, rates=QUENCH_RATES, dt=5e-3):
+    """Final relative crystallinity over a high-rate (quench) sweep.
+
+    V3 on COOL_RATES alone is vacuous -- alpha_f saturates at 1.000 for every rate
+    there, so 'non-increasing' passes without discriminating anything. Crystallinity
+    suppression only appears once cooling outruns the crystallization kinetics, which
+    for PEEK needs rates orders of magnitude above the DSC range.
+    """
+    return np.array([run_cooling(Kfun, r, dt=dt)[1][-1] for r in rates])
 
 
 def main():
     here = os.path.dirname(os.path.abspath(__file__))
-    cb, Tpb, Xfb = sweep(K_bell)
-    ch, Tph, Xfh = sweep(K_hl)
+    cb, Tpb, Xfb, Thb = sweep(K_bell)
+    ch, Tph, Xfh, Thh = sweep(K_hl)
     print("=== PEEK non-isothermal crystallization: bell+cutoff vs Hoffman-Lauritzen ===")
-    print("rate[C/min]   Tp_bell   Tp_HL   alphaf_HL")
-    for r, tb, th, xf in zip(COOL_RATES, Tpb, Tph, Xfh):
-        print("  %6.0f      %6.1f   %6.1f    %6.3f" % (r, tb, th, xf))
-    checks(Tpb, Xfb, "bell")
-    ok_h = checks(Tph, Xfh, "HL  ")
+    print("rate[C/min]   Tp_bell   Tp_HL   alphaf_HL   Thalf_HL")
+    for r, tb, th, xf, t5 in zip(COOL_RATES, Tpb, Tph, Xfh, Thh):
+        print("  %6.0f      %6.1f   %6.1f    %6.3f     %6.1f" % (r, tb, th, xf, t5))
+    checks(Tpb, Xfb, Thb, "bell")
+    ok_h = checks(Tph, Xfh, Thh, "HL  ")
+
+    # ---- quench check: at what rate does each model stop crystallizing? ----
+    # V3 on the DSC rates is vacuous for HL (alpha_f=1.000 throughout), so it discriminates
+    # nothing there. Pushing to quench rates turns it into a real, third test -- and it
+    # separates bell from HL just as the Tp band does.
+    def r_crit_of(q):
+        below = [r for r, a in zip(QUENCH_RATES, q) if a < 0.5]
+        return below[0] if below else float("nan")
+
+    qb, qh = quench_sweep(K_bell), quench_sweep(K_hl)
+    print("  [quench] alpha_f(HL) vs rate: "
+          + ", ".join("%g:%.3f" % (r, a) for r, a in zip(QUENCH_RATES, qh)))
+    rc_b, rc_h = r_crit_of(qb), r_crit_of(qh)
+    q_ok = (rc_h == rc_h) and LIT_QUENCH_DECADE[0] <= rc_h <= LIT_QUENCH_DECADE[1]
+    print("  [quench] alpha_f<0.5 at:  bell ~%g C/min  |  HL ~%g C/min   "
+          "(PEEK quenches amorphous at order 1e3) -> HL %s"
+          % (rc_b, rc_h, "RIGHT ORDER" if q_ok else "WRONG ORDER"))
+    print("           bell already half-suppresses at a routine DSC rate, where real PEEK "
+          "still fully crystallizes -- a third way it is wrong, independent of the Tp band.")
 
     rref, tpref = (None, None)
     csv = os.path.join(here, "peek_reference_Tp.csv")
@@ -149,11 +214,12 @@ def main():
     out = os.path.join(here, "peek_crystallization_validation.png")
     fig.savefig(out, dpi=130); plt.close(fig)
     print("wrote %s" % out)
-    return ok_h
+    return ok_h + (q_ok,)
 
 
 if __name__ == "__main__":
-    v1, v3, inband = main()
+    v1, v2, v3, inband, q_ok = main()
     print("OVERALL (HL): %s" %
-          ("PASS — reproduces trends AND lands in the literature Tp band"
-           if (v1 and inband) else "PARTIAL — check parameters"))
+          ("PASS — reproduces all three trends, lands in the literature Tp band, "
+           "and suppresses crystallinity at the right order of quench rate"
+           if (v1 and v2 and inband and q_ok) else "PARTIAL — check parameters"))
