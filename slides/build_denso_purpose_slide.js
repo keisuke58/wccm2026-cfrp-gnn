@@ -62,9 +62,9 @@ const steps = [
     fig: "purpose_p2_stress.png",
     cap: [tx("既報の入力による残留応力（本リポジトリの計算、全量形式）。× は既報の表面値 −24.3／+15.2 MPa。")] },
   { no: "3", head: "計算と実測の差", added: false,
-    desc: [tx("穿孔法の解放ひずみと比べると、傾向は一致するが、解析は約 40 % 大きい")],
+    desc: [tx("傾向は合うが、解析は実測より大きい（既報 1.4 倍、本計算 1.6 倍）")],
     fig: "purpose_p4_hole_drilling.png",
-    cap: [tx("穿孔法の解放ひずみと深さ。実測と既報の有限要素解析。既報 図12 の読み取り値。")] },
+    cap: [tx("穿孔法の解放ひずみと深さ。実測と既報の解析は既報 図12 の読み取り値、本計算は既報と同じ入力（CalculiX、粗いメッシュ）。")] },
   { no: "4", head: "転移学習による補正", added: true,
     desc: [tx("数値解析で事前学習した "), it("f"), si("θ"), tx(" を、デンソー様の少数の点計測で合わせ込む")],
     fig: "purpose_p3_transfer.png",
@@ -104,7 +104,7 @@ s.addText([
   tx("(i)　結晶化度の入力：", { bold: true, color: ACCENT }), br("既報は金型 150 °C・アニールで影響小と判断。金型温度の低い条件まで対象を広げる。"),
   tx("(ii)　断面の情報 ", { bold: true, color: ACCENT }), bi("m", { color: ACCENT }), tx("：", { bold: true, color: ACCENT }),
   br("点の量だけでは不足（予備検討で決定係数 0.914 → 0.9995、合成データ）。"),
-  tx("(iii)　転移学習：", { bold: true, color: ACCENT }), tx("計算と実測の定量差（既報で約 40 %）を、少数の点計測で補正する。"),
+  tx("(iii)　転移学習：", { bold: true, color: ACCENT }), tx("計算と実測の定量差（既報で約 40 %、同じ入力の本計算で約 60 %）を、少数の点計測で補正する。"),
 ], { x: 7.0, y: yB + 0.33, w: 5.74, h: 1.2, fontSize: 10.5, color: INK, isTextBox: true, margin: 0, lineSpacing: 14, paraSpaceAfter: 2, valign: "top" });
 
 // ---------------------------------------------------------------- footer -------------

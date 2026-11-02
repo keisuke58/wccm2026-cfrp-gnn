@@ -7,8 +7,9 @@ flow (slides/build_denso_purpose_slide.js). Every curve comes from a file in the
       (results/denso_tsuda2026/compare.json, total form), with the paper's surface values (text);
   p3  fine-tune vs source-only vs target-only RMSE against the number of measured plates —
       synthetic preliminary study (results/denso_ml_copaam_gpu/results.json);
-  p4  released strain against drilling depth, measured vs the paper's FE — Tsuda et al. (2026)
-      Fig. 12, READ BY EYE.
+  p4  released strain against drilling depth: measured and the paper's FE (Tsuda et al. (2026)
+      Fig. 12, READ BY EYE) and this work with the paper's inputs
+      (results/denso_tsuda2026/hole_drilling_coarse_calculix.json, CalculiX, coarse mesh).
 Run:  python3 slides/figure_sources/denso_purpose_panels.py   (writes slides/figures_paper/purpose_p*.png)
 """
 import json
@@ -98,20 +99,20 @@ def main():
     ax.set_xlabel("measured plates (5 points each)"); ax.set_ylabel(r"RMSE [$10^{-3}$]")
     ax.legend(frameon=False, loc="upper right", handlelength=1.8)
     save(fig, "purpose_p3_transfer.png")
-    # p4 released strain: measured vs paper's FE
+    # p4 released strain: measured vs the paper's FE vs this work (same inputs)
     f12 = paper["fig12_released_strain"]; dd = f12["depth_mm"]
+    mine = json.load(open(os.path.join(ROOT, "results", "denso_tsuda2026", "hole_drilling_coarse_calculix.json")))
     fig, ax = plt.subplots(figsize=(W, H))
     ax.axhline(0, color="0.85", lw=0.6)
-    ax.plot(dd, f12["Ch3_exp"], "k-", marker="o", ms=3, label="measured")
-    ax.plot(dd, f12["Ch3_sim"], "k--", marker="s", ms=3, mfc="white", label="FE (paper)")
-    ax.plot(dd, f12["Ch1_exp"], "-", color=GREY, marker="o", ms=3)
-    ax.plot(dd, f12["Ch1_sim"], "--", color=GREY, marker="s", ms=3, mfc="white")
-    ax.annotate("", xy=(0.8, 272), xytext=(0.8, 192), arrowprops=dict(arrowstyle="<->", lw=0.8))
-    ax.text(0.88, 228, r"$\approx$ 40 %", fontsize=8, va="center")
-    ax.text(0.05, 255, "MD (Ch. 3)", fontsize=7.5); ax.text(0.05, -215, "TD (Ch. 1)", fontsize=7.5, color=GREY)
+    for ch, g, c in (("3", "GCH3", "k"), ("1", "GCH1", GREY)):
+        lab = (lambda t: t) if ch == "3" else (lambda t: None)
+        ax.plot(dd, f12[f"Ch{ch}_exp"], "-", color=c, marker="o", ms=3, label=lab("measured"))
+        ax.plot(dd, f12[f"Ch{ch}_sim"], ":", color=c, marker="s", ms=3, mfc="white", lw=1.0, label=lab("FE (paper)"))
+        ax.plot(mine["depth_mm"], mine["released"][g], "--", color=c, marker="^", ms=3.5, label=lab("FE (this work)"))
+    ax.text(0.05, 290, "MD (Ch. 3)", fontsize=7.5); ax.text(0.05, -290, "TD (Ch. 1)", fontsize=7.5, color=GREY)
     ax.set_xlabel("drilling depth [mm]"); ax.set_ylabel(r"released strain [$\mu\varepsilon$]")
-    ax.set_xlim(0, 2.0); ax.set_ylim(-300, 330)
-    ax.legend(frameon=False, loc="center right", bbox_to_anchor=(1.0, 0.47), handlelength=1.8)
+    ax.set_xlim(0, 2.0); ax.set_ylim(-330, 360)
+    ax.legend(frameon=False, loc="center right", bbox_to_anchor=(1.0, 0.5), handlelength=2.0)
     save(fig, "purpose_p4_hole_drilling.png")
     print("wrote purpose_p1..p4 to", OUT)
 
