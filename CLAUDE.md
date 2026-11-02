@@ -1,6 +1,32 @@
-# CLAUDE.md
+# CLAUDE.md — wccm2026-cfrp-gnn
 
 このリポジトリで作業するときの指示。
+
+## これは何
+CFRP段間構造（穴あり）の **3次元欠陥推定**（FEA × Graph Neural Network）。
+**WCCM 2026 / ECCOMAS（ミュンヘン, 2026-07-22, MS090E）登壇**用のクリーンな作業リポジトリ。
+既発表（穴あき試験片）Nishioka et al., *Frontiers in Materials* 2025 を **穴あり段間構造＋ノイズ頑健** へ拡張する。
+
+## 課題設定（NDT制約）
+- 赤外線応力測定を想定 → **入力は主応力和 DSPSS と既知形状（座標）のみ**。応力テンソル成分は使用不可。
+- 表面DSPSS（最外2層）をノード特徴に、**19クラス**（欠陥なし＋層×面内領域）で分類。
+- モデルは **GAT/GATv2**（`train.py` 内 `GATModel`）。PyTorch + DDP（4GPU torchrun）。
+
+## 正規化方針（重要な論点）
+- **差分正規化**（既定, `all_sub_hole_defect_zscore`）= 主結果。欠陥なし基準が要るが穴の応力集中を相殺できる。
+- **plain正規化 + 幾何特徴(r,θ)** = 「基準不要化」拡張。実機の赤外線測定に直結（アブスト future work）。
+- 切替は **`--data_base` と `--extra_geo_features` のフラグのみ**（コード改変不要）。
+
+## コード地図
+```
+train.py            # メイン学習（旧 GNN_zscore_sub.py）。DDP/4GPU torchrun、GATModel
+make_mirror_perm.py # 左右ミラー拡張の permutation を座標から生成（mirror_perm.npy）
+Loss/               # Focal ほか損失（train.py が import）
+data_prep/          # 正規化スクリプト（差分/plain, percentile zscore）
+eval/               # 予測・可視化・評価（混同行列, クラス別F1, TDPS）
+scripts/            # run_best_configs.sh（既存ベスト）, run_ablation.sh（本研究用）
+results/            # 最新の結果図
+```
 
 ## 文体・体裁：**常に学術的に**
 
@@ -37,6 +63,9 @@
 - **検証を数値で示す**（機械精度での整合、文献バンドとの比較など）。
   検証が失敗したら、パラメータを合わせにいかずに**失敗として報告する**。
 - 数値はすべて例示（未校正）であることを、該当箇所に明記する。
+- 提出アブストの主張（差分を主結果に残す）と整合させる。拡張は plain+幾何特徴として併記。
+- 長時間学習・4GPU専有を伴う実行は事前に確認する。
+- 関連: フレームワーク版 `~/GNN`、所属 LUH/IKM。
 
 ## 技術メモ
 
@@ -44,4 +73,7 @@
   LaTeX が無い環境では usetex を落とすフォールバックを入れる（既存スクリプト参照）。
   `scripts/check_mpl_style.py` が新規違反を弾く。
 - この環境には LaTeX が無く、Beamer はコンパイル検証できない。
-- `python3` は 3.11。numpy 等が無ければ `python3 -m pip install` で入れる。
+- クラウド環境：`python3` は 3.11。numpy 等が無ければ `python3 -m pip install` で入れる。
+- IKM クラスタ（copaam）：学習は `~/miniconda3/envs/gnn_final_env/bin/python`（torch+PyG）。
+  GPU 学習は `qsub` で計算ノードに投げ、ジョブスクリプトは ASCII だけで書き `unset LD_LIBRARY_PATH` を入れる
+  （詳細はクラスタの `~/AGENTS.md`）。
