@@ -82,8 +82,26 @@ def _load_edges() -> torch.Tensor:
     return torch.tensor(edges, dtype=torch.long)
 
 
+
+
+def _compute_geometry_features() -> tuple:
+    """Geometry-based features for perforated CFRP specimen.
+    Returns (d_hole_norm, theta_sin, theta_cos) each shape (N_NODES,).
+      d_hole_norm : (r - r_hole) / r_hole  — distance from hole boundary
+      theta_sin   : sin of polar angle around hole center
+      theta_cos   : cos of polar angle around hole center
+    """
+    x, y, _ = _load_coords()
+    x0, y0 = x.mean(), y.mean()
+    r = np.sqrt((x - x0)**2 + (y - y0)**2).astype(np.float32)
+    r_hole = float(np.percentile(r, 2))   # 2nd-pct ≈ innermost nodes
+    d_hole = ((r - r_hole) / (r_hole + 1e-6)).astype(np.float32)
+    theta = np.arctan2(y - y0, x - x0)
+    return d_hole, np.sin(theta).astype(np.float32), np.cos(theta).astype(np.float32)
+
 def build_dual_data(
     split: str,
+    geo_features: bool = False,
     no_baseline: bool = False,
     noise_std: float = 0.0,
     noise_healthy_std: float = 0.0,
@@ -91,8 +109,8 @@ def build_dual_data(
     diff_channel_dropout: float = 0.0,
 ) -> List[Data]:
     """
-    Load {train, val, test} specimens with 5-channel node features:
-        [x, y, z, dspss_diff, dspss_raw]
+    Load {train, val, test} specimens with 5- or 8-channel node features:
+        [x, y, z, dspss_diff, dspss_raw] (+ d_hole_norm, theta_sin, theta_cos if geo_features)
 
     Parameters — noise augmentation ("strongest model")
     ----------
@@ -120,6 +138,11 @@ def build_dual_data(
     edge_index  = _load_edges()
 
     coord_block = np.column_stack([cx, cy, cz])   # (N, 3)
+    if geo_features:
+        _dh, _ts, _tc = _compute_geometry_features()
+        geo_block = np.column_stack([_dh, _ts, _tc])  # (N, 3)
+    else:
+        geo_block = None
 
     files = sorted(f for f in os.listdir(diff_dir) if f.endswith(".npy"))
     data_list: List[Data] = []
@@ -170,8 +193,11 @@ def build_dual_data(
             if diff_channel_dropout > 0.0 and np.random.rand() < diff_channel_dropout:
                 diff_vals = np.zeros(N_NODES, dtype=np.float32)
 
-        # node features: [x, y, z, diff, raw]
-        feats = np.column_stack([coord_block, diff_vals, raw_vals])  # (N, 5)
+        # node features: [x, y, z, diff, raw] (+ geometry if enabled)
+        if geo_block is not None:
+            feats = np.column_stack([coord_block, diff_vals, raw_vals, geo_block])  # (N, 8)
+        else:
+            feats = np.column_stack([coord_block, diff_vals, raw_vals])  # (N, 5)
         x_t   = torch.tensor(feats, dtype=torch.float)
 
         # labels
@@ -185,8 +211,9 @@ def build_dual_data(
         d.filename = fname
         data_list.append(d)
 
+    n_ch = 8 if geo_features else 5
     print(f"[dual] split={split}  loaded={len(data_list)}  "
-          f"no_baseline={no_baseline}  in_channels=5")
+          f"no_baseline={no_baseline}  in_channels={n_ch}")
     return data_list
 
 
@@ -201,17 +228,17 @@ _ARCH_MAP = {
     "sage":         "MeshGraphNetModel",   # fallback
 }
 
-def build_model(arch: str, device: torch.device) -> torch.nn.Module:
+def build_model(arch: str, device: torch.device, in_channels: int = 5) -> torch.nn.Module:
     """
-    Reuse existing architectures from train.py with in_channels=5.
-    The only change: the first linear layer is wider by one input.
+    Reuse existing architectures from train.py.
+    in_channels: 5 (default) or 8 (with geo_features).
     """
     cls_name = _ARCH_MAP.get(arch, "HybridMeshGraphNetModel")
     cls = getattr(T, cls_name)
     # hidden_channels=64 → hidden=64*4=256 (same hidden dim as default MeshGraphNet,
     # fits on one 24GB RTX 4090 at batch_size=8 with 13942 nodes).
     model = cls(hidden_channels=64, num_classes=19, dropout=0.1,
-                edge_drop_prob=0.0, in_channels=5, num_blocks=10)
+                edge_drop_prob=0.0, in_channels=in_channels, num_blocks=10)
     return model.to(device)
 
 
@@ -255,26 +282,40 @@ def train_dual(args: argparse.Namespace) -> None:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"[dual] device={device}  arch={args.arch}")
 
+    in_channels = 8 if args.geo_features else 5
     train_data = build_dual_data(
         "train",
+        geo_features=args.geo_features,
         noise_std=args.noise_std,
         noise_healthy_std=args.noise_healthy_std,
         baseline_noise_std=args.baseline_noise_std,
         diff_channel_dropout=args.diff_channel_dropout,
     )
-    val_data   = build_dual_data("val")
+    val_data   = build_dual_data("val", geo_features=args.geo_features)
 
     train_loader = DataLoader(train_data, batch_size=args.batch_size, shuffle=True,  num_workers=4)
     val_loader   = DataLoader(val_data,   batch_size=args.batch_size, shuffle=False, num_workers=4)
 
-    model     = build_model(args.arch, device)
+    model     = build_model(args.arch, device, in_channels=in_channels)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
+    # warmup → cosine: warmup_epochs で lr を 0 → lr に線形増加、その後 cosine decay
+    if args.warmup_epochs > 0:
+        warmup = torch.optim.lr_scheduler.LinearLR(
+            optimizer, start_factor=1e-3, end_factor=1.0, total_iters=args.warmup_epochs)
+        cosine = torch.optim.lr_scheduler.CosineAnnealingLR(
+            optimizer, T_max=args.epochs - args.warmup_epochs)
+        scheduler = torch.optim.lr_scheduler.SequentialLR(
+            optimizer, schedulers=[warmup, cosine], milestones=[args.warmup_epochs])
+    else:
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
     criterion = _build_criterion(args, train_data, device)
 
     best_f1   = 0.0
     CK_OUT.mkdir(parents=True, exist_ok=True)
-    ckpt_path = CK_OUT / f"{args.arch}_dual_best.pth"
+    geo_tag   = "_geo" if args.geo_features else ""
+    run_tag   = f"{args.arch}_{args.loss}_g{args.gamma}{geo_tag}"
+    ckpt_path = CK_OUT / f"{run_tag}_best.pth"
+    print(f"[dual] warmup={args.warmup_epochs}  ckpt={ckpt_path.name}")
 
     for epoch in range(1, args.epochs + 1):
         model.train()
@@ -295,7 +336,7 @@ def train_dual(args: argparse.Namespace) -> None:
             if f1 > best_f1:
                 best_f1 = f1
                 torch.save(model.state_dict(), ckpt_path)
-                print(f"    → saved  {ckpt_path}  (best={best_f1:.4f})")
+                print(f"    → saved  {ckpt_path.name}  (best={best_f1:.4f})")
 
     print(f"[dual] training done.  best_val_F1={best_f1:.4f}")
 
@@ -315,10 +356,11 @@ def _eval_f1(model, loader, device) -> float:
 
 def eval_dual(args: argparse.Namespace) -> None:
     device    = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    test_data = build_dual_data("test", no_baseline=args.no_baseline)
+    in_channels = 8 if getattr(args, "geo_features", False) else 5
+    test_data = build_dual_data("test", no_baseline=args.no_baseline, geo_features=getattr(args, "geo_features", False))
     loader    = DataLoader(test_data, batch_size=args.batch_size, shuffle=False, num_workers=4)
 
-    model = build_model(args.arch, device)
+    model = build_model(args.arch, device, in_channels=in_channels)
     state = torch.load(args.ckpt, map_location=device)
     model.load_state_dict(state)
     model.eval()
@@ -452,6 +494,10 @@ def _parse() -> argparse.Namespace:
     ap.add_argument("--no_fix_class0_weight", dest="fix_class0_weight", action="store_false")
     ap.add_argument("--class0_weight", type=float, default=1.0,
                     help="Anchor weight for class-0 (other classes scaled relative to this)")
+    ap.add_argument("--geo_features",  action="store_true", default=False,
+                    help="Add d_hole_norm + theta_sin/cos as extra node features (8ch total)")
+    ap.add_argument("--warmup_epochs", type=int, default=0,
+                    help="Linear LR warmup epochs before cosine decay (recommended: 10-20 with focal)")
 
     return ap.parse_args()
 

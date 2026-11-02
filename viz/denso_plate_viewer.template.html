@@ -1,0 +1,366 @@
+<title>成形板の内部構造</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400;1,600&display=swap">
+<style>
+/* Layout: one reading column like a short paper; figures break wider; controls sit with the figure they drive. */
+:root{
+  --paper:#ffffff; --ink:#15181d; --muted:#5b6068; --rule:#d5d8dc; --tint:#f3f4f6;
+  --flow:#1f4e79;   /* series aligned with flow (x) */
+  --trans:#8a3e2c;  /* series transverse to flow (y) */
+  --mid:#b9bdc3;
+  --f-text:"STIX Two Text","Noto Serif JP","Times New Roman","Yu Mincho","Hiragino Mincho ProN",serif;
+  --measure:46rem;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#14171b; --ink:#e7e9ec; --muted:#a3a8b0; --rule:#343a42; --tint:#1d2127;
+  --flow:#7fb0dd; --trans:#e19a83; --mid:#5d636b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#14171b; --ink:#e7e9ec; --muted:#a3a8b0; --rule:#343a42; --tint:#1d2127;
+  --flow:#7fb0dd; --trans:#e19a83; --mid:#5d636b; color-scheme:dark}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-text);font-size:17px;line-height:1.75;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:2.5rem 4rem}
+main{max-width:64rem;margin:0 auto;display:grid;gap:2.75rem}
+.col{max-width:var(--measure)}
+header{display:grid;gap:.6rem;border-bottom:1px solid var(--rule);padding-bottom:1.5rem}
+h1{font-size:1.85rem;line-height:1.35;margin:0;font-weight:700;text-wrap:balance}
+h2{font-size:1.25rem;margin:0 0 .6rem;font-weight:700;text-wrap:balance}
+h3{font-size:1.02rem;margin:0 0 .3rem;font-weight:600}
+p{margin:0}
+.lede{color:var(--muted);font-size:1rem}
+.meta{color:var(--muted);font-size:.9rem}
+section{display:grid;gap:1rem}
+.math i{font-style:italic}.math b{font-weight:600;font-style:italic}
+.eq{display:flex;align-items:center;justify-content:center;gap:1rem;font-size:1.12rem;padding:.25rem 0}
+.eq .no{margin-left:auto;color:var(--muted);font-size:1rem}
+figure{margin:0;display:grid;gap:.6rem}
+figcaption{color:var(--muted);font-size:.92rem;line-height:1.6;max-width:var(--measure)}
+.stage{position:relative;width:100%;max-width:100%;aspect-ratio:16/9;background:var(--tint);border:1px solid var(--rule)}
+.stage canvas{display:block;width:100%;height:100%;cursor:grab}
+.stage .tag{position:absolute;font-size:.85rem;color:var(--muted);pointer-events:none}
+.tl{top:.6rem;left:.8rem}.br{bottom:.55rem;right:.8rem;text-align:right}
+.controls{display:flex;flex-wrap:wrap;gap:1rem 2rem;align-items:center;font-size:.95rem}
+.controls label{display:flex;gap:.6rem;align-items:center}
+input[type=range]{width:min(22rem,70vw);accent-color:var(--flow)}
+input:focus-visible,button:focus-visible{outline:2px solid var(--flow);outline-offset:2px}
+.seg{display:inline-flex;border:1px solid var(--rule)}
+.seg button{font:inherit;font-size:.92rem;padding:.3rem .8rem;background:var(--paper);color:var(--ink);border:0;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.zval{font-variant-numeric:tabular-nums;min-width:4.5em;display:inline-block}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:1.5rem;align-items:start}
+.two>*{min-width:0}
+.ell{aspect-ratio:1/1}
+table{border-collapse:collapse;font-size:.95rem;font-variant-numeric:tabular-nums;width:100%}
+th,td{border-bottom:1px solid var(--rule);padding:.35rem .6rem;text-align:left;vertical-align:top}
+th{font-weight:600;color:var(--muted)}
+td.n{text-align:right}
+.tablewrap{overflow-x:auto}
+.profiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.75rem}
+.profiles svg{width:100%;height:auto;display:block}
+.key{display:flex;flex-wrap:wrap;gap:.4rem 1.2rem;font-size:.88rem;color:var(--muted)}
+.key span::before{content:"";display:inline-block;width:1.4em;height:0;border-top:2px solid currentColor;vertical-align:middle;margin-right:.4em}
+.k-flow{color:var(--flow)}.k-trans{color:var(--trans)}.k-dash::before{border-top-style:dashed!important}
+ol.refs{padding-left:1.4rem;margin:0;display:grid;gap:.4rem;font-size:.95rem}
+a{color:var(--flow)}
+.note{border-left:0;background:var(--tint);padding:1rem 1.2rem;font-size:.95rem;display:grid;gap:.5rem}
+@media (max-width:760px){.two{grid-template-columns:1fr}.profiles{grid-template-columns:repeat(2,minmax(0,1fr))}h1{font-size:1.5rem}}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+
+<main>
+<header class="col">
+  <p class="meta">株式会社デンソー様との共同研究に向けた検討資料／2026年11月　西岡 佳祐</p>
+  <h1>射出成形板の内部構造 ― 繊維配向・結晶化度・残留ひずみの板厚方向分布</h1>
+  <p class="lede">短繊維強化熱可塑性樹脂の成形板について、本研究の入力である結晶化度と繊維配向、出力である残留ひずみが、板厚方向にどう分布し、どうつながるかを三次元で示す。図はすべて計算結果から描いており、定数は例示値である。</p>
+</header>
+
+<section>
+  <div class="col">
+    <h2>1. 板の中の繊維 ― スキン・シェル・コア</h2>
+    <p>横から見ると、上下のシェル層（青）と中央のコア層（赤）が縞として見える。スライダで板を上面から削ると、内部の層を順に表示できる。繊維の色は流動方向 <i>x</i> へのそろい具合 <span class="math"><i>p<sub>x</sub></i><sup>2</sup></span> を表し、青が流動方向、赤が流動直交方向を向く繊維である。</p>
+  </div>
+  <figure>
+    <div class="stage" id="stage3d"><canvas id="c3d" aria-label="成形板内の繊維の三次元表示"></canvas>
+      <div class="tag tl" id="tag3d">ドラッグで回転・ホイールで拡大</div>
+      <div class="tag br">流動方向 <i>x</i> は矢印の向き<br>板厚方向は約 9 倍に拡大</div></div>
+    <div class="controls">
+      <label for="zcut">表示する上端 <span class="math"><i>z</i></span> = <span class="zval" id="zout">1.00</span>
+        <input id="zcut" type="range" min="-1" max="1" step="0.05" value="1"></label>
+      <span class="seg" role="group" aria-label="金型温度の条件">
+        <button type="button" id="b-sym" aria-pressed="true">対称 185/185 °C</button>
+        <button type="button" id="b-asym" aria-pressed="false">非対称 170/200 °C</button></span>
+      <label for="warp"><input id="warp" type="checkbox"> 反りを表示（×15 に誇張）</label>
+    </div>
+    <figcaption>図1　短繊維の三次元分布。各繊維の向きは、その深さの配向テンソル <span class="math"><i>a<sub>ij</sub></i></span> と二次モーメントが一致する分布（角度中心ガウス分布）から抽出した。配向の層構造は流動解析の結果ではなく、射出成形で典型的とされる形を仮定したものである。板厚方向は約 9 倍に拡大して描いているが、繊維の向きは拡大していない。</figcaption>
+  </figure>
+</section>
+
+<section>
+  <div class="col">
+    <h2>2. 配向テンソル ― 向きの分布を楕円体で見る</h2>
+    <p>ある深さの繊維の向きの分布は、2 階の配向テンソルで縮約できる [1]。</p>
+    <div class="eq math"><span><i>a<sub>ij</sub></i> = ∫ <i>p<sub>i</sub> p<sub>j</sub></i> <i>ψ</i>(<b>p</b>) d<b>p</b>,　 <i>a<sub>ii</sub></i> = 1</span><span class="no">(1)</span></div>
+    <p>固有値を半軸長とする楕円体で描くと、配向の状態が形として読める。3 次元ランダムなら球（灰色の網目、半径 1/3）、面内ランダムなら円盤、一方向にそろえば葉巻形になる。図1のスライダで選んだ深さの楕円体を右に示す。</p>
+  </div>
+  <div class="two">
+    <figure>
+      <div class="stage ell"><canvas id="cell" aria-label="配向テンソルの楕円体"></canvas>
+        <div class="tag tl" id="tagell">z = 1.00</div></div>
+      <figcaption>図2　選択した深さの配向テンソルの楕円体。半軸長は固有値 <span class="math"><i>a</i><sub>11</sub>, <i>a</i><sub>22</sub>, <i>a</i><sub>33</sub></span> に比例する。</figcaption>
+    </figure>
+    <div class="tablewrap">
+      <table aria-label="選択した深さでの値">
+        <thead><tr><th>量</th><th class="n">選択した深さでの値</th></tr></thead>
+        <tbody id="readout"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    <h2>3. 板厚方向の分布 ― 入力から出力まで</h2>
+    <p>配向は熱膨張係数の異方性を通じて、結晶化度は結晶化収縮を通じて、残留ひずみに寄与する。熱膨張係数は配向の異なる領域どうしの拘束を考慮し、熱応力を平均してから平均剛性の逆を作用させて求める [1]。</p>
+    <div class="eq math"><span>⟨<b>α</b>⟩ = ⟨<b>C</b>⟩<sup>−1</sup> : ⟨<b>C</b> : <b>α</b>⟩</span><span class="no">(2)</span></div>
+    <p>残留ひずみは、各層が固定温度で無応力となり室温まで冷えるとして、自由な板の力とモーメントのつり合いから求めた弾性ひずみ <span class="math"><b>ε</b><sub>res</sub> = <b>ε</b><sub>0</sub> + <i>z</i> <b>κ</b> − <b>ε</b>*</span> である。</p>
+  </div>
+  <figure>
+    <div class="profiles" id="profiles"></div>
+    <div class="key"><span class="k-flow">流動方向 <i>x</i> 成分</span><span class="k-trans k-dash">流動直交方向 <i>y</i> 成分</span><span style="color:var(--mid)">もう一方の金型条件</span></div>
+    <figcaption>図3　板厚方向の分布。縦軸は正規化した板厚位置 <i>z</i>（±1 が金型面）、横の細線は選択した深さ。(a) 配向テンソル成分（仮定）。(b) 結晶化度。板厚方向の熱伝導と Hoffman–Lauritzen 型の結晶化速度式で計算した。速度式は炭素繊維/PEEK の公開データで検証済みである。(c) 配向平均した熱膨張係数（式 (2)）。(d) 残留ひずみ。定数はいずれも例示値。</figcaption>
+  </figure>
+</section>
+
+<section>
+  <div class="col">
+    <h2>4. どの特徴量が効いているか</h2>
+    <p>この計算は固有ひずみについて線形なので、熱収縮（配向を経由する）の寄与と結晶化収縮の寄与を厳密に分けて足し合わせられる。分解の誤差は機械精度（10<sup>−16</sup> 程度）である。</p>
+  </div>
+  <div class="tablewrap col"><table aria-label="寄与の分解"><thead><tr><th>条件</th><th>寄与</th><th class="n">残留ひずみの幅 <i>ε<sub>xx</sub></i> [10<sup>−3</sup>]</th><th class="n">同 <i>ε<sub>yy</sub></i> [10<sup>−3</sup>]</th><th class="n">反り（<i>y</i> 方向、100 mm 当たり）[mm]</th></tr></thead><tbody id="attr"></tbody></table></div>
+  <div class="col note">
+    <p><b>示せたこと：</b>この条件では、残留ひずみの大きさと分布はおもに繊維配向が熱収縮を通じて決めており、結晶化の寄与のおよそ 2 倍である。反りは結晶化度の上下非対称からのみ生じた。</p>
+    <p><b>示せていないこと：</b>反りが結晶化だけから生じたのは、配向の分布と固定温度を上下対称と仮定したためである。実部品で配向が上下非対称であれば、配向も反りを生む。また数値の大きさは例示値と単純化に依存し、校正していない。</p>
+  </div>
+</section>
+
+<section class="col">
+  <h2>5. 計算の前提と限界</h2>
+  <p>板厚 3 mm の平板、溶融温度 380 °C から金型内で 40 s 冷却する。結晶化は金型内でのみ進むとし、離型後は変化しないと仮定した。潜熱、保圧と圧力履歴、粘弾性緩和は考慮していない。粘弾性緩和を入れると応力は大きく下がることが本リポの別の計算で分かっており、ここでの大きさは過大である。結晶化収縮は固定後にすべて生じるとして数えており、上限の見積もりである。定数は PEEK 系を想定した例示値で、特定の材料のデータではない。検証：力とモーメントのつり合い、対称条件での曲率ゼロ、一様な板での応力ゼロ、繊維抽出の二次モーメントは、いずれも機械精度で満たされる。</p>
+  <p class="meta">計算：<code>viz/denso_plate_features.py</code>（リポジトリ keisuke58/wccm2026-cfrp-gnn）</p>
+</section>
+
+<section class="col">
+  <h2>6. 実物の観察像（外部の公開論文）</h2>
+  <p>実際の射出成形品のスキン・シェル・コア構造は、X 線マイクロ CT で観察できる。以下はオープンアクセスで画像を見られる文献である。図は転載していない。</p>
+  <ol class="refs">
+    <li><a href="https://www.mdpi.com/2073-4360/14/1/29" rel="noopener">Polymers 14(1), 29</a> ― 短ガラス繊維強化ポリアミド射出成形品について、X 線マイクロ CT で測った配向と解析を比較している。スキン・シェア・コア層の記述がある。</li>
+    <li><a href="https://www.matec-conferences.org/articles/matecconf/pdf/2018/24/matecconf_fatigue2018_22026.pdf" rel="noopener">MATEC Web of Conferences, Fatigue 2018</a> ― ガラス繊維 50% の PA66 について、マイクロ CT で板厚方向の配向テンソルの変化を定量化している。</li>
+    <li><a href="https://arts.units.it/retrieve/4b520130-351f-4daa-89ca-2e53e783b575/PIME-L-microstructure-Post_print.pdf" rel="noopener">トリエステ大学リポジトリの著者最終稿</a> ― 放射光マイクロ CT による PA6.6（ガラス繊維 30 wt%）のスキン・シェル・コア構造。</li>
+    <li><a href="https://help.autodesk.com/cloudhelp/2024/ENU/HeliusPFA-AdvMaterials/files/Theory-Manual/HELIUS-AME-THEORY-FIB-ORIENT-DISTRBN.html" rel="noopener">Autodesk Helius AME 理論マニュアル：繊維配向分布</a> ― 配向テンソルの考え方の解説。</li>
+  </ol>
+  <p class="meta">[1] S. G. Advani and C. L. Tucker III, Journal of Rheology, 31(8), 751–784, 1987.（書誌は一次文献で未照合）</p>
+</section>
+</main>
+
+<script id="data" type="application/json">__DATA__</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(function(){
+const D = JSON.parse(document.getElementById('data').textContent);
+const NZ = D.z.length;
+const st = { caseKey:'symmetric', z:1, warp:false };
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const layer = z => Math.max(0, Math.min(NZ-1, Math.round((z+1)/2*(NZ-1))));
+const fmt = (v,d) => { const r=Math.abs(v).toFixed(d); return (v<0 && +r!==0 ? '−' : '') + r; };
+
+// ------------------------------------------------------------------ readout
+function readout(){
+  const k = layer(st.z), c = D.cases[st.caseKey];
+  const rows = [
+    ['配向 <i>a</i><sub>11</sub>（流動 <i>x</i>）', fmt(D.a11[k],2)],
+    ['配向 <i>a</i><sub>22</sub>（直交 <i>y</i>）', fmt(D.a22[k],2)],
+    ['配向 <i>a</i><sub>33</sub>（板厚）', fmt(D.a33[k],2)],
+    ['結晶化度 <i>X</i><sub>c</sub>', fmt(c.Xc[k],3)],
+    ['熱膨張係数 ⟨<i>α</i>⟩<sub><i>xx</i></sub> [ppm/K]', fmt(D.alpha_xx[k],1)],
+    ['熱膨張係数 ⟨<i>α</i>⟩<sub><i>yy</i></sub> [ppm/K]', fmt(D.alpha_yy[k],1)],
+    ['残留ひずみ <i>ε</i><sub><i>xx</i></sub> [10<sup>−3</sup>]', fmt(c.eps_res_xx[k],2)],
+    ['残留ひずみ <i>ε</i><sub><i>yy</i></sub> [10<sup>−3</sup>]', fmt(c.eps_res_yy[k],2)],
+  ];
+  document.getElementById('readout').innerHTML =
+    `<tr><td>深さ <i>z</i></td><td class="n">${fmt(D.z[k],2)}</td></tr>` +
+    rows.map(r=>`<tr><td>${r[0]}</td><td class="n">${r[1]}</td></tr>`).join('');
+}
+
+// ------------------------------------------------------------- attribution
+function attribution(){
+  const lab = {symmetric:'対称 185/185 °C', asymmetric:'非対称 170/200 °C'};
+  let h='';
+  for (const k of ['symmetric','asymmetric']){
+    const a = D.cases[k].attribution;
+    h += `<tr><td rowspan="2">${lab[k]}</td><td>熱収縮（配向経由）</td><td class="n">${fmt(a.range_xx_thermal,2)}</td><td class="n">${fmt(a.range_yy_thermal,2)}</td><td class="n">${fmt(a.sag_y_thermal_mm,2)}</td></tr>`;
+    h += `<tr><td>結晶化収縮</td><td class="n">${fmt(a.range_xx_cryst,2)}</td><td class="n">${fmt(a.range_yy_cryst,2)}</td><td class="n">${fmt(a.sag_y_cryst_mm,2)}</td></tr>`;
+  }
+  document.getElementById('attr').innerHTML = h;
+}
+
+// --------------------------------------------------------------- profiles
+const PANELS = [
+  {t:'(a) 配向', x:[0,1], ticks:[0,0.5,1], s:()=>[[D.a11,'flow',0],[D.a22,'trans',1]], unit:'成分'},
+  {t:'(b) 結晶化度', x:[0,0.3], ticks:[0,0.1,0.2,0.3], s:()=>[[D.cases[st.caseKey].Xc,'flow',0],[D.cases[other()].Xc,'mid',0]], unit:'<tspan font-style="italic">X</tspan><tspan baseline-shift="sub" font-size="70%">c</tspan>'},
+  {t:'(c) 熱膨張係数', x:[-5,55], ticks:[0,25,50], s:()=>[[D.alpha_xx,'flow',0],[D.alpha_yy,'trans',1]], unit:'ppm/K'},
+  {t:'(d) 残留ひずみ', x:[-4,6], ticks:[-4,0,4], s:()=>[[D.cases[st.caseKey].eps_res_xx,'flow',0],[D.cases[st.caseKey].eps_res_yy,'trans',1]], unit:'10<tspan baseline-shift="super" font-size="70%">−3</tspan>'},
+];
+const other = () => st.caseKey==='symmetric'?'asymmetric':'symmetric';
+function profiles(){
+  const W=220,H=330,ml=34,mr=10,mt=30,mb=44, pw=W-ml-mr, ph=H-mt-mb;
+  const X=(p,v)=>ml+(v-p.x[0])/(p.x[1]-p.x[0])*pw, Y=z=>mt+(1-(z+1)/2)*ph;
+  const col = {flow:css('--flow'),trans:css('--trans'),mid:css('--mid')};
+  const ink=css('--ink'), muted=css('--muted'), rule=css('--rule');
+  document.getElementById('profiles').innerHTML = PANELS.map(p=>{
+    let g=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${p.t.replace(/<[^>]+>/g,'')}" font-family="STIX Two Text, Noto Serif JP, serif">`;
+    g+=`<text x="${ml}" y="18" font-size="14" fill="${ink}">${p.t}</text>`;
+    g+=`<rect x="${ml}" y="${mt}" width="${pw}" height="${ph}" fill="none" stroke="${rule}"/>`;
+    for(const zt of [-1,0,1]){ g+=`<line x1="${ml}" x2="${ml+pw}" y1="${Y(zt)}" y2="${Y(zt)}" stroke="${rule}" stroke-dasharray="2 3"/><text x="${ml-5}" y="${Y(zt)+4}" font-size="11" text-anchor="end" fill="${muted}">${zt>0?'+1':zt<0?'−1':'0'}</text>`; }
+    for(const xt of p.ticks){ g+=`<line x1="${X(p,xt)}" x2="${X(p,xt)}" y1="${mt+ph}" y2="${mt+ph+4}" stroke="${muted}"/><text x="${X(p,xt)}" y="${mt+ph+16}" font-size="11" text-anchor="middle" fill="${muted}">${String(xt).replace('-','−')}</text>`; }
+    if(p.x[0]<0) g+=`<line x1="${X(p,0)}" x2="${X(p,0)}" y1="${mt}" y2="${mt+ph}" stroke="${rule}"/>`;
+    g+=`<text x="${ml+pw/2}" y="${H-8}" font-size="12" text-anchor="middle" fill="${muted}">${p.unit}</text>`;
+    for(const [arr,c,dash] of p.s()){
+      const pts = arr.map((v,i)=>`${X(p,Math.max(p.x[0],Math.min(p.x[1],v))).toFixed(1)},${Y(D.z[i]).toFixed(1)}`).join(' ');
+      g+=`<polyline points="${pts}" fill="none" stroke="${col[c]}" stroke-width="${c==='mid'?1.4:2}" ${dash?'stroke-dasharray="5 3"':''}/>`;
+    }
+    const yz=Y(D.z[layer(st.z)]);
+    g+=`<line x1="${ml}" x2="${ml+pw}" y1="${yz}" y2="${yz}" stroke="${ink}" stroke-width="0.8"/>`;
+    return g+'</svg>';
+  }).join('');
+}
+
+// ------------------------------------------------------------- 3-D plate
+const hasGL = !!window.THREE;
+let r3, scene, cam, ctl, fibres, plateTop, plateBot, cutPlane, edges, arrow, F=[];
+const LX=6, LY=4, TZ=1.6, NF=2600, FL=0.22, EXAG=15, M2V=60; // 6 viewer units = 100 mm
+function warpW(x,y){
+  if(!st.warp) return 0;
+  const k = D.cases[st.caseKey].kappa; const X=(x-LX/2)/M2V, Y=(y-LY/2)/M2V;
+  return (k[0]*X*X/2 + k[1]*Y*Y/2)*M2V*EXAG;
+}
+function gauss(rng){ let u=0,v=0; while(u===0)u=rng(); while(v===0)v=rng(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+function mulberry(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function buildFibres(){
+  const rng = mulberry(20261102);
+  F=[];
+  for(let i=0;i<NF;i++){
+    const zn = -1+2*rng(), k=layer(zn), s=D.fibre_scales[k];
+    let p=[Math.sqrt(s[0])*gauss(rng), Math.sqrt(s[1])*gauss(rng), Math.sqrt(s[2])*gauss(rng)];
+    const n=Math.hypot(...p); p=p.map(v=>v/n);
+    F.push({x:0.15+rng()*(LX-0.3), y:0.15+rng()*(LY-0.3), zn, p, t:p[0]*p[0]});
+  }
+}
+function fibreColor(t,pal){
+  return t<0.5 ? pal.a.clone().lerp(pal.m, t/0.5) : pal.m.clone().lerp(pal.b, (t-0.5)/0.5);
+}
+function surface(yOff){
+  const g=new THREE.PlaneGeometry(LX,LY,24,16); g.rotateX(-Math.PI/2); g.translate(LX/2,yOff,LY/2);
+  return g;
+}
+function deformSurface(mesh, base){
+  const pos=mesh.geometry.attributes.position;
+  for(let i=0;i<pos.count;i++){ const x=pos.getX(i), y=pos.getZ(i); pos.setY(i, base + warpW(x,y)); }
+  pos.needsUpdate=true; mesh.geometry.computeVertexNormals();
+}
+function init3d(){
+  const cv=document.getElementById('c3d');
+  r3=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true}); r3.setPixelRatio(Math.min(devicePixelRatio,2));
+  scene=new THREE.Scene();
+  cam=new THREE.PerspectiveCamera(35,16/9,0.1,100); cam.position.set(LX*0.62, 1.15, LY*2.55);  // low, from the y side: layers read as bands
+  scene.add(new THREE.AmbientLight(0xffffff,0.75)); const dl=new THREE.DirectionalLight(0xffffff,0.55); dl.position.set(3,6,4); scene.add(dl);
+  buildFibres();
+  const geo=new THREE.CylinderGeometry(0.011,0.011,FL,5,1); geo.rotateZ(Math.PI/2); // along +x
+  fibres=new THREE.InstancedMesh(geo,new THREE.MeshLambertMaterial({color:0xffffff}),NF);
+  scene.add(fibres);
+  const pm=()=>new THREE.MeshBasicMaterial({color:new THREE.Color(css('--mid')),transparent:true,opacity:0.12,side:THREE.DoubleSide,depthWrite:false});
+  plateTop=new THREE.Mesh(surface(TZ/2),pm()); plateBot=new THREE.Mesh(surface(-TZ/2),pm());
+  cutPlane=new THREE.Mesh(surface(0),new THREE.MeshBasicMaterial({color:new THREE.Color(css('--ink')),transparent:true,opacity:0.07,side:THREE.DoubleSide,depthWrite:false}));
+  scene.add(plateTop,plateBot,cutPlane);
+  edges=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(LX,TZ,LY)),new THREE.LineBasicMaterial({color:new THREE.Color(css('--muted'))}));
+  edges.position.set(LX/2,0,LY/2); scene.add(edges);
+  arrow=new THREE.ArrowHelper(new THREE.Vector3(1,0,0),new THREE.Vector3(0.2,TZ/2+0.45,-0.35),1.6,new THREE.Color(css('--flow')),0.25,0.14); scene.add(arrow);
+  if(THREE.OrbitControls){ ctl=new THREE.OrbitControls(cam,cv); ctl.target.set(LX/2,0,LY/2); ctl.enableDamping=true; ctl.update(); }
+  else { cam.lookAt(LX/2,0,LY/2); document.getElementById('tag3d').textContent='回転操作は読み込めなかった（表示のみ）'; }
+  update3d(); resize();
+}
+function update3d(){
+  if(!fibres) return;
+  const pal={a:new THREE.Color(css('--trans')),m:new THREE.Color(css('--mid')),b:new THREE.Color(css('--flow'))};
+  const m=new THREE.Matrix4(), q=new THREE.Quaternion(), sc=new THREE.Vector3(), v=new THREE.Vector3(), ax=new THREE.Vector3(1,0,0);
+  F.forEach((f,i)=>{
+    const vis = f.zn <= st.z + 1e-9;
+    const dir=new THREE.Vector3(f.p[0],f.p[2],f.p[1]); // world y = thickness
+    q.setFromUnitVectors(ax,dir);
+    sc.set(vis?1:0,vis?1:0,vis?1:0);
+    v.set(f.x, f.zn*TZ/2 + warpW(f.x,f.y), f.y);
+    m.compose(v,q,sc); fibres.setMatrixAt(i,m);
+    fibres.setColorAt(i,fibreColor(f.t,pal));
+  });
+  fibres.instanceMatrix.needsUpdate=true; if(fibres.instanceColor) fibres.instanceColor.needsUpdate=true;
+  deformSurface(plateTop, TZ/2); deformSurface(plateBot, -TZ/2); deformSurface(cutPlane, st.z*TZ/2 + 0.002);
+  edges.visible = !st.warp;
+  render3d();
+}
+function render3d(){ if(r3) r3.render(scene,cam); }
+
+// ------------------------------------------------------------- ellipsoid
+let re, se, ce, cte, ellMesh;
+function initEll(){
+  const cv=document.getElementById('cell');
+  re=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true}); re.setPixelRatio(Math.min(devicePixelRatio,2));
+  se=new THREE.Scene(); ce=new THREE.PerspectiveCamera(35,1,0.1,50); ce.position.set(2.6,2.0,3.0);
+  se.add(new THREE.AmbientLight(0xffffff,0.6)); const dl=new THREE.DirectionalLight(0xffffff,0.7); dl.position.set(2,4,3); se.add(dl);
+  ellMesh=new THREE.Mesh(new THREE.SphereGeometry(1,48,32),new THREE.MeshPhongMaterial({color:new THREE.Color(css('--flow')),transparent:true,opacity:0.85,shininess:30}));
+  se.add(ellMesh);
+  const ref=new THREE.Mesh(new THREE.SphereGeometry(1/3*2.4,24,16),new THREE.MeshBasicMaterial({color:new THREE.Color(css('--mid')),wireframe:true,transparent:true,opacity:0.5}));
+  se.add(ref);
+  const ax=(d,c)=>{ const g=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(...d.map(x=>-x*1.4)),new THREE.Vector3(...d.map(x=>x*1.4))]); se.add(new THREE.Line(g,new THREE.LineBasicMaterial({color:c}))); };
+  ax([1,0,0],new THREE.Color(css('--flow'))); ax([0,0,1],new THREE.Color(css('--trans'))); ax([0,1,0],new THREE.Color(css('--muted')));
+  if(THREE.OrbitControls){ cte=new THREE.OrbitControls(ce,cv); cte.enableDamping=true; cte.enablePan=false; }
+  ce.lookAt(0,0,0); updateEll(); resize();
+}
+function updateEll(){
+  if(!ellMesh) return; const k=layer(st.z), S=2.4;
+  ellMesh.scale.set(D.a11[k]*S, D.a33[k]*S, D.a22[k]*S); // world: x flow, y thickness, z transverse
+  document.getElementById('tagell').innerHTML = `<i>z</i> = ${fmt(D.z[k],2)}　 <i>a</i><sub>11</sub> = ${D.a11[k].toFixed(2)}, <i>a</i><sub>22</sub> = ${D.a22[k].toFixed(2)}, <i>a</i><sub>33</sub> = ${D.a33[k].toFixed(2)}`;
+  renderEll();
+}
+function renderEll(){ if(re) re.render(se,ce); }
+
+// ------------------------------------------------------------- plumbing
+function resize(){
+  for(const [r,c,cv] of [[r3,cam,'c3d'],[re,ce,'cell']]){
+    if(!r) continue; const el=document.getElementById(cv), w=el.clientWidth, h=el.clientHeight;
+    r.setSize(w,h,false); c.aspect=w/h; c.updateProjectionMatrix();
+  }
+  render3d(); renderEll();
+}
+function setCase(k){
+  st.caseKey=k;
+  document.getElementById('b-sym').setAttribute('aria-pressed', k==='symmetric');
+  document.getElementById('b-asym').setAttribute('aria-pressed', k==='asymmetric');
+  refresh();
+}
+function refresh(){ readout(); profiles(); update3d(); updateEll(); }
+document.getElementById('zcut').addEventListener('input',e=>{ st.z=+e.target.value; document.getElementById('zout').textContent=fmt(st.z,2); refresh(); });
+document.getElementById('b-sym').addEventListener('click',()=>setCase('symmetric'));
+document.getElementById('b-asym').addEventListener('click',()=>setCase('asymmetric'));
+document.getElementById('warp').addEventListener('change',e=>{ st.warp=e.target.checked; if(st.warp && st.caseKey==='symmetric') setCase('asymmetric'); else update3d(); });
+addEventListener('resize',resize);
+const mq=matchMedia('(prefers-color-scheme: dark)');
+const recolor=()=>{ if(hasGL){ [plateTop,plateBot].forEach(m=>m&&m.material.color.set(css('--mid'))); if(cutPlane) cutPlane.material.color.set(css('--ink')); if(edges) edges.material.color.set(css('--muted')); if(ellMesh) ellMesh.material.color.set(css('--flow')); } refresh(); };
+mq.addEventListener && mq.addEventListener('change',recolor);
+new MutationObserver(recolor).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+attribution(); readout(); profiles();
+if(hasGL){ try{ init3d(); initEll(); (function loop(){ requestAnimationFrame(loop); if(ctl) ctl.update(); if(cte) cte.update(); if(r3) r3.render(scene,cam); if(re) re.render(se,ce); })(); }catch(err){ document.getElementById('tag3d').textContent='三次元表示を初期化できなかった: '+err.message; } }
+else { document.getElementById('tag3d').textContent='三次元表示ライブラリを読み込めなかった'; }
+})();
+</script>
