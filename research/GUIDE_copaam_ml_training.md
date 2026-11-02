@@ -8,6 +8,20 @@
 > 「数値解析で事前学習し、少数の実測点で合わせ込む」手順を、**合成データで**事前に試すことである。
 > 実データは契約前のため未入手であり、ここで得られる数値は**手法の検証**であって、材料の予測ではない。
 
+### copaam で確認済みの設定（2026-11-03）
+
+以下は copaam で実際に確かめた値である。§2・§3 の「確認する」「選ぶ」項目は、この表のとおりでよい。
+
+| 項目 | copaam での値 |
+|---|---|
+| スケジューラ | **Torque**（PBS Pro ではない）。`#PBS -l nodes=...:gpus=1` の書式で通る |
+| キュー | `default` のみ。`-q` の指定は不要 |
+| ノード | ログインノード copaam に GPU は無い。計算ノードは vancouver01/02（RTX 4090、12 コア）、stuttgart01–03（RTX 3090、10 コア）。**`ppn` は 10 以下**にする（16 では始まらない）。celtic03 は GPU 故障 |
+| ドライバ | 550.90.07（CUDA 12.4）→ PyTorch は **cu124**（`torch 2.6.0+cu124` で動作確認） |
+| 仮想環境 | `~/venvs/denso`（python 3.11、`uv venv` で作成）。numpy 2.4.6、scipy 1.17.1 |
+| ジョブスクリプト | `scripts/denso_ml.pbs` は copaam 用に修正済み（`ppn=10:vancouver01`、`unset LD_LIBRARY_PATH`、割り当て GPU の固定）。**ASCII だけで書く**（日本語が入ると Torque が受け付けない） |
+| 動作確認（§3.1） | 計算ノード（vancouver01、RTX 4090）で 46 秒。検証2行は 2.3e-16 / 1.1e-16、実験1は local RMSE 0.828・context 0.137（§4.1 の `--quick` の参照値と一致） |
+
 ---
 
 ## 1. 学習の内容
@@ -67,7 +81,7 @@ pip install numpy scipy matplotlib pillow
 
 # 4) PyTorch を入れる。cu の番号は nvidia-smi の CUDA Version 以下のものを選ぶ
 #    （例：CUDA Version 12.4 なら cu121 または cu124）。対応表は https://pytorch.org/get-started/locally/
-pip install torch --index-url https://download.pytorch.org/whl/cu121
+pip install torch --index-url https://download.pytorch.org/whl/cu121   # copaam では cu124（冒頭の表）
 
 # 5) GPU が見えるか確認（True になればよい）
 python -c "import torch; print(torch.__version__, torch.cuda.is_available())"
@@ -80,7 +94,7 @@ python -c "import torch; print(torch.__version__, torch.cuda.is_available())"
 
 ## 3. 実行
 
-### 3.1 動作確認（CPU 4 コアで約 30 秒。ログインノードでも可）
+### 3.1 動作確認（CPU 4 コアで約 30 秒。copaam では学習なので計算ノードで回す）
 ```bash
 source $HOME/venvs/denso/bin/activate
 python denso_residual_strain_ml.py --quick --workers 4 --out results/denso_ml_quick
@@ -100,6 +114,7 @@ python denso_residual_strain_ml.py --quick --workers 4 --out results/denso_ml_qu
 2. **資源指定の書式**
    - スクリプトは Torque 形式の `#PBS -l nodes=1:ppn=16:gpus=1` を使う（既存の `inverse_rigor.pbs` と同じ）。
    - qsub がこの行を拒否したら、copaam は PBS Pro である。その行を `##` でコメントにし、`##PBS -l select=1:ncpus=16:ngpus=1` を有効にする。
+   - **copaam では確認済み**：Torque、キューは `default`、スクリプトは修正済みなので、そのまま投入してよい。
 
 ```bash
 cd wccm2026-cfrp-gnn
@@ -109,7 +124,7 @@ qstat -u $USER                 # 状態確認
 - ログはジョブ名 `denso_ml` の出力ファイル `denso_ml.o<ジョブ番号>` に出る。
 - 結果は `results/denso_ml_<日時>/` に保存される。
 
-### 3.3 ジョブを使わずに直接回す場合
+### 3.3 ジョブを使わずに直接回す場合（copaam では使わない：GPU は共有なので必ず qsub）
 ```bash
 nohup $HOME/venvs/denso/bin/python denso_residual_strain_ml.py --workers 16 \
       --out results/denso_ml_$(date +%Y%m%d_%H%M) > denso_ml.log 2>&1 &
