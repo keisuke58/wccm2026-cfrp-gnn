@@ -90,6 +90,9 @@
 | 解析ソフト | Abaqus（fifa）、Ansys（IKM） | 既報は Abaqus | 開始時に Ansys との関係を確認する |
 
 ## 出典
+
+PDF は `bash research/papers/fetch_papers.sh` で `research/papers/` に取得できる（公開リポジトリなので PDF 自体は入れていない）。
+
 - [日本複合材料学会誌 52(3), 88–96 (2026), J-STAGE](https://www.jstage.jst.go.jp/article/jscm/52/3/52_88/_article/-char/ja)
 - [3D TIMON 導入事例：株式会社デンソー様](https://www.3dtimon.com/case/testimonial/testimonial01.html)
 - [デンソーテクニカルレビュー Vol.11 No.2 (2006)「デンソーの部品加工技術の現状と今後の展望」](https://www.denso.com/jp/ja/-/media/Global/business/innovation/review/11-2/11-2-doc-disseration02itp6-ja.pdf)
