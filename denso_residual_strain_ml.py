@@ -332,7 +332,14 @@ def _plot(path, res, n_t_list, p, models, sc, torch, dev):
     try:                                   # repo convention: thesis_style, graceful fallback
         from thesis_style import use
         use(width_frac=1.0, aspect=0.45)
-        if shutil.which("latex") is None:
+        usetex_ok = shutil.which("latex") is not None
+        if usetex_ok and matplotlib.rcParams["text.usetex"]:
+            try:                           # latex may exist without cm-super (e.g. copaam)
+                from matplotlib.texmanager import TexManager
+                TexManager().get_text_width_height_descent("lp", 10)
+            except Exception:
+                usetex_ok = False
+        if not usetex_ok:
             matplotlib.rcParams["text.usetex"] = False
             matplotlib.rcParams["font.family"] = "serif"
             matplotlib.rcParams["font.serif"] = ["Times New Roman", "Liberation Serif",
