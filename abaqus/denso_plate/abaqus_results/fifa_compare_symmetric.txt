@@ -1,0 +1,2 @@
+symmetric  (H) max |dT| (t >= 1 s) lumped 0.000 K, consistent 0.226 K; whole history 0.00 / 3.66 K | PASS
+           (M) stress err 1.6e-03, alpha err 2.0e-08, sag x -0.000 (py +0.000) mm, y -0.000 (py -0.000) mm, max|S33| 0.00 MPa | PASS
