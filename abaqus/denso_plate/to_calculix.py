@@ -24,7 +24,11 @@ def convert(src):
     s = s.replace("TYPE=ORTHOTROPIC", "TYPE=ORTHO")
     s = re.sub(r"^\*STEP, NAME=\w+", "*STEP", s, flags=re.M)
     s = s.replace(", NLGEOM=NO", "")
-    if heat:
+    if "*MODEL CHANGE, REMOVE" in s:                  # hole-drilling deck (gen_hole_drilling.py)
+        s = s.replace("*MODEL CHANGE, REMOVE", "*MODEL CHANGE, TYPE=ELEMENT, REMOVE")
+        s = s.replace("*OUTPUT, FIELD\n*ELEMENT OUTPUT, ELSET=GAUGES\n E, S\n", "")
+        s = s.replace("*EL PRINT, ELSET=GAUGES, SUMMARY=NO\n E\n", "*EL PRINT, ELSET=GAUGES\n E\n")
+    elif heat:
         s = s.replace("*HEAT TRANSFER, END=PERIOD", "*HEAT TRANSFER, DIRECT")
         s = s.replace("*OUTPUT, FIELD, FREQUENCY=1\n*NODE OUTPUT\n NT\n",
                       "*NODE PRINT, NSET=NCOL\n NT\n")
