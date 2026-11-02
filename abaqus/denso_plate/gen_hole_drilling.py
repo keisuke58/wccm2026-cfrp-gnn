@@ -133,7 +133,7 @@ def lamination_check(mat):
     return sig[0] / 1e6                                       # top (drilled-face) layer, MPa
 
 
-def write_deck(path, P, Q, hole, mat, nl, tag):
+def write_deck(path, P, Q, hole, mat, nl, tag, eig="all"):
     H = tc.H3; dz = H / nl
     Np, Nq = len(P), len(Q)
     nd = lambda p, k: 1 + p + Np * k                 # k = 0 bottom plane ... nl top plane (drilled face)
@@ -193,6 +193,8 @@ def write_deck(path, P, Q, hole, mat, nl, tag):
     for k in range(nl):
         C = mat["C"][nl - 1 - k]                  # element layer k sits at depth index nl-1-k
         ae = mat["eth"][nl - 1 - k] / dT
+        if eig != "all":                          # one eigenstrain component only (superposition basis)
+            ae = ae * (np.arange(3) == "xyz".index(eig[0]))
         v = [C[i, j] for i, j in ab]
         L += [f"*SOLID SECTION, ELSET=L{k+1:03d}, MATERIAL=M{k+1:03d}, ORIENTATION=GLOBAL",
               f"*MATERIAL, NAME=M{k+1:03d}", "*ELASTIC, TYPE=ORTHOTROPIC",
@@ -225,6 +227,8 @@ def main():
     ap.add_argument("--nc", type=int, default=26)
     ap.add_argument("--q", type=float, default=1.15, help="radial growth ratio outside the hole")
     ap.add_argument("--tag", default="")
+    ap.add_argument("--eig", default="all", choices=["all", "xx", "yy", "zz"],
+                    help="keep only this eigenstrain component (linear superposition basis)")
     ap.add_argument("--out", default=os.path.join(HERE, "jobs"))
     a = ap.parse_args()
     assert abs(tc.H3 / a.layers * round(DRILL_STEP / (tc.H3 / a.layers)) - DRILL_STEP) < 1e-6 * DRILL_STEP or True
@@ -237,13 +241,13 @@ def main():
     if abs(per - round(per)) > 1e-6:
         print(f"note: 0.2 mm is {per:.3f} layers; drilling bands are rounded to {round(per)} layers "
               f"({round(per) * tc.H3 / a.layers * 1e3:.3f} mm)")
-    gauges, nb = write_deck(os.path.join(a.out, job + ".inp"), P, Q, hole, mat, a.layers, a.tag or "full")
+    gauges, nb = write_deck(os.path.join(a.out, job + ".inp"), P, Q, hole, mat, a.layers, a.tag or "full", a.eig)
     meta = dict(job=job, layers=a.layers, na=a.na, nb=a.nb, nc=a.nc, q=a.q, n_quads=int(len(Q)),
                 n_elements=int(len(Q) * a.layers), drill_steps=nb, drill_step_mm=DRILL_STEP * 1e3,
                 band_mm=round(per) * tc.H3 / a.layers * 1e3,
                 gauge_r_mm=[g * 1e3 for g in GAUGE_R], gauge_w_mm=GAUGE_W * 1e3,
                 gauges=gauges, lamination_surface_stress_MPa=dict(sxx=float(s_top[0]), syy=float(s_top[1])),
-                paper_fig12=tc.PAPER["fig12_released_strain"])
+                eig=a.eig, paper_fig12=tc.PAPER["fig12_released_strain"])
     json.dump(meta, open(os.path.join(a.out, job + "_meta.json"), "w"), indent=1)
     print(f"{job}: {len(Q)} quads x {a.layers} layers = {len(Q) * a.layers} C3D8I, {len(P) * (a.layers + 1)} nodes; "
           f"gauge elements Ch1 {len(gauges['GCH1']['elements'])}, Ch2 {len(gauges['GCH2']['elements'])}, "
