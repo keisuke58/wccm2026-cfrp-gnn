@@ -29,6 +29,8 @@ has three parameters, so it shows the mechanics of calibrating a physics prior o
 the neural-network transfer learning of the main study, which needs many conditions.
 
 Run:  python3 validation/denso_tsuda2026_transfer.py --basis-dir <dir with denso_hole_coarse_{xx,yy,zz}_released.json>
+      full mesh (fifa):  ... --basis-dir abaqus/denso_plate/abaqus_results --prefix denso_hole \
+                             --full abaqus/denso_plate/abaqus_results/denso_hole_released.json
 """
 from __future__ import annotations
 
@@ -49,8 +51,8 @@ S_Y, S_A = 10.0, 0.5
 CH = ["GCH1", "GCH2", "GCH3"]
 
 
-def load(basis_dir, full_json):
-    B = {c: json.load(open(os.path.join(basis_dir, f"denso_hole_coarse_{c}_released.json"))) for c in ("xx", "yy", "zz")}
+def load(basis_dir, full_json, prefix="denso_hole_coarse"):
+    B = {c: json.load(open(os.path.join(basis_dir, f"{prefix}_{c}_released.json"))) for c in ("xx", "yy", "zz")}
     full = json.load(open(full_json))
     paper = json.load(open(os.path.join(ROOT, "data", "literature", "tsuda2026_jscm52_88.json"), encoding="utf-8"))
     f12 = paper["fig12_released_strain"]
@@ -83,8 +85,9 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--basis-dir", required=True)
     ap.add_argument("--full", default=os.path.join(OUT, "hole_drilling_coarse_calculix.json"))
+    ap.add_argument("--prefix", default="denso_hole_coarse", help="basis file prefix; full mesh from fifa: denso_hole")
     a_ = ap.parse_args()
-    H, full_vec, y, yfe, gauge, dd, depth = load(a_.basis_dir, a_.full)
+    H, full_vec, y, yfe, gauge, dd, depth = load(a_.basis_dir, a_.full, a_.prefix)
     sup = float(np.max(np.abs(H.sum(1) - full_vec)) / np.max(np.abs(full_vec)))
     print(f"[check] superposition h_xx + h_yy + h_zz vs full run: {sup:.1e} (rel)")
     print(f"        column norms [micro-strain]: xx {np.linalg.norm(H[:,0]):.0f}, yy {np.linalg.norm(H[:,1]):.0f}, zz {np.linalg.norm(H[:,2]):.0f}")
