@@ -157,7 +157,7 @@ def _plot(H, y, yfe, p0, depth, dd, gauge, res):
     ax[1].set_xticks(range(4)); ax[1].set_xticklabels(names, fontsize=8)
     ax[1].set_ylabel(r"held-out RMSE [$\mu\varepsilon$]"); ax[1].legend(frameon=False, fontsize=7)
     ax[1].set_title("(b) error on measurements not used in the fit", fontsize=8)
-    fig.suptitle("Calibrating the physics prediction on Tsuda et al. (2026) Fig. 12 (read by eye); one plate, coarse mesh", fontsize=8)
+    fig.suptitle("Calibrating the physics prediction on Tsuda et al. (2026) Fig. 12 (read by eye); one plate", fontsize=8)
     fig.tight_layout(); fig.savefig(os.path.join(OUT, "transfer_hole_drilling.png"), dpi=200); plt.close(fig)
 
 

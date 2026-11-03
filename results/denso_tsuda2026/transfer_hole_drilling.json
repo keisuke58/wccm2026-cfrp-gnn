@@ -50,10 +50,10 @@
    "n_test": 20
   },
   "H3 common factor fit on Ch.3 (MD), predict Ch.1/Ch.2": {
-   "common_factor": 0.6548355540801925,
-   "T0_eff": 124.7736886528308,
-   "rmse_test_physics": 50.69383203159364,
-   "rmse_test_common": 10.628254720590476,
+   "common_factor": 0.6710102060339401,
+   "T0_eff": 127.36163296543042,
+   "rmse_test_physics": 46.24068513994677,
+   "rmse_test_common": 10.58944454227722,
    "rmse_test_paper_fe": 28.614681546367066
   }
  },
