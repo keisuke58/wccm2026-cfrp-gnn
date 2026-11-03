@@ -273,3 +273,37 @@ bash abaqus/denso_plate/run_hole_drilling.sh coarse          # 確認用（77 �
 > 2. `compare_hole_drilling.py` の出力表、Ch.1 と Ch.3 のピークの比、`denso_hole_released.png`、所要時間を報告する。
 > 3. 合わせるために材料定数・配向・ゲージ寸法・メッシュを変えないこと。エラーは `.msg` と `.dat` の該当箇所を添えて報告する。
 > 4. 結果（`*_abaqus.json`、`*_released.json`、`*_released.png`）を `abaqus/denso_plate/abaqus_results/` にコピーし、ブランチを切ってコミットし、プッシュする（`.odb` と `.inp` は入れない）。
+
+## 13. 追加の計算（2026-11-03）：転移学習用の成分別の本番計算
+
+**目的**：第 III 部の本番に加えて、固有ひずみの成分を 1 つだけ残した計算（xx、yy、zz の 3 本）を本番メッシュで回す。
+解放ひずみは固有ひずみに線形なので、3 本の和は本番の結果と一致するはずである。
+この 3 本を使い、既報の実測（図 12）への補正（`validation/denso_tsuda2026_transfer.py`）を、粗いメッシュから本番メッシュへ置き換える。
+
+**順序**：第 II 部の非対称ケース → 第 III 部の本番 → 本節。本番の結果が先に要る（重ね合わせの確認に使う）。
+
+```bash
+git pull
+CPUS=8 bash abaqus/denso_plate/run_hole_drilling.sh basis     # denso_hole_{xx,yy,zz}、本番と同じメッシュで 3 ジョブ
+```
+
+**判定**：
+- 3 本とも 11 ステップ終わること。
+- 重ね合わせの誤差：次を実行し、1 行目の `[check] superposition` が 10<sup>−4</sup> 未満であること。
+
+```bash
+cp abaqus/denso_plate/jobs/denso_hole*_released.json abaqus/denso_plate/abaqus_results/
+python3 validation/denso_tsuda2026_transfer.py --basis-dir abaqus/denso_plate/abaqus_results --prefix denso_hole \
+    --full abaqus/denso_plate/abaqus_results/denso_hole_released.json
+```
+
+参考（粗いメッシュ、CalculiX、例示）：重ね合わせ誤差 7.6×10<sup>−7</sup>、補正の共通倍率 0.65（*T*<sub>0,eff</sub> ≈ 124 °C）。
+本番メッシュで値が変わっても、合わせにいかずにそのまま報告すること。
+
+**報告と保存**：上のスクリプトの全出力、`results/denso_tsuda2026/transfer_hole_drilling.{json,png}`、各ジョブの所要時間。
+`denso_hole_{xx,yy,zz}_{abaqus,released}.json` を `abaqus/denso_plate/abaqus_results/` に入れ、第 III 部と同じブランチにコミット・プッシュする（`.odb` と `.inp` は入れない）。
+
+**Claude Code に渡す指示文**：
+
+> `research/GUIDE_fifa_abaqus.md` §13 に従い、第 III 部の本番が終わった後に `run_hole_drilling.sh basis` を回してください。
+> 重ね合わせの誤差と、`denso_tsuda2026_transfer.py` の全出力を報告してください。定数・メッシュは変えないこと。
