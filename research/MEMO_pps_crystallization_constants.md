@@ -32,6 +32,22 @@ L. C. López, G. L. Wilkes, *Polymer* 29(1), 106–113, 1988（doi:10.1016/0032-
 **Hoffman–Lauritzen の *K*<sub>g</sub>、*U*\* はこの論文にない。** 著者自身が「温度範囲が狭く、Hoffman らの領域理論による詳しい解析ができなかった」と書いている（p. 107）。
 したがって *K*<sub>g</sub> は、図6 の *K*(*T*) を読み取って自分で当てはめるか、別の文献を探す必要がある。
 
+## 1c. López, Wilkes & Geibel (1989) から得た値（2026-11-03、本文を確認）
+
+L. C. López, G. L. Wilkes, J. F. Geibel, *Polymer* 30(1), 147–155, 1989（doi:10.1016/0032-3861(89)90395-9）。
+分岐剤（トリクロロベンゼン）の量と、末端基の対イオン（H、Ca、Zn、Na）の影響。
+
+| 量 | 値 | 備考 |
+|---|---|---|
+| 平衡融点 *T*<sub>m</sub><sup>0</sup>（Hoffman–Weeks 法） | 312 °C（線状）、304 °C（分岐剤 0.13 mol%）、301 °C（0.20 mol%） | 線状は Lovinger らの値より 3 °C 低いと記載 |
+| Avrami 指数 *n* | ほぼ 3（末端 H のみ約 2.6） | |
+| 全体の結晶化速度 *K* が最大になる温度 | 約 180 °C | ln *K*(*T*) を 3 次多項式で当てはめた結果。既報の値と一致と記載 |
+| 分岐剤 0.20 mol% の影響 | 全体の結晶化速度 1/5、成長速度 1/2.2、核密度 1/3.5 | |
+| 末端の対イオンの影響 | 全体の結晶化速度は H > Zn > Ca > Na（H は Na の 17 倍） | 同じ PPS でも銘柄・末端処理で 1 桁以上変わる |
+
+**この論文にも *K*<sub>g</sub>、*U*\* はない。** ただし「速度が最大になる温度 約 180 °C」は、Hoffman–Lauritzen 式の形を決める手がかりになる（速度最大の温度は *K*<sub>g</sub>、*U*\*、*T*<sub>∞</sub> の組で決まる）。
+また、銘柄や末端処理で速度が 1 桁以上変わるので、**文献値をそのまま 1130A6 に使うことはできない**。
+
 ## 2. 見つかっていない値
 
 - Hoffman–Lauritzen の核形成定数 *K*<sub>g</sub> と活性化エネルギー *U*\*、および *T*<sub>∞</sub>。
@@ -52,6 +68,12 @@ L. C. López, G. L. Wilkes, *Polymer* 29(1), 106–113, 1988（doi:10.1016/0032-
 
 ## 文献
 
-- L. B. Nohara et al., "Study of crystallization behavior of poly(phenylene sulfide)", *Polímeros* 16(2), 2006. doi:10.1590/S0104-14282006000200009
+- L. B. Nohara et al., "Study of crystallization behavior of poly(phenylene sulfide)", *Polímeros* 16(2), 104–110, 2006. doi:10.1590/S0104-14282006000200009（本文確認済み）
 - L. C. López, G. L. Wilkes, "Crystallization kinetics of poly(p-phenylene sulphide): effect of molecular weight", *Polymer* 29(1), 106–113, 1988.（本文確認済み）
-- L. C. López, G. L. Wilkes, J. F. Geibel, *Polymer* 30(1), 147–155, 1989.（未読）
+- L. C. López, G. L. Wilkes, J. F. Geibel, "Crystallization kinetics of poly(p-phenylene sulphide): the effect of branching agent content and endgroup counter-atom", *Polymer* 30(1), 147–155, 1989.（本文確認済み）
+
+## PDF の扱い
+
+PDF はリポジトリに入れていない（公開リポジトリで、論文には著作権がある）。入手方法：
+- Nohara et al. (2006)：無料。`bash research/papers/fetch_papers.sh` で取得できる。
+- López & Wilkes (1988)、López et al. (1989)：Elsevier（有料）。大学のネットワークから ScienceDirect で取得し、`research/papers/` に置く（git の対象外）。
