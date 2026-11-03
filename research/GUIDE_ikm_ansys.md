@@ -14,6 +14,8 @@
 |---|---|---|---|
 | 1 | 弾性照合（Abaqus 第 I 部と同じ問題） | `run_denso_plate_ansys.sh` | **これから**。Ansys では未実行 |
 | 2 | 成形プロセス解析（熱伝導 → 粘弾性） | — | **未作成**。Abaqus の UMAT を Ansys の USERMAT に移す必要がある |
+| 3 | **穿孔法の模擬**（第 II 部、2026-11-03 追加） | `run_hole_drilling_ansys.sh` | **これから**。Abaqus・CalculiX の結果と比べる |
+| 4 | **ライセンスの確認**（第 III 部、2026-11-03 追加） | コマンドで確認 | **これから** |
 
 ## 1. 解く問題
 
@@ -113,3 +115,70 @@ Ansys でも同程度（誤差 10<sup>−3</sup> 未満）になるはずだが�
 > 3. 余裕があれば `--part thermal` と `--part cryst` も実行する。
 > 4. エラーが出た場合は、§5 の表で対処できるものは対処し、それ以外は `.out` の該当箇所を添えて報告する。合格させるために、材料定数・メッシュ・許容値を変えないこと。
 > 5. `jobs/` は git の管理外である。結果のファイル（`*_ansys_*.csv`、`*_compare.png`、照合の出力）を `ansys/denso_plate/ansys_results/` にコピーし、ブランチを切ってコミットし、プッシュする。`.dat`、`.rst` などの大きいファイルはコミットしない。
+
+
+---
+
+# 第 II 部　穿孔法の模擬（Ansys で 3 つ目の照合）
+
+## 8. 解く問題
+
+既報（津田ら 2026）と同じ入力で、穴あけによって解放されるひずみを計算する。fifa の Abaqus 2024 と、ここの CalculiX で解いた問題と、節点・要素の番号まで同じである。
+Abaqus の入力ファイル（`gen_hole_drilling.py` が書く）を読み、APDL に変換する（`ansys/denso_plate/gen_hole_drilling_ansys.py`）。
+
+| Abaqus | Ansys |
+|---|---|
+| C3D8I | SOLID185、KEYOPT(2) = 3 |
+| *ELASTIC, TYPE=ORTHOTROPIC | MP の EX〜GXZ（剛性に戻して 5×10<sup>−16</sup> で一致を確認済み） |
+| *EXPANSION（固有ひずみを等価な熱膨張で与える） | MP の ALPX〜ALPZ、TREF = 180 °C、BFUNIF = 20 °C |
+| *MODEL CHANGE, REMOVE（穴を 0.2 mm ずつ 10 段階） | EKILL |
+| ゲージの要素のひずみ | ETABLE（EPTO）→ CSV |
+
+CSV から比較までの流れは、CalculiX の結果で作った CSV を通して、CalculiX と同じ値（270 / 307 µε）が出ることを確認済み。**APDL の入力そのものは Ansys で未実行**。
+
+## 9. 実行
+
+```bash
+git pull
+bash ansys/denso_plate/run_hole_drilling_ansys.sh coarse        # 先に確認用（約 3.4 万要素）
+NP=8 bash ansys/denso_plate/run_hole_drilling_ansys.sh          # 本番（約 13 万要素）
+```
+
+## 10. 判定と参照値
+
+`compare_hole_drilling.py` の出力のピークを、次の値と比べる（単位 µε、括弧は実測比）。
+
+| | 粗いメッシュ Ch.3 / Ch.1 | 本番メッシュ Ch.3 / Ch.1 |
+|---|---|---|
+| Abaqus 2024（fifa） | 309 / −272 | 299（1.54）/ −261（1.54） |
+| CalculiX 2.21（2 スレッド） | 307 / −270 | — |
+
+- **合格の目安**：Abaqus との差が 2 % 以内。
+- 合わない場合は、定数・メッシュを変えずに、`.out` の警告・エラーと数値をそのまま報告する。
+- 特に確かめたいこと：EKILL で除いた要素が解に効いていないこと（`.out` に「killed」の数が 10 段階で増えていくこと）。
+
+---
+
+# 第 III 部　ライセンスと機能の確認
+
+## 11. 確認すること
+
+繊維の向きを計算する流動解析（射出成形の充填）が IKM の Ansys でできるかを知りたい。次を調べて、そのまま報告する。
+
+```bash
+# 使える Ansys の製品・機能の一覧（ライセンスサーバの名前は管理者に確認）
+lmutil lmstat -a -c <port>@<server> | grep -i -E "ansys|polyflow|fluent|mech|dyna|moldflow|moldex|digimat"
+ls /ansys_inc/ /usr/ansys_inc/ 2>/dev/null       # インストールされている版
+```
+
+- 特に、**Ansys Polyflow**（樹脂の流れ）、**Fluent**、**Moldflow／Moldex3D／Digimat**（繊維配向）の有無。
+- 版（例：2024 R1）と、同時に使えるライセンスの数。
+- 何も計算しなくてよい。調べた結果だけを報告する。
+
+## 12. IKM 上の Claude Code に頼む場合の指示文（第 II・III 部）
+
+> リポジトリ wccm2026-cfrp-gnn の `research/GUIDE_ikm_ansys.md` 第 II 部と第 III 部に従ってください。
+> 1. `git pull` の後、§9 の `coarse` を先に回し、11 ロードステップが終わることを確かめる。そのうえで本番を回す。
+> 2. `compare_hole_drilling.py` の出力のピークを §10 の表と並べて報告する。合わせるために定数・メッシュを変えないこと。エラーは `.out` の該当箇所を添えて報告する。
+> 3. §11 のライセンスと機能を調べて報告する。
+> 4. 結果（`*_ansys.json`、`*_released.json`、比較の出力）を `ansys/denso_plate/ansys_results/` にコピーし、ブランチを切ってコミット・プッシュする（`.rst`、`.dat` などの大きいファイルは入れない）。

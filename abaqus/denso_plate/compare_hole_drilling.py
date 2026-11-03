@@ -66,10 +66,11 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("job")
     ap.add_argument("--calculix")
+    ap.add_argument("--result", help="result JSON in the <job>_abaqus.json schema (e.g. <job>_ansys.json)")
     ap.add_argument("--no-fig", action="store_true")
     a = ap.parse_args()
     meta = json.load(open(a.job + "_meta.json"))
-    res = read_calculix(a.calculix) if a.calculix else json.load(open(a.job + "_abaqus.json"))
+    res = read_calculix(a.calculix) if a.calculix else json.load(open(a.result or a.job + "_abaqus.json"))
     rel = released(meta, res)
     f12 = meta["paper_fig12"]
     depth = [meta["band_mm"] * b for b in range(len(rel["GCH1"]))]
