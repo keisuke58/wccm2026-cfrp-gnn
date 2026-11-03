@@ -334,6 +334,10 @@ CPUS=8 bash abaqus/denso_plate/run_hole_drilling.sh gauge     # denso_hole_gm02�
 
 **判定**：2 本とも 11 ステップ終わること。結果の数値に合格の基準はない（感度を見る計算である）。
 
+参考（粗いメッシュ、CalculiX、ここでの事前確認）：内側へ 0.2 mm で Ch.3 +359（実測の 1.84 倍）、Ch.1 −329（1.93 倍）。
+外側へ 0.2 mm では、粗いメッシュではゲージに入る要素が変わらず、ずらす前と同じ値（1.57・1.59 倍）になった。
+外側の感度は、要素の細かい本番メッシュで見る必要がある。
+
 **報告**：2 本それぞれの `compare_hole_drilling.py` の出力（ピークと実測比）、所要時間。
 `denso_hole_g{m02,p02}_{abaqus,released}.json` と `_released.png` を `abaqus/denso_plate/abaqus_results/` に入れ、
 ブランチを切ってコミット・プッシュする（`.odb` と `.inp` は入れない）。
