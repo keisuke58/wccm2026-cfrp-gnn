@@ -15,12 +15,27 @@
 | Avrami 指数 *n* | 2.5–3.0 | Nohara et al. (2006) | 等温 265–270 °C。PPS 単体で *n* = 4 とする報告もある（PPS/CNT の研究） |
 | 等温結晶化が最も速い温度 | 268 °C | Nohara et al. (2006) | 試験範囲 265–270 °C 内での値 |
 
+## 1b. López & Wilkes (1988) から得た値（2026-11-03、本文を確認）
+
+L. C. López, G. L. Wilkes, *Polymer* 29(1), 106–113, 1988（doi:10.1016/0032-3861(88)90207-8）。
+線状 PPS、分子量 *M*<sub>w</sub> = 24 000、49 000、63 000 の 3 種。等温結晶化（DSC）と球晶成長速度（偏光顕微鏡）。
+
+| 量 | 値 | 備考 |
+|---|---|---|
+| 平衡融点 *T*<sub>m</sub><sup>0</sup>（Hoffman–Weeks 法） | 304 / 308 / 312 °C | *M*<sub>w</sub> 24 000 / 49 000 / 63 000。Nohara et al. の 340 °C より約 30 °C 低い |
+| Avrami 指数 *n*（*M*<sub>w</sub> 49 000、表2） | 2.6〜3.1（220〜255 °C） | 二重対数法と半結晶化時間法がよく一致。*M*<sub>w</sub> 24 000 では約 2.5 |
+| 等温結晶化の温度範囲 | 220〜260 °C | 溶融から（320 °C で 4 min 保持後）。これより低温は DSC の冷却が間に合わない |
+| 速度定数 *K*、半結晶化時間 *t*<sub>1/2</sub> | 図6 のみ（数値表なし） | 図からの読み取りが必要 |
+| 成長速度の分子量依存 | 過冷却 70 °C で、*M*<sub>w</sub> 24 000 は 63 000 の約 4 倍速い | |
+
+**Hoffman–Lauritzen の *K*<sub>g</sub>、*U*\* はこの論文にない。** 著者自身が「温度範囲が狭く、Hoffman らの領域理論による詳しい解析ができなかった」と書いている（p. 107）。
+したがって *K*<sub>g</sub> は、図6 の *K*(*T*) を読み取って自分で当てはめるか、別の文献を探す必要がある。
+
 ## 2. 見つかっていない値
 
 - Hoffman–Lauritzen の核形成定数 *K*<sub>g</sub> と活性化エネルギー *U*\*、および *T*<sub>∞</sub>。
   非等温の Nakamura 式で *K*(*T*) を与えるのに必要である。
-- 候補の一次文献：López & Wilkes, *Polymer* 29 (1988)（球晶成長速度の温度・分子量依存）。
-  有料のため本文は未確認。
+- López & Wilkes (1988) にはないことを確認した（§1b）。
 - 一部の文献は、PPS の等温結晶化では二次結晶化が起き、Avrami 式の当てはまりが悪いと報告している。
 
 ## 3. 注意点
@@ -30,12 +45,12 @@
 
 ## 4. 今後
 
-1. 図書館経由で López & Wilkes (1988) を入手し、*K*<sub>g</sub> を確認する。
+1. López & Wilkes (1988) 図6 の *K*(*T*) を読み取り、*K*<sub>g</sub> を当てはめる（溶融側 220〜260 °C のみで、外挿の幅は大きい）。
 2. 最も確実なのは、本銘柄の DSC データ（等温・非等温）をデンソー様またはポリプラスチックス様から得ることである
    （`research/QUESTIONS_denso.md` §1 に記載済み）。
 
 ## 文献
 
 - L. B. Nohara et al., "Study of crystallization behavior of poly(phenylene sulfide)", *Polímeros* 16(2), 2006. doi:10.1590/S0104-14282006000200009
-- L. C. López, G. L. Wilkes, "Crystallization kinetics of poly(p-phenylene sulphide): effect of molecular weight", *Polymer* 29(1), 1988.（未読）
+- L. C. López, G. L. Wilkes, "Crystallization kinetics of poly(p-phenylene sulphide): effect of molecular weight", *Polymer* 29(1), 106–113, 1988.（本文確認済み）
 - L. C. López, G. L. Wilkes, J. F. Geibel, *Polymer* 30(1), 147–155, 1989.（未読）
