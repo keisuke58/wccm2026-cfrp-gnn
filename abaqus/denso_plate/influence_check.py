@@ -10,8 +10,10 @@ the quantity actually measured, for profiles other than the paper's. The stiffne
 (the operator is exact only for that stiffness profile; for other orientations it is an approximation).
 
 Checks (printed):
-  I1 linearity: sum over the 16 bands vs the run with unit eigenstrain at all depths (should agree to
-     round-off, as the basis runs did, 2.5e-7);
+  I1 linearity: sum over the 16 bands vs the run with unit eigenstrain at all depths. A uniform unit
+     expansion of a free plate is compatible and stress-free, so the all-depth run must release ZERO
+     strain and the 16 bands must cancel; the difference is normalised by the largest single-band
+     response (a first version divided by the all-depth response, which is zero, and reported 3e4);
   I2 band averaging: (1) with the paper's eigenstrain averaged per band vs the full production run
      denso_hole_released.json (abaqus_results): the error of using 0.2 mm bands.
 Writes <jobs>/influence_operator.json (G and the checks).
@@ -44,9 +46,10 @@ def main():
     for c in ("xx", "yy"):
         G[c] = np.stack([load(d, f"inf_{c}_{b:02d}")[0] for b in range(NB)], axis=-1)   # (3, steps+1, NB)
         allr, depth = load(d, f"inf_{c}_all")
-        err = float(np.max(np.abs(G[c].sum(-1) - allr)) / np.max(np.abs(allr)))
+        err = float(np.max(np.abs(G[c].sum(-1) - allr)) / np.max(np.abs(G[c])))
         out["checks"][f"I1_linearity_{c}"] = err
-        print(f"[I1] {c}: sum of {NB} bands vs all-depth run, max rel. difference {err:.1e}")
+        print(f"[I1] {c}: sum of {NB} bands vs all-depth run (exact value 0), max difference {err:.1e} "
+              f"of the largest band response; all-depth run max |released| {np.max(np.abs(allr)):.1e} micro-strain")
     out["depth_mm"] = depth
     # I2: paper eigenstrain, band-averaged
     import gen_hole_drilling as g
