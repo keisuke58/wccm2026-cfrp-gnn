@@ -14,3 +14,4 @@ get nohara2006_polimeros16_104.pdf "https://www.scielo.br/j/po/a/kzSJKJHTpkBdzHv
 # Elsevier (subscription; fetch by hand from a university network, keep in research/papers/, gitignored):
 #   lopez1988_polymer29_106.pdf  doi:10.1016/0032-3861(88)90207-8
 #   lopez1989_polymer30_147.pdf  doi:10.1016/0032-3861(89)90395-9
+#   lovinger1985_polymer26_1595.pdf  doi:10.1016/0032-3861(85)90270-8

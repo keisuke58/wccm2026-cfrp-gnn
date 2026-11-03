@@ -55,9 +55,34 @@ L. C. López, G. L. Wilkes, J. F. Geibel, *Polymer* 30(1), 147–155, 1989（doi
 - López & Wilkes (1988) にはないことを確認した（§1b）。
 - 一部の文献は、PPS の等温結晶化では二次結晶化が起き、Avrami 式の当てはまりが悪いと報告している。
 
+## 1d. Lovinger, Davis & Padden (1985)：Hoffman–Lauritzen の定数（2026-11-03、本文を確認）
+
+A. J. Lovinger, D. D. Davis, F. J. Padden Jr., *Polymer* 26(11), 1595–1604, 1985（doi:10.1016/0032-3861(85)90270-8）。
+球晶成長速度 *G* を 100〜280 °C（溶融から・急冷ガラスから）で測定し、二次核形成理論で解析。
+
+    G = G0 exp[−U*/R(Tc − T∞)] exp[−Kg/(Tc ΔT f)],   ΔT = Tm0 − Tc
+
+**表2（中分子量 PPS、*M*<sub>w</sub> ≈ 51 000、*T*<sub>m</sub><sup>0</sup> = 315 °C、*T*<sub>g</sub> = 92 °C）**
+
+| 輸送項の選び方 | *U*\* | 領域 | *K*<sub>g</sub> [10<sup>5</sup> K<sup>2</sup>] | *G*<sub>0</sub> [cm/s] | 相関係数 |
+|---|---|---|---|---|---|
+| *T*<sub>∞</sub> = *T*<sub>g</sub> − 30 K（**著者の推奨**） | 1400 cal/mol（5.86 kJ/mol） | II | 8.84 | 5.43 | 0.9994 |
+| 同上 | 同上 | III | 18.35 | 3.86×10<sup>4</sup> | 0.9968 |
+| *T*<sub>∞</sub> = *T*<sub>g</sub> − 51.6 K（WLF 型） | 2650 cal/mol | II | 9.39 | 1.61×10<sup>2</sup> | 0.9996 |
+| 同上 | 同上 | III | 28.42 | 4.67×10<sup>9</sup> | 0.9976 |
+
+- 領域 II → III の転移は 208 °C（推奨の組）。III/II の傾き比は 2.07（理論値 2）。
+- 著者は WLF の値（*U*\* = 4120 cal/mol、*T*<sub>∞</sub> = *T*<sub>g</sub> − 51.6 K）では解析が成り立たないとし、*U*\* = 1400 cal/mol、*T*<sub>∞</sub> = *T*<sub>g</sub> − 30 K を採用した。
+- 完全結晶の融解熱は約 80 J/g（19 cal/g、Brady の値からの外挿）。
+- 低分子量 PPS（*M*<sub>w</sub> ≈ 15 000）は、どの定数でも一つの式に乗らなかった。
+
+**本研究での使い方（案）**
+- Nakamura 式の *K*(*T*) の温度依存に、この *U*\*、*T*<sub>∞</sub>、*K*<sub>g</sub> を使う。成形の冷却では 208 °C より低温（領域 III）が主なので、*K*<sub>g</sub> = 1.835×10<sup>6</sup> K<sup>2</sup> を基準とする。
+- ただし、これは**球晶の成長速度**の定数であり、全体の結晶化速度（核形成を含む）の温度依存とは同じではない。また、純 PPS（Phillips の試料）の値で、1130A6（GF 30 %）の値ではない。前指数因子は DSC で合わせる必要がある。
+
 ## 2b. *K*<sub>g</sub> が載っている可能性の高い文献（2026-11-03 調査、本文未入手）
 
-1. A. J. Lovinger, D. D. Davis, F. J. Padden Jr., "Kinetic analysis of the crystallization of poly(p-phenylene sulphide)", *Polymer* 26(11), 1595–1604, 1985.
+1. （本文確認済み、§1d）A. J. Lovinger, D. D. Davis, F. J. Padden Jr., "Kinetic analysis of the crystallization of poly(p-phenylene sulphide)", *Polymer* 26(11), 1595–1604, 1985.
    球晶成長速度を 100〜280 °C の広い範囲で測り、二次核形成理論で解析。要旨によれば領域 I→II 転移 488 K、II→III 転移 468 K。**領域ごとの *K*<sub>g</sub> が本文にあるはず**（要旨には数値なし）。
    https://www.sciencedirect.com/science/article/abs/pii/0032386185902708
 2. J. M. Kenny, A. Maffezzoli, "Crystallization kinetics of poly(phenylene sulfide) (PPS) and PPS/carbon fiber composites", *Polymer Engineering & Science* 31(8), 607–614, 1991（頁は未確認）。
@@ -87,4 +112,4 @@ L. C. López, G. L. Wilkes, J. F. Geibel, *Polymer* 30(1), 147–155, 1989（doi
 
 PDF はリポジトリに入れていない（公開リポジトリで、論文には著作権がある）。入手方法：
 - Nohara et al. (2006)：無料。`bash research/papers/fetch_papers.sh` で取得できる。
-- López & Wilkes (1988)、López et al. (1989)：Elsevier（有料）。大学のネットワークから ScienceDirect で取得し、`research/papers/` に置く（git の対象外）。
+- López & Wilkes (1988)、López et al. (1989)、Lovinger et al. (1985)：Elsevier（有料）。大学のネットワークから ScienceDirect で取得し、`research/papers/` に置く（git の対象外）。
