@@ -1,0 +1,56 @@
+host frontale01 start Tue Nov  3 04:55:36 PM JST 2026
+16:55:41 denso_hole_zone: 864 quads x 154 layers = 133056 C3D8I, 142445 nodes; gauge elements Ch1 12, Ch2 24, Ch3 12; lamination surface stress sxx -24.4 / syy +18.6 MPa
+16:55:43 Analysis initiated from SIMULIA established products
+16:55:43 Abaqus JOB denso_hole_zone
+16:55:43 Abaqus 2024
+16:55:43 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+16:55:44 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+16:55:44 Successfully checked out QPL for 8 cpu(s)
+16:55:44 Abaqus License Manager checked out the following licenses:
+16:55:44 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+16:55:44 <9 out of 120 licenses remain available>.
+16:55:44 Begin Analysis Input File Processor
+16:55:44 Tue 03 Nov 2026 04:55:44 PM JST
+16:55:44 Run pre
+16:55:58 Tue 03 Nov 2026 04:55:58 PM JST
+16:55:58 End Analysis Input File Processor
+16:55:58 Begin Abaqus/Standard Analysis
+16:55:58 Tue 03 Nov 2026 04:55:58 PM JST
+16:55:58 Run standard
+16:58:44 Tue 03 Nov 2026 04:58:44 PM JST
+16:58:44 End Abaqus/Standard Analysis
+16:58:46 Begin SIM Wrap-up
+16:58:46 Tue 03 Nov 2026 04:58:46 PM JST
+16:58:46 Run SMASimUtility
+16:58:46 Tue 03 Nov 2026 04:58:46 PM JST
+16:58:46 End SIM Wrap-up
+16:58:46 Abaqus JOB denso_hole_zone COMPLETED
+16:58:47 wrote denso_hole_zone_abaqus.json (11 steps)
+16:58:47 denso_hole_zone [abaqus]: released strain [micro-strain] at depth [mm]; paper Fig. 12 read by eye
+16:58:47  depth   Ch1 this / exp / paper-FE     Ch2 this / exp / paper-FE     Ch3 this / exp / paper-FE
+16:58:47  0.00         0 /     0 /     0          0 /     0 /     0          0 /     0 /     0
+16:58:47  0.20       -46 /   -10 /   -35         -3 /    -5 /    -5         56 /    10 /    50
+16:58:47  0.40      -121 /   -60 /  -100         -8 /    -5 /   -10        147 /    70 /   135
+16:58:47  0.60      -206 /  -120 /  -170        -14 /    -8 /   -20        247 /   140 /   228
+16:58:47  0.80      -260 /  -160 /  -220        -19 /   -10 /   -30        299 /   192 /   272
+16:58:47  1.00      -261 /  -170 /  -225        -22 /   -15 /   -35        297 /   195 /   265
+16:58:47  1.20      -231 /  -158 /  -200        -21 /   -18 /   -35        270 /   185 /   240
+16:58:47  1.40      -195 /  -140 /  -170        -22 /   -18 /   -32        237 /   170 /   205
+16:58:47  1.60      -164 /  -120 /  -140        -23 /   -20 /   -30        207 /   155 /   180
+16:58:47  1.80      -140 /  -108 /  -120        -24 /   -20 /   -30        183 /   145 /   160
+16:58:47  2.00      -123 /  -100 /  -108        -25 /   -18 /   -28        165 /   142 /   150
+16:58:47 Ch1: peak |e| 261 (at 1.00 mm) vs measured 170 (x1.54) and paper FE 225 (x1.16); paper FE / measured = x1.32
+16:58:47 Ch3: peak |e| 299 (at 0.80 mm) vs measured 195 (x1.54) and paper FE 272 (x1.10); paper FE / measured = x1.39
+16:58:47 denso_hole_zone [abaqus]: grid averaged by element overlap areas; peak |released strain| [micro-strain]
+16:58:47  shift   Ch3 peak (x meas)   Ch1 peak (x meas)   grid-area check (Ch3, Ch1, Ch2) [mm^2]
+16:58:47  -0.40     453 (x2.32)        437 (x2.57)      1.100000, 1.100000, 2.200000
+16:58:47  -0.30     416 (x2.13)        394 (x2.32)      1.100000, 1.100000, 2.200000
+16:58:47  -0.20     378 (x1.94)        350 (x2.06)      1.100000, 1.100000, 2.200000
+16:58:47  -0.10     350 (x1.79)        318 (x1.87)      1.100000, 1.100000, 2.200000
+16:58:47  +0.00     322 (x1.65)        287 (x1.69)      1.100000, 1.100000, 2.200000
+16:58:47  +0.10     296 (x1.52)        258 (x1.52)      1.100000, 1.100000, 2.200000
+16:58:47  +0.20     275 (x1.41)        236 (x1.39)      1.100000, 1.100000, 2.200000
+16:58:47  +0.30     253 (x1.30)        213 (x1.25)      1.100000, 1.100000, 2.200000
+16:58:47  +0.40     231 (x1.19)        191 (x1.12)      1.100000, 1.100000, 2.200000
+16:58:47 wrote denso_hole_zone_overlap.json
+exit=0 end Tue Nov  3 04:58:47 PM JST 2026
