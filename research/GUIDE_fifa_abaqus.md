@@ -524,6 +524,12 @@ python3 validation/greif3d_rescue.py --selftest --out /tmp/g3d_selftest   # G1�
 - `summary.json` の中央値と四分位：prior、cos_prior_data、field_1f／field_2f（場全体で当てはめたときの限界）、rescue_{5,10,20}_{1f,2f}。
 - 補正がよく効く形状と効かない形状の例を 2〜3 個ずつ（id、大きさ、反りの最大値、cos）。
 
+**最終版に足すこと（2026-11-04 追記）**：100 形状がそろったら、次も実行して `transfer_factor.json` を一緒に push し、T1 と T2 の表を報告に入れる（計算は数秒、FE の再計算は不要）。
+```bash
+python3 validation/greif3d_transfer_factor.py abaqus/denso_plate/abaqus_results/greif3d_rescue/per_geometry.json
+```
+T1 が 10⁻⁸ を超えたら、そこで止めて報告する。途中経過 46 形状での値（ここで計算）：測定なし（ほかの形状の倍率の中央値）0.218、5 点・1 倍率 0.201、10 点・2 倍率 0.172、補正なし 0.530。
+
 **判定の目安**（失敗したら、定数を合わせにいかずに失敗として報告する）：
 - G1 が 10⁻⁸ を超える、または G2 で倍率を回復できない → 実行環境の問題。そこで止めて報告する。
 - cos_prior_data が負や 0 付近の形状が多い → 事前の予測の形が合っていない（物理モデルの限界）。それ自体が結果なので、そのまま報告する。
