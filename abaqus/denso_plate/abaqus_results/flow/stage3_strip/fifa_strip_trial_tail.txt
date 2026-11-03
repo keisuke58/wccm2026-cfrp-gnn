@@ -1,0 +1,40 @@
+diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+smoothSolver:  Solving for elSigDevxx, Initial residual = 0, Final residual = 0, No Iterations 0
+smoothSolver:  Solving for elSigDevxy, Initial residual = 0, Final residual = 0, No Iterations 0
+smoothSolver:  Solving for elSigDevxz, Initial residual = 0, Final residual = 0, No Iterations 0
+smoothSolver:  Solving for elSigDevyy, Initial residual = 0, Final residual = 0, No Iterations 0
+smoothSolver:  Solving for elSigDevyz, Initial residual = 0, Final residual = 0, No Iterations 0
+smoothSolver:  Solving for elSigDevzz, Initial residual = 0, Final residual = 0, No Iterations 0
+smoothSolver:  Solving for T, Initial residual = 0.083041901, Final residual = 0.00057216325, No Iterations 1
+[0] #0  Foam::error::printStack(Foam::Ostream&) at ??:?
+[0] #1  Foam::sigFpe::sigHandler(int) at ??:?
+[0] #2  ? in "/lib/x86_64-linux-gnu/libc.so.6"
+[0] #3  ? in "/lib/x86_64-linux-gnu/libm.so.6"
+[0] #4  expf64 in "/lib/x86_64-linux-gnu/libm.so.6"
+[0] #5  ? in "/foamuser/bin/openInjMoldSimF"
+[0] #6  ? in "/foamuser/bin/openInjMoldSimF"
+[0] #7  ? in "/foamuser/bin/openInjMoldSimF"
+[0] #8  ? in "/foamuser/bin/openInjMoldSimF"
+[0] #9  ? in "/foamuser/bin/openInjMoldSimF"
+[0] #10  __libc_start_main in "/lib/x86_64-linux-gnu/libc.so.6"
+[0] #11  ?[frontale03:00159] *** Process received signal ***
+[frontale03:00159] Signal: Floating point exception (8)
+[frontale03:00159] Signal code:  (-6)
+[frontale03:00159] Failing at address: 0x40c0000009f
+[frontale03:00159] [ 0] /lib/x86_64-linux-gnu/libc.so.6(+0x3ef20)[0x14f0224fbf20]
+[frontale03:00159] [ 1] /lib/x86_64-linux-gnu/libc.so.6(gsignal+0xc7)[0x14f0224fbe97]
+[frontale03:00159] [ 2] /lib/x86_64-linux-gnu/libc.so.6(+0x3ef20)[0x14f0224fbf20]
+[frontale03:00159] [ 3] /lib/x86_64-linux-gnu/libm.so.6(+0x86f8f)[0x14f022b4cf8f]
+[frontale03:00159] [ 4] /lib/x86_64-linux-gnu/libm.so.6(expf64+0xf)[0x14f022ad51ff]
+[frontale03:00159] [ 5] openInjMoldSimF(+0x9da13)[0x56486e49da13]
+[frontale03:00159] [ 6] openInjMoldSimF(+0xb0b97)[0x56486e4b0b97]
+[frontale03:00159] [ 7] openInjMoldSimF(+0xb14ee)[0x56486e4b14ee]
+[frontale03:00159] [ 8] openInjMoldSimF(+0xe99d8)[0x56486e4e99d8]
+[frontale03:00159] [ 9] openInjMoldSimF(+0x87b8e)[0x56486e487b8e]
+[frontale03:00159] [10] /lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0xe7)[0x14f0224deb97]
+[frontale03:00159] [11] openInjMoldSimF(+0x98d8a)[0x56486e498d8a]
+[frontale03:00159] *** End of error message ***
+ in "/foamuser/bin/openInjMoldSimF"
+--------------------------------------------------------------------------
+mpirun noticed that process rank 0 with PID 0 on node frontale03 exited on signal 8 (Floating point exception).
+--------------------------------------------------------------------------

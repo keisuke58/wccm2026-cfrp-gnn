@@ -1,0 +1,60 @@
+max(U) 0.60782251
+min(p_rgh) 61092.413
+PIMPLE: Iteration 3
+MULES: Solving for alpha.poly
+Liquid phase volume fraction = 0.025519344  Min(alpha.poly) = -2.4101163e-18  Min(alpha.air) = -2.220446e-16
+DILUPBiCG:  Solving for A2xx, Initial residual = 1.2031499e-06, Final residual = 1.7068747e-10, No Iterations 1
+DILUPBiCG:  Solving for A2xy, Initial residual = 7.2342849e-06, Final residual = 3.1838125e-12, No Iterations 2
+DILUPBiCG:  Solving for A2xz, Initial residual = 1.1625948e-05, Final residual = 2.9252377e-11, No Iterations 2
+DILUPBiCG:  Solving for A2yy, Initial residual = 1.3245946e-06, Final residual = 1.6840379e-10, No Iterations 1
+DILUPBiCG:  Solving for A2yz, Initial residual = 8.132503e-06, Final residual = 1.4353872e-11, No Iterations 2
+DILUPBiCG:  Solving for A2zz, Initial residual = 1.2575213e-06, Final residual = 3.6911037e-10, No Iterations 1
+diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+smoothSolver:  Solving for elSigDevxx, Initial residual = 0, Final residual = 0, No Iterations 0
+smoothSolver:  Solving for elSigDevxy, Initial residual = 0, Final residual = 0, No Iterations 0
+smoothSolver:  Solving for elSigDevxz, Initial residual = 0, Final residual = 0, No Iterations 0
+smoothSolver:  Solving for elSigDevyy, Initial residual = 0, Final residual = 0, No Iterations 0
+smoothSolver:  Solving for elSigDevyz, Initial residual = 0, Final residual = 0, No Iterations 0
+smoothSolver:  Solving for elSigDevzz, Initial residual = 0, Final residual = 0, No Iterations 0
+smoothSolver:  Solving for T, Initial residual = 2.2961759e-07, Final residual = 2.7537828e-11, No Iterations 1
+min(T) 323.17415
+GAMG:  Solving for p_rgh, Initial residual = 3.5515218e-06, Final residual = 1.0744258e-08, No Iterations 2
+GAMG:  Solving for p_rgh, Initial residual = 1.0743428e-08, Final residual = 2.1451794e-11, No Iterations 3
+GAMGPCG:  Solving for p_rgh, Initial residual = 2.1451765e-11, Final residual = 1.3020826e-12, No Iterations 1
+max(U) 0.6080303
+min(p_rgh) 61540.452
+PIMPLE: Iteration 4
+MULES: Solving for alpha.poly
+Liquid phase volume fraction = 0.025519342  Min(alpha.poly) = -2.0273192e-18  Min(alpha.air) = -2.220446e-16
+DILUPBiCG:  Solving for A2xx, Initial residual = 6.5277124e-07, Final residual = 1.9612732e-10, No Iterations 1
+DILUPBiCG:  Solving for A2xy, Initial residual = 5.8361286e-06, Final residual = 5.925976e-10, No Iterations 1
+DILUPBiCG:  Solving for A2xz, Initial residual = 9.4069821e-06, Final residual = 2.2038277e-12, No Iterations 2
+DILUPBiCG:  Solving for A2yy, Initial residual = 7.5781376e-07, Final residual = 2.0218466e-10, No Iterations 1
+DILUPBiCG:  Solving for A2yz, Initial residual = 6.1466338e-06, Final residual = 8.160873e-12, No Iterations 2
+DILUPBiCG:  Solving for A2zz, Initial residual = 6.8771161e-07, Final residual = 2.070645e-10, No Iterations 1
+diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+smoothSolver:  Solving for elSigDevxx, Initial residual = 0, Final residual = 0, No Iterations 0
+smoothSolver:  Solving for elSigDevxy, Initial residual = 0, Final residual = 0, No Iterations 0
+smoothSolver:  Solving for elSigDevxz, Initial residual = 0, Final residual = 0, No Iterations 0
+smoothSolver:  Solving for elSigDevyy, Initial residual = 0, Final residual = 0, No Iterations 0
+smoothSolver:  Solving for elSigDevyz, Initial residual = 0, Final residual = 0, No Iterations 0
+smoothSolver:  Solving for elSigDevzz, Initial residual = 0, Final residual = 0, No Iterations 0
+smoothSolver:  Solving for T, Initial residual = 1.4700641e-07, Final residual = 1.5019985e-11, No Iterations 1
+min(T) 323.17415
+GAMG:  Solving for p_rgh, Initial residual = 2.2927064e-06, Final residual = 8.8995563e-09, No Iterations 2
+GAMG:  Solving for p_rgh, Initial residual = 8.8994612e-09, Final residual = 1.9873896e-11, No Iterations 3
+GAMGPCG:  Solving for p_rgh, Initial residual = 1.9873873e-11, Final residual = 1.4434212e-12, No Iterations 1
+max(U) 0.60823282
+min(p_rgh) 61826.145
+PIMPLE: Converged 
+        Doing final iteration
+PIMPLE: Iteration 5
+MULES: Solving for alpha.poly
+Liquid phase volume fraction = 0.025519341  Min(alpha.poly) = -2.8474306e-18  Min(alpha.air) = -2.220446e-16
+DILUPBiCG:  Solving for A2xx, Initial residual = 5.633374e-07, Final residual = 9.4923364e-11, No Iterations 1
+DILUPBiCG:  Solving for A2xy, Initial residual = 5.0090021e-06, Final residual = 8.1318653e-10, No Iterations 1
+DILUPBiCG:  Solving for A2xz, Initial residual = 8.0820771e-06, Final residual = 5.6332276e-11, No Iterations 2
+DILUPBiCG:  Solving for A2yy, Initial residual = 6.5719757e-07, Final residual = 9.9519161e-11, No Iterations 1
+DILUPBiCG:  Solving for A2yz, Initial residual = 5.8520775e-06, Final residual = 1.3348886e-11, No Iterations 2
+DILUPBiCG:  Solving for A2zz, Initial residual = 5.9337967e-07, Final residual = 1.7547569e-10, No Iterations 1
+diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
