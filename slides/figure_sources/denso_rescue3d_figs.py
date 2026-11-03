@@ -96,3 +96,30 @@ fig.text(0.5, 0.005, "相対誤差：全節点で、予測とデータの差か�
 fig.savefig(os.path.join(OUTD, "rescue3d_errors.png"), dpi=250); plt.close(fig)
 print("wrote rescue3d_flow.png, rescue3d_errors.png;", N, "geometries; medians",
       {k: round(float(np.median(v)), 3) for k, v in cols})
+
+# ------------------------------------------------------------------ transfer (no measurement)
+fig = plt.figure(figsize=(12.0, 3.2))
+ax = fig.add_axes([0.0, 0.0, 0.42, 1.0]); ax.set_xlim(0, 42); ax.set_ylim(0, 32); ax.axis("off")
+for i in range(4):
+    ax.add_patch(FancyBboxPatch((1.5 + i * 4.3, 17), 3.4, 8, boxstyle="round,pad=0.2,rounding_size=0.6", ec="0.4", fc="0.95"))
+    ax.text(3.2 + i * 4.3, 21, f"部品\n{'ABC…'[i]}", ha="center", va="center", fontsize=8.5)
+ax.text(9.5, 28.5, "ほかの部品（データあり）", ha="center", fontsize=9.5, fontweight="bold")
+ax.text(9.5, 13.5, f"それぞれの最適な倍率\n→ 中央値 {np.median(astar):.2f}", ha="center", va="top", fontsize=9)
+ax.add_patch(FancyArrowPatch((19.5, 21), (27.5, 21), arrowstyle="-|>", mutation_scale=16, color=ACC, lw=1.6))
+ax.text(23.5, 23.0, "倍率だけ渡す", ha="center", fontsize=8.5, color=ACC)
+ax.add_patch(FancyBboxPatch((29, 16), 9, 10, boxstyle="round,pad=0.2,rounding_size=0.6", ec=ACC, fc="white", lw=1.4))
+ax.text(33.5, 21, "新しい部品\n（測定なし）", ha="center", va="center", fontsize=9, color=ACC, fontweight="bold")
+ax.text(33.5, 13.5, "補正前の予測 × 倍率", ha="center", va="top", fontsize=9)
+ax.text(21, 3.5, "一つ抜き：各部品を「新しい部品」とみなし、残りの部品の倍率で予測する", ha="center", fontsize=8.5, color="0.35")
+b = fig.add_axes([0.52, 0.2, 0.45, 0.68])
+labs = ["補正なし", "測定なし\n（他の部品の倍率）", "5 点\n倍率 1 個", "10 点\n倍率 2 個"]
+vals = [np.median(e0), np.median(eL), np.median([r["rescue_5_1f"] for r in R]), np.median([r["rescue_10_2f"] for r in R])]
+yy = np.arange(len(labs))[::-1]
+b.barh(yy, np.array(vals) * 100, color=["0.7", ACC, "0.45", "0.45"], height=0.6)
+for y_, v in zip(yy, vals):
+    b.text(v * 100 + 1, y_, f"{v * 100:.0f} %", va="center", fontsize=10, fontweight="bold")
+b.set_yticks(yy); b.set_yticklabels(labs, fontsize=9); b.set_xlim(0, 65)
+b.set_xlabel(f"反りの相対誤差の中央値 [%]（{N} 形状）")
+b.set_title("測定なしでも誤差は半分以下", fontsize=10.5, fontweight="bold")
+fig.savefig(os.path.join(OUTD, "rescue3d_transfer.png"), dpi=250); plt.close(fig)
+print("wrote rescue3d_transfer.png")
