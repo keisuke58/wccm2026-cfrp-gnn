@@ -26,7 +26,7 @@ const pres = new pptxgen();
 pres.layout = "LAYOUT_WIDE";
 pres.theme = { headFontFace: LATIN, bodyFontFace: LATIN };
 pres.author = "西岡 佳祐";
-pres.title = "RESCUE：少数点の計測による物理モデルの補正";
+pres.title = "少数点の計測による物理モデルの補正";
 const C = pres.SchemeColor;
 
 pres.defineSlideMaster({
@@ -89,7 +89,7 @@ const R4 = JSON.parse(fs.readFileSync(F("results/denso_rescue/results.json"))).R
 const TF = JSON.parse(fs.readFileSync(F("abaqus/denso_plate/abaqus_results/greif3d_rescue/transfer_factor.json")));
 const ACC = "1F3A5F";
 let s = pres.addSlide({ masterName: "CONTENT" });
-s.addText("少数点の計測で物理モデルを補正する（RESCUE）", { placeholder: "title", fontSize: 24 });
+s.addText("少数点の計測で物理モデルを補正し、残留ひずみ・反りを予測する", { placeholder: "title", fontSize: 24 });
 // flow strip
 const steps = ["物理モデルで予測", "数点だけ測る", "倍率を決める", "全体を予測"];
 steps.forEach((t, i) => {

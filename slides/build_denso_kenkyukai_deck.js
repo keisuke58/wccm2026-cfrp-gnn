@@ -91,7 +91,7 @@ const img = (s, p, x, y, w, aspect) => s.addImage({ path: p, x, y, w, h: w / asp
 // ===================================================== title ================
 let s = pres.addSlide({ masterName: "TITLE" });
 s.addText("穿孔法の点計測による物理モデルの補正を用いた短繊維強化 PPS 射出成形品の残留ひずみ予測", { placeholder: "title", fontSize: 26 });
-s.addText("— RESCUE：REsidual Strain Calibration with Under-sampled Experiments —", { placeholder: "body" });
+s.addText("— 数値解析による物理モデルと少数の実測点による補正 —", { placeholder: "body" });
 rule(s, 4.4, 4.15, 5.0);
 s.addText([br("西岡 佳祐"), br("慶應義塾大学 修士課程"), tx("2026年11月")],
   { x: 0.9, y: 4.6, w: 11.5, h: 1.2, fontSize: 15, color: INK, align: "center",
