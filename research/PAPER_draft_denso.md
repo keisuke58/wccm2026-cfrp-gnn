@@ -21,7 +21,7 @@
 | 3. 解析の検証 | 積層理論と固体要素の一致、重ね合わせの誤差、メッシュ依存性 | 10⁻³ 未満、2.5×10⁻⁷、約 3 % | `research/GUIDE_fifa_abaqus.md` 表2・6 |
 | 4. 既報の再現 | 4.1 表面の残留応力、4.2 穿孔法の解放ひずみ | σxx −24.4 対 −24.3 MPa、実測の 1.5〜1.7 倍 | `results/denso_tsuda2026/`、`abaqus/denso_plate/abaqus_results/` |
 | 5. 少数の実測点による補正 | 深さ方向・方向間の予測、共通の倍率と *T*₀ | 44 → 22 µε、46 → 11 µε、*T*₀,eff ≈ 127 °C | `results/denso_tsuda2026/transfer_hole_drilling.json` |
-| 6. 考察 | ゲージ位置の感度、冷却中の応力緩和、共通の倍率の仮定の妥当性 | ±0.4 mm で 1.1〜2.6 倍、τ_g ≈ 10⁹〜10¹⁰ s | `research/GUIDE_fifa_abaqus.md` 表8、`validation/denso_anneal_relaxation.py` |
+| 6. 考察 | ゲージ位置の感度、冷却中の応力緩和、共通の倍率の仮定の妥当性 | ±0.4 mm で 1.1〜2.6 倍、τ_g ≈ 10⁹〜10¹⁰ s（全緩和）、緩和する割合 φ ≈ 0.56〜0.64（一般値で部分緩和） | `research/GUIDE_fifa_abaqus.md` 表8、`validation/denso_anneal_relaxation.py` |
 | 7. 結論 | 示せたことと限界 | — | — |
 
 ## 図表
