@@ -30,6 +30,10 @@ alone (eq. 3) aligns too much of the thickness; the wide transverse core of the 
 extensional / diverging flow at the gate and flow front, which this 1-D model does not contain.
 The mould-wall asymmetry moves the core and gives a sag (110/190 C: +0.48 mm, fully crystallised),
 i.e. a design handle exists in principle, but from a model that fails its check: qualitative only.
+RSC (slow orientation, kappa < 1) at the paper's flow length L = 50 mm (film gate; Tsuda et al. 2026):
+core 0.31 / 0.62 / 0.77 / 0.92 mm for kappa 1 / 0.2 / 0.1 / 0.05 (n = 0.3), RMSE a_yy 0.38 -> 0.25;
+still short of 1.60 mm. Remaining suspects: growth of the frozen layer DURING filling and the flow-front
+(fountain) region, the gate orientation a0 -- a 3-D filling simulation (openInjMoldSim, fifa guide §17).
 
 Run:  python3 validation/denso_flow_orientation.py   (writes results/denso_flow/)
 """
@@ -64,14 +68,30 @@ def hybrid_A4D(a, D):
     return (1 - f) * lin + f * quad
 
 
-def orient_after_strain(a0, gamma, Ci, dg=0.05):
+def rsc_terms(a, A4D, kappa):
+    """RSC correction (Wang, O'Gara & Tucker, J. Rheol. 52, 2008): closure term A4:D is replaced by
+    A4:D + (1 - kappa)(L:D - M:(A4:D)), L = sum_i lam_i e_i e_i e_i e_i, M = sum_i e_i e_i e_i e_i."""
+    lam, E = np.linalg.eigh(a)
+    LD = sum(lam[i] * (E[:, i] @ D_G @ E[:, i]) * np.outer(E[:, i], E[:, i]) for i in range(3))
+    MAD = sum((E[:, i] @ A4D @ E[:, i]) * np.outer(E[:, i], E[:, i]) for i in range(3))
+    return A4D + (1 - kappa) * (LD - MAD)
+
+
+_LG = np.zeros((3, 3)); _LG[0, 2] = 1.0
+W_G = 0.5 * (_LG - _LG.T); D_G = 0.5 * (_LG + _LG.T)
+
+
+def orient_after_strain(a0, gamma, Ci, dg=0.05, kappa=1.0):
     Lg = np.zeros((3, 3)); Lg[0, 2] = 1.0                      # u_x(z): dU_x/dz, unit shear rate
     W = 0.5 * (Lg - Lg.T); D = 0.5 * (Lg + Lg.T)
     a = np.diag(a0).astype(float); g = 0.0; I = np.eye(3)
     while g < gamma:
         h = min(dg, gamma - g)
         def rhs(a):
-            return W @ a - a @ W + LAM * (D @ a + a @ D - 2 * hybrid_A4D(a, D)) + 2 * Ci * (I - 3 * a)
+            A4D = hybrid_A4D(a, D)
+            if kappa != 1.0:
+                A4D = rsc_terms(a, A4D, kappa)
+            return W @ a - a @ W + LAM * (D @ a + a @ D - 2 * A4D) + 2 * kappa * Ci * (I - 3 * a)
         k1 = rhs(a); k2 = rhs(a + h / 2 * k1); k3 = rhs(a + h / 2 * k2); k4 = rhs(a + h * k3)
         a = a + h / 6 * (k1 + 2 * k2 + 2 * k3 + k4); a = 0.5 * (a + a.T); a = a / np.trace(a); g += h
     return a
@@ -99,7 +119,7 @@ def profile(p, nz=61, gmax=400.0):
     g = (1 + 1 / n) * np.abs(xi) ** (1 / n) / hc                 # |du/dz| per unit max velocity
     gamma = np.where(u > 1e-6, g * p["L"] / np.maximum(u, 1e-6), gmax)
     gamma = np.minimum(gamma, gmax)
-    A = np.array([orient_after_strain(p["a0"], gm, p["Ci"]) for gm in gamma])
+    A = np.array([orient_after_strain(p["a0"], gm, p["Ci"], kappa=p.get("kappa", 1.0)) for gm in gamma])
     inflow = (z > zb) & (z < zt)
     # frozen skins: orientation of the adjacent flowing layer
     ib = np.argmax(inflow); it = len(z) - 1 - np.argmax(inflow[::-1])

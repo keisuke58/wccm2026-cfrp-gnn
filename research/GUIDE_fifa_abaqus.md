@@ -428,3 +428,31 @@ CPUS=8 bash abaqus/denso_plate/run_hole_drilling.sh influence    # 34 ジョブ�
 
 > `research/GUIDE_fifa_abaqus.md` §16 に従い、`run_hole_drilling.sh influence` を qsub で回してください（約 2 時間）。
 > `influence_check.py` の出力（I1、I2）をそのまま報告してください。定数・メッシュは変えないこと。
+
+## 17. 追加の作業（2026-11-03）：オープンソースの射出成形解析 openInjMoldSim で繊維配向を計算する
+
+**目的**：既報の試験片（80×80 mm、厚さ 3.08 mm、フィルムゲート、樹脂 320 °C、金型 150 °C）の充填を 3 次元で計算し、
+**ゲートから 50 mm の位置**の繊維配向の板厚方向分布を、既報 図8a（`data/literature/tsuda2026_jscm52_88.json` の `fig8_orientation_3mm`）と比べる。
+本リポジトリの 1 次元モデル（`validation/denso_flow_orientation.py`）は、芯の層の厚さが 0.92 mm 以下にしかならず、既報の 1.60 mm を再現できなかった。
+
+**ソルバ**：openInjMoldSim（OpenFOAM の compressibleInterFoam を改造した充填・保圧・冷却のソルバ。繊維配向は openInjMoldSimF、Folgar–Tucker 型）。
+OpenFOAM の一部ではない。**元の GitHub リポジトリ、ライセンス、対応する OpenFOAM の版をまず確認すること**（本リポジトリ側では gitee のミラーしか見ていない）。
+
+**段階**（各段階の結果を報告してから次に進む）：
+1. **導入の可否**：fifa に必要な版の OpenFOAM を入れられるか（管理者権限、ネットワーク、ディスク）。openInjMoldSim をビルドできるか。できなければ、その理由を報告して止める。
+2. **付属の例題**：openInjMoldSim の例題（繊維配向を含むもの）が動くか。所要時間。
+3. **既報の板**：
+   - 形状：板 80 × 80 × 3.08 mm、板の 1 辺の全幅をフィルムゲートとする（ゲート部の厚さは既報に記載がないので、板厚と同じとし、仮定と明記）。
+   - 板厚方向に 30 要素以上。
+   - 条件：樹脂温度 320 °C、金型温度 150 °C（上下同じ）。充填時間は既報に記載がないので 1 s と仮定する。
+   - 材料：PPS/GF30 の粘度（Cross–WLF など）と PVT は、openInjMoldSim の例題の値か文献値を使い、**出典を書く**。見つからなければ例示値として明記する。繊維のアスペクト比 16.8、*C*<sub>i</sub> は例題の値。
+   - 出力：ゲートから 50 mm、幅の中央の位置での *a*<sub>xx</sub>、*a*<sub>yy</sub>、*a*<sub>zz</sub> の板厚方向分布（CSV、深さは上面から）。
+4. **比較**：既報 図8a と重ねた図と、芯の層（*a*<sub>yy</sub> > *a*<sub>xx</sub>）の厚さ（既報 1.60 mm）。
+
+**守ること**：既報に合わせるために *C*<sub>i</sub> や材料定数を調整しないこと。合わなければそのまま報告する。仮定した値はすべて一覧にする。
+
+**報告と保存**：各段階の結果、所要時間、CSV と比較の図。`abaqus/denso_plate/abaqus_results/flow/` に入れ、ブランチを切ってコミット・プッシュする（OpenFOAM のケースの大きな時刻ディレクトリは入れない）。
+
+**Claude Code に渡す指示文**：
+
+> `research/GUIDE_fifa_abaqus.md` §17 に従い、openInjMoldSim の導入を試してください。段階 1 の結果（導入できるか、できないならその理由）をまず報告してください。定数を合わせにいかないこと。
