@@ -29,7 +29,10 @@ VE sweep (printed; relaxation times x 1e-3..1e3, WLF reference 70..110 C, GINF 1
 <= 0.001 mm. Both mould walls are above Tg, so within the WLF form the conclusion holds over these
 ranges; it would change for a mould wall below Tg or a non-WLF (e.g. crystalline-phase) relaxation.
 The sag comes from the up/down asymmetry of the orientation profile read from the paper's figure;
-whether that asymmetry is real or a reading artefact is not known.
+orientation check (printed): the symmetrised profile gives zero sag (so the asymmetry is the whole
+cause), and random reading errors of +-0.03 on a symmetric profile give sag_y sd 0.20 mm, max 0.46 mm
+in 20 draws, against -2.85 mm: the asymmetry of the read profile is far larger than the reading error,
+i.e. it is in the paper's figure (whether the plate itself warps so is not reported there).
 
 Run:  python3 abaqus/denso_plate/process_pps.py   (writes abaqus/denso_plate/process_results/pps_summary.json)
 """
@@ -134,8 +137,45 @@ def main():
         d["superposition_sag_mm"] = sup
         res["cases"][case] = d
     res["ve_sweep"] = ve_sweep(orient, CP, sag)
+    res["orientation_check"] = orientation_check(orient, CP, sag)
     json.dump(res, open(os.path.join(OUT, "pps_summary.json"), "w"), indent=1)
     print(f"wrote {OUT}/pps_summary.json")
+
+
+def orientation_check(orient, CP, sag, u=0.03, n_rand=20, seed=20261103):
+    """Where the sag comes from. (i) the read profile made symmetric (mean of profile and its mirror):
+    sag must vanish if the up/down asymmetry of the profile is its cause. (ii) random reading errors:
+    independent +-u (uniform; u = 0.03 is the reading uncertainty stated for Fig. 8a) on a_xx and a_yy at
+    the 28 read depths, of a profile that is symmetric: the sag these alone produce, to compare with the
+    sag of the read profile."""
+    d = json.load(open(os.path.join(ROOT, "data", "literature", "tsuda2026_jscm52_88.json"), encoding="utf-8"))["fig8_orientation_3mm"]
+    dep = np.array(d["depth_mm"]); Hm = H_PPS * 1e3
+    def mk(axx_f, ayy_f):
+        def fn(zm):
+            depth = (1 - np.asarray(zm)) / 2 * Hm
+            a11, a22 = axx_f(depth), ayy_f(depth)
+            return a11, a22, np.clip(1 - a11 - a22, 0.0, 1.0)
+        return fn
+    def run(fn):
+        P, _ = pr.layer_props(fn, c=CP, part="total")
+        t, Tn = pr.heat_1d(150.0, 150.0)
+        r = pr.plate_history(P, t, Tn)
+        return sag(r["kappa"][0]), sag(r["kappa"][1])
+    sym = lambda f: (lambda x: 0.5 * (f(x) + f(Hm - x)))
+    fx = lambda x: np.interp(x, dep, d["a_xx"]); fy = lambda x: np.interp(x, dep, d["a_yy"])
+    read = run(mk(fx, fy)); symm = run(mk(sym(fx), sym(fy)))
+    print(f"[orientation] sag x, y [mm]: read profile {read[0]:+.3f}, {read[1]:+.3f} | symmetrised {symm[0]:+.3f}, {symm[1]:+.3f}")
+    rng = np.random.default_rng(seed); sy = []
+    for _ in range(n_rand):
+        ex = rng.uniform(-u, u, dep.size); ey = rng.uniform(-u, u, dep.size)
+        gx = lambda x, ex=ex: sym(fx)(x) + np.interp(x, dep, ex)
+        gy = lambda x, ey=ey: sym(fy)(x) + np.interp(x, dep, ey)
+        sy.append(run(mk(gx, gy))[1])
+    sy = np.array(sy)
+    print(f"[orientation] symmetric profile + reading errors +-{u} ({n_rand} draws): sag_y mean {sy.mean():+.3f}, "
+          f"sd {sy.std():.3f}, max |.| {np.abs(sy).max():.3f} mm (read profile: {read[1]:+.3f} mm)")
+    return dict(read=read, symmetrised=symm, reading_error_u=u, sag_y_draws=sy.tolist(),
+                sag_y_sd=float(sy.std()), sag_y_maxabs=float(np.abs(sy).max()))
 
 
 def ve_sweep(orient, CP, sag):
