@@ -217,26 +217,61 @@ cap(s, 6.8, 4.95, 5.8, 0.6, [tx("図5　アニール後の冷却中の応力緩�
 para(s, 0.7, 5.6, 5.6, 1.3, [tx("ゲージ位置：外側へ 0.1 mm ずれるごとに比は約 0.11〜0.14 下がる。0.4 mm ずれても 1.1〜1.2 倍であり、位置のずれだけでは差を説明できない。")], 12);
 para(s, 6.8, 5.6, 5.8, 1.3, [tx("応力緩和：倍率 0.67 には "), it("τ"), sr("g"), tx(" ≈ 10⁹〜10¹⁰ s が要る。非晶性高分子で通常想定する値では緩和しすぎる（0.41〜0.43）。寄与の大きさは PPS の緩和データなしには決められない。")], 12);
 
-// ===================================================== 7. まとめ ===========
+// ===================================================== 7. 3 次元部品 =========
+const TF3 = JSON.parse(fs.readFileSync(F("abaqus/denso_plate/abaqus_results/greif3d_rescue/transfer_factor.json")));
+const ST3 = JSON.parse(fs.readFileSync(F("results/denso_strength/strength.json")));
 s = pres.addSlide({ masterName: "CONTENT" });
-s.addText("7. まとめと今後", { placeholder: "title" });
+s.addText("7. 3 次元部品への適用（公開の解析データ）", { placeholder: "title" });
+img(s, F("slides/figures_paper/rescue3d_example.png"), 0.7, 1.12, 7.6, 2.222);
+cap(s, 0.7, 4.57, 7.6, 0.6, [tx("図6　Greif & Meyer の公開データ[9]（Moldflow、PP/GF30、保圧なし）の部品。補正前の予測（配向平均＋FE）と、表面 10 点（赤）で倍率を決めた予測。上：効く部品、下：効きにくい部品。")]);
+s.addTable([hdr(["補正", "反りの誤差（中央値）"]),
+  ...[["補正なし", `${Math.round(TF3["prior (a = 1)"].median * 100)} %`],
+    ["測定なし（他の部品の倍率）", `${Math.round(TF3["LOO factor, no measurement"].median * 100)} %`],
+    ["表面 5 点、倍率 1 個", `${Math.round(TF3["RESCUE 5 nodes, 1 factor"].median * 100)} %`],
+    ["表面 10 点、倍率 2 個", `${Math.round(TF3["RESCUE 10 nodes, 2 factors"].median * 100)} %`]].map((r) => r.map((c, i) => cell(c, { align: i === 0 ? "left" : "center", fontSize: 11.5 })))],
+  tableOpts(0.7, 5.25, 7.6, [5.0, 2.6], 0.32));
+head(s, 8.6, 1.2, 4.0, "示せたこと");
+para(s, 8.6, 1.55, 4.0, 2.8, [tx(`${TF3.n} 形状（途中経過）で、補正前の予測は反りの形がデータとよく合い（cos の中央値 0.98）、大きさは約半分であった。表面の数点で倍率を決めると誤差は大きく下がり、倍率（中央値 ${TF3.a_star_median.toFixed(2)}）は部品によらずほぼ同じであった。倍率が約 2 になることは、保圧なしの PP の結晶化収縮で大きさの桁まで説明できる。`)], 12);
+head(s, 8.6, 4.45, 4.0, "示せていないこと");
+para(s, 8.6, 4.8, 4.0, 2.0, [tx("データは解析であり実測ではない。材料は PP で PPS ではない。反りの形が合わない部品（cos < 0.9）は倍率では直らない。")], 12);
+
+// ===================================================== 8. 強度 ===============
+s = pres.addSlide({ masterName: "CONTENT" });
+s.addText("8. 強度への影響（試算）", { placeholder: "title" });
+para(s, 0.7, 1.25, 11.9, 0.9, [tx("既報の 3.08 mm 板に一軸引張を加え、残留応力（積層理論）を含めて最初の層が壊れる応力を求めた。判定はどれかの層の最大主ひずみが限界値 "), it("ε"), sr("c"), tx(` = ${(ST3.eps_c * 100).toFixed(2)} % に達したとき（残留応力のない板の MD を物性表の 155 MPa に合わせた。1130T6 の値[10]、例示）。`)], 13);
+const C3 = ST3.cases, K3 = Object.keys(C3);
+s.addTable([hdr(["残留応力", "MD [MPa]", "TD [MPa]"]),
+  ...K3.map((k) => [cell(k === "no residual stress" ? "なし" : k.startsWith("T0 =") ? "T₀ = 180 °C（既報の仮定）" : `T₀,eff = ${ST3.T0_identified.toFixed(0)} °C（実測から同定）`, { align: "left" }),
+    cell(`${C3[k].MD.strength_MPa.toFixed(0)}${C3[k].change_MD !== undefined ? `（${(C3[k].change_MD * 100).toFixed(0)} %）` : ""}`),
+    cell(`${C3[k].TD.strength_MPa.toFixed(0)}${C3[k].change_TD !== undefined ? `（${(C3[k].change_TD * 100).toFixed(0)} %）` : ""}`)])],
+  tableOpts(0.7, 2.35, 7.6, [3.8, 1.9, 1.9], 0.46));
+cap(s, 0.7, 4.25, 7.6, 0.4, [tx("表3　最初の層が壊れる引張応力（板の平均）。括弧は残留応力なしに対する変化。")]);
+head(s, 8.6, 2.35, 4.0, "示せたこと");
+para(s, 8.6, 2.7, 4.0, 2.0, [tx("残留応力は板の中心付近の引張で強度の余裕を 2〜4 割減らす。実測から同定した無応力温度を使うと、強度の見積もりは既報の仮定より 14〜21 % 高い。補正は強度の予測にも効く。")], 12);
+head(s, 0.7, 4.85, 11.9, "示せていないこと");
+para(s, 0.7, 5.2, 11.9, 1.6, [tx(`方向別の強度データがなく、絶対値は確かめられない。限界ひずみは全層・全方向で同じとした。繊維方向と樹脂を分けた判定（擬似層ごとの Tsai–Hill）では、残留応力なしでも MD ${C3[K3[0]].MD.B_strength_MPa.toFixed(0)} MPa と物性表の約半分になり、強度の予測には使えなかった（割れ始めの目安）。`)], 12.5);
+
+// ===================================================== 9. まとめ ===========
+s = pres.addSlide({ masterName: "CONTENT" });
+s.addText("9. まとめと今後", { placeholder: "title" });
 head(s, 0.7, 1.25, 11.9, "示せたこと");
 s.addText([
   { text: "既報と同じ入力で、表面の残留応力（σxx −24.4 対 −24.3 MPa）と、穿孔法の解放ひずみの傾向を再現した。", options: { bullet: true, breakLine: true } },
   { text: "解析は実測より約 1.5〜1.7 倍大きく、既報の解析（1.3〜1.4 倍）と同じ向きである。ゲージ位置のずれだけでは説明できない。", options: { bullet: true, breakLine: true } },
-  { text: "共通の倍率による補正で、当てはめに使わない実測点の誤差が半分以下になった。倍率は T₀,eff ≈ 142〜143 °C に相当する（熱膨張係数一定の換算では 127 °C、既報の推定は約 120 °C）。", options: { bullet: true } },
-], { x: 0.7, y: 1.6, w: 11.9, h: 1.6, fontSize: 13, color: INK, paraSpaceAfter: 4, valign: "top" });
-head(s, 0.7, 3.35, 11.9, "示せていないこと");
+  { text: "共通の倍率による補正で、当てはめに使わない実測点の誤差が半分以下になった。倍率は T₀,eff ≈ 142〜143 °C に相当する（熱膨張係数一定の換算では 127 °C、既報の推定は約 120 °C）。", options: { bullet: true, breakLine: true } },
+  { text: "公開の 3 次元部品の解析データでも、表面の数点で反りの予測を直せ、倍率は部品によらずほぼ同じであった。補正は強度の見積もりにも 14〜21 % 効く（試算）。", options: { bullet: true } },
+], { x: 0.7, y: 1.6, w: 11.9, h: 1.9, fontSize: 12.5, color: INK, paraSpaceAfter: 3, valign: "top" });
+head(s, 0.7, 3.55, 11.9, "示せていないこと");
 s.addText([
-  { text: "実測は既報の図からの読み取り値で、試験片 1 枚・成形条件 1 つである。デンソー様の実データでは検証していない。", options: { bullet: true, breakLine: true } },
+  { text: "実測は既報の図からの読み取り値で、試験片 1 枚・成形条件 1 つである。3 次元部品は解析データであり、デンソー様の実データでは検証していない。", options: { bullet: true, breakLine: true } },
   { text: "補正は 1〜3 個のパラメータであり、多数の条件で学習するニューラルネットワークの転移学習はまだ実データで試していない。", options: { bullet: true, breakLine: true } },
   { text: "差の原因（応力緩和、材料定数、閉包近似など）は特定していない。PPS の結晶化と粘弾性の定数が未入手である。", options: { bullet: true } },
-], { x: 0.7, y: 3.7, w: 11.9, h: 1.6, fontSize: 13, color: INK, paraSpaceAfter: 4, valign: "top" });
-head(s, 0.7, 5.4, 11.9, "今後");
+], { x: 0.7, y: 3.9, w: 11.9, h: 1.5, fontSize: 12.5, color: INK, paraSpaceAfter: 4, valign: "top" });
+head(s, 0.7, 5.45, 11.9, "今後");
 s.addText([
   { text: "デンソー様の数値解析・計測データで、事前学習と補正を行う（MD と、一部の条件で TD の計測をお願いしたい）。", options: { bullet: true, breakLine: true } },
-  { text: "DSC・DMA のデータを得て結晶化と応力緩和を入れ、段階②（反り）に進む。", options: { bullet: true } },
-], { x: 0.7, y: 5.75, w: 11.9, h: 1.0, fontSize: 13, color: INK, paraSpaceAfter: 4, valign: "top" });
+  { text: "DSC・DMA と方向別の強度のデータを得て、結晶化・応力緩和・強度の判定を確かめる。3 次元部品では、計算で選んだ数点の計測を提案する。", options: { bullet: true } },
+], { x: 0.7, y: 5.8, w: 11.9, h: 1.0, fontSize: 12.5, color: INK, paraSpaceAfter: 4, valign: "top" });
 
 // ===================================================== 参考文献 ==============
 s = pres.addSlide({ masterName: "CONTENT" });
@@ -250,6 +285,8 @@ const refs = [
   "[6] X. Li, Y. Grandvalet and F. Davoine, “Explicit inductive bias for transfer learning with convolutional networks,” Proc. 35th International Conference on Machine Learning (ICML), 2018.",
   "[7] L. B. Nohara et al., “Study of crystallization behavior of poly(phenylene sulfide),” Polímeros, 16(2), 2006.",
   "[8] M. L. Williams, R. F. Landel and J. D. Ferry, “The temperature dependence of relaxation mechanisms in amorphous polymers and other glass-forming liquids,” Journal of the American Chemical Society, 77(14), 3701–3707, 1955.",
+  "[9] N. Greif and N. Meyer, “Injection Molding Simulations with Artificially Enhanced Warpage,” Zenodo, record 17831586 (CC BY 4.0); N. Greif and N. Meyer, Composites Part A, 204, 109653, 2026.",
+  "[10] DURAFIDE 1130T6 物性表（販売店掲載、ISO 527-2）。1130A6 の物性表は未入手。",
 ];
 s.addText(refs.map((r, i) => ({ text: r, options: { breakLine: i < refs.length - 1 } })),
   { x: 0.7, y: 1.3, w: 11.9, h: 4.7, fontSize: 11.5, color: INK, lineSpacing: 17, paraSpaceAfter: 6, valign: "top" });

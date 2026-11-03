@@ -6,11 +6,17 @@
   "no residual stress": {
    "MD": {
     "strength_MPa": 155.0,
-    "first_failure_depth_mm": 0.0
+    "first_failure_depth_mm": 0.0,
+    "B_strength_MPa": 81.22096648064408,
+    "B_depth_mm": 0.020000000000000052,
+    "B_ply_angle_deg": -90.0
    },
    "TD": {
     "strength_MPa": 164.18640855578207,
-    "first_failure_depth_mm": 0.0
+    "first_failure_depth_mm": 0.0,
+    "B_strength_MPa": 86.48310395721607,
+    "B_depth_mm": 0.0,
+    "B_ply_angle_deg": 0.0
    },
    "max_residual_sxx_MPa": 0.0,
    "max_residual_syy_MPa": 0.0
@@ -18,30 +24,47 @@
   "T0 = 180 C (paper)": {
    "MD": {
     "strength_MPa": 109.3030961590996,
-    "first_failure_depth_mm": 1.3999999999999997
+    "first_failure_depth_mm": 1.3999999999999997,
+    "B_strength_MPa": 38.788721603976136,
+    "B_depth_mm": 1.4999999999999998,
+    "B_ply_angle_deg": -90.0
    },
    "TD": {
     "strength_MPa": 101.47003344361683,
-    "first_failure_depth_mm": 2.86
+    "first_failure_depth_mm": 2.86,
+    "B_strength_MPa": 29.798347764224673,
+    "B_depth_mm": 2.8199999999999994,
+    "B_ply_angle_deg": 0.0
    },
    "max_residual_sxx_MPa": 30.469688981349027,
    "max_residual_syy_MPa": 35.56438513979008,
    "change_MD": -0.294818734457422,
-   "change_TD": -0.3819827454892982
+   "change_TD": -0.3819827454892982,
+   "B_change_MD": -0.5224296966077109,
+   "B_change_TD": -0.655443128186447
   },
   "T0_eff = 143 C (identified)": {
    "MD": {
     "strength_MPa": 124.84702692931945,
-    "first_failure_depth_mm": 1.3999999999999997
+    "first_failure_depth_mm": 1.3999999999999997,
+    "B_strength_MPa": 53.37903550321626,
+    "B_depth_mm": 1.4999999999999998,
+    "B_ply_angle_deg": -90.0
    },
    "TD": {
     "strength_MPa": 122.85417301523971,
-    "first_failure_depth_mm": 2.86
+    "first_failure_depth_mm": 2.86,
+    "B_strength_MPa": 49.39227992462983,
+    "B_depth_mm": 2.7999999999999994,
+    "B_ply_angle_deg": 0.0
    },
    "max_residual_sxx_MPa": 19.969040349141608,
    "max_residual_syy_MPa": 23.263265117164575,
    "change_MD": -0.19453531013342285,
-   "change_TD": -0.25173968968631044
+   "change_TD": -0.25173968968631044,
+   "B_change_MD": -0.3427924116621154,
+   "B_change_TD": -0.42887942656331335
   }
- }
+ },
+ "B_XL_MPa": 156.67623762376238
 }

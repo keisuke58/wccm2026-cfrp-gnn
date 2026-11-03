@@ -17,6 +17,16 @@ Honest scope: linear elastic to failure (the real curves are slightly non-linear
 criterion with one critical strain for all layers and directions (fibre- and matrix-dominated failure are not
 distinguished); no directional strength data to check the TD prediction; the datasheet specimen itself
 contains residual stress, so eps_c already absorbs part of it. The result is the RELATIVE effect.
+Criterion B (fibre / matrix split, laminate analogy, Advani & Tucker style): each layer is split into pseudo-plies of
+aligned fibre at angles theta with weights w(theta) ~ exp(kappa cos 2 theta), kappa chosen so that the weighted
+<cos^2 theta> equals the layer's a_xx / (a_xx + a_yy). Same strain in all pseudo-plies of a layer (iso-strain).
+Each pseudo-ply: UD stress from the aligned Mori-Tanaka stiffness, Tsai-Hill index with
+    X_L (Kelly-Tyson, sub-critical fibres): eta_0 V_f tau l / d + (1 - V_f) sigma_m'                         (3)
+    Y_T, S (matrix-dominated): general values for GF thermoplastics.
+The first pseudo-ply with weight above 2 % of the layer's maximum reaching index 1 fails the plate (first-ply).
+Constants (ALL EXAMPLE): tau = 35 MPa, eta_0 = 1 (fibres in the ply direction), sigma_m' = 60 MPa, Y_T = 60 MPa,
+S = 45 MPa, fibre length 170.6 um, diameter 10.1 um (paper). X_L from (3) is printed and compared with the
+datasheet 155 MPa (not fitted).
 Run:  python3 validation/denso_strength_residual.py      (writes results/denso_strength/strength.json)
 """
 import json
@@ -62,6 +72,56 @@ def failure(Q, A, H, e_res, direction, ec):
     return hi / H, k
 
 
+from fiber_orientation_cte import VOIGT  # noqa: E402  (orientation module, 11,22,33,23,13,12)
+sys.path.insert(0, os.path.join(ROOT, "viz"))
+from denso_plate_features import reduced_Q  # noqa: E402
+
+TAU, ETA0, SIGM, YT, SS = 35e6, 1.0, 60e6, 60e6, 45e6          # example constants (criterion B)
+VF, LF, DF = tc.VF, tc._m["fibre_length_mean_um"], tc._m["fibre_diameter_mean_um"]
+XL = ETA0 * VF * TAU * LF / DF + (1 - VF) * SIGM                 # (3)
+THETA = np.radians(np.linspace(-90, 90, 72, endpoint=False))
+
+
+def rot_strain(e, th):
+    """global in-plane (exx, eyy, gxy) -> ply axes (e11, e22, g12)."""
+    c, s_ = np.cos(th), np.sin(th)
+    return np.stack([c * c * e[..., 0] + s_ * s_ * e[..., 1] + c * s_ * e[..., 2],
+                     s_ * s_ * e[..., 0] + c * c * e[..., 1] - c * s_ * e[..., 2],
+                     -2 * c * s_ * e[..., 0] + 2 * c * s_ * e[..., 1] + (c * c - s_ * s_) * e[..., 2]], -1)
+
+
+def weights(frac):
+    """kappa with <cos^2> = frac for w ~ exp(kappa cos 2 theta) on THETA."""
+    lo, hi = -40.0, 40.0
+    for _ in range(80):
+        k = 0.5 * (lo + hi); w = np.exp(k * np.cos(2 * THETA) - abs(k)); m = np.sum(w * np.cos(THETA) ** 2) / w.sum()
+        lo, hi = (k, hi) if m < frac else (lo, k)
+    return w / w.max()
+
+
+def tsai_hill_failure(A, H, e_res, ax, ay, direction):
+    Qud = reduced_Q(tc.ud(tc.T_RT)[0])
+    W = np.array([weights(x / (x + y)) for x, y in zip(ax, ay)])          # (layers, angles)
+    act = W > 0.02
+    n = np.zeros(3); n[direction] = 1.0
+    e1 = np.linalg.solve(A, n)
+
+    def index(lam):
+        e = e_res + lam * e1[None, :]                                   # (layers, 3)
+        el = rot_strain(e[:, None, :], THETA[None, :])                   # (layers, angles, 3)
+        sg = el @ Qud.T
+        s1, s2, t = sg[..., 0], sg[..., 1], sg[..., 2]
+        X = np.where(s1 >= 0, XL, 2 * XL); Y = np.where(s2 >= 0, YT, 2.5 * YT)       # compression stronger (example)
+        f = s1 ** 2 / X ** 2 - s1 * s2 / X ** 2 + s2 ** 2 / Y ** 2 + t ** 2 / SS ** 2
+        return np.where(act, f, 0.0)
+    lo, hi = 0.0, 2e3 * H * 1e6
+    for _ in range(80):
+        mid = 0.5 * (lo + hi)
+        lo, hi = (lo, mid) if index(mid).max() >= 1 else (mid, hi)
+    k = np.unravel_index(np.argmax(index(hi)), index(hi).shape)
+    return hi / H, int(k[0]), float(np.degrees(THETA[k[1]]))
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     z, d, ax, ay, az = plate()
@@ -83,18 +143,27 @@ def main():
         r = {}
         for lab, dr in (("MD", 0), ("TD", 1)):
             s, k = failure(Q, A, H, e_res, dr, ec)
-            r[lab] = dict(strength_MPa=s / 1e6, first_failure_depth_mm=float(d[k]))
+            sb, kb, thb = tsai_hill_failure(A, H, e_res, ax, ay, dr)
+            r[lab] = dict(strength_MPa=s / 1e6, first_failure_depth_mm=float(d[k]),
+                          B_strength_MPa=sb / 1e6, B_depth_mm=float(d[kb]), B_ply_angle_deg=thb)
         r["max_residual_sxx_MPa"] = float(sres[:, 0].max() / 1e6); r["max_residual_syy_MPa"] = float(sres[:, 1].max() / 1e6)
         out["cases"][name] = r
-        print(f"{name:30s}: MD {r['MD']['strength_MPa']:6.1f} MPa (first failure at depth {r['MD']['first_failure_depth_mm']:.2f} mm), "
+        print(f"{name:30s}: [A strain] MD {r['MD']['strength_MPa']:6.1f} MPa (first failure at depth {r['MD']['first_failure_depth_mm']:.2f} mm), "
               f"TD {r['TD']['strength_MPa']:6.1f} MPa (depth {r['TD']['first_failure_depth_mm']:.2f} mm); "
               f"max residual tension sxx {r['max_residual_sxx_MPa']:+.1f}, syy {r['max_residual_syy_MPa']:+.1f} MPa")
+        print(f"   {'':30s} [B fibre/matrix] MD {r['MD']['B_strength_MPa']:6.1f} MPa (depth {r['MD']['B_depth_mm']:.2f} mm, ply {r['MD']['B_ply_angle_deg']:+.0f} deg), "
+              f"TD {r['TD']['B_strength_MPa']:6.1f} MPa (depth {r['TD']['B_depth_mm']:.2f} mm, ply {r['TD']['B_ply_angle_deg']:+.0f} deg)")
     base = out["cases"]["no residual stress"]
     for name in list(cases)[1:]:
         c = out["cases"][name]
         c["change_MD"] = c["MD"]["strength_MPa"] / base["MD"]["strength_MPa"] - 1
         c["change_TD"] = c["TD"]["strength_MPa"] / base["TD"]["strength_MPa"] - 1
-        print(f"  {name}: strength change MD {c['change_MD'] * 100:+.1f} %, TD {c['change_TD'] * 100:+.1f} %")
+        c["B_change_MD"] = c["MD"]["B_strength_MPa"] / base["MD"]["B_strength_MPa"] - 1
+        c["B_change_TD"] = c["TD"]["B_strength_MPa"] / base["TD"]["B_strength_MPa"] - 1
+        print(f"  {name}: strength change [A] MD {c['change_MD'] * 100:+.1f} %, TD {c['change_TD'] * 100:+.1f} % | "
+              f"[B] MD {c['B_change_MD'] * 100:+.1f} %, TD {c['B_change_TD'] * 100:+.1f} %")
+    print(f"[B] X_L (Kelly-Tyson, example constants) = {XL / 1e6:.0f} MPa (datasheet 155 MPa, proxy grade, not fitted)")
+    out["B_XL_MPa"] = XL / 1e6
     print(f"eps_c (example, from {SIG_MD_DATASHEET / 1e6:.0f} MPa MD, stress-free) = {ec * 100:.2f} %")
     json.dump(out, open(os.path.join(OUT, "strength.json"), "w"), indent=1)
     print("wrote", os.path.join(OUT, "strength.json"))
