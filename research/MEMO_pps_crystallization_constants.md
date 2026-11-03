@@ -55,6 +55,17 @@ L. C. López, G. L. Wilkes, J. F. Geibel, *Polymer* 30(1), 147–155, 1989（doi
 - López & Wilkes (1988) にはないことを確認した（§1b）。
 - 一部の文献は、PPS の等温結晶化では二次結晶化が起き、Avrami 式の当てはまりが悪いと報告している。
 
+## 2b. *K*<sub>g</sub> が載っている可能性の高い文献（2026-11-03 調査、本文未入手）
+
+1. A. J. Lovinger, D. D. Davis, F. J. Padden Jr., "Kinetic analysis of the crystallization of poly(p-phenylene sulphide)", *Polymer* 26(11), 1595–1604, 1985.
+   球晶成長速度を 100〜280 °C の広い範囲で測り、二次核形成理論で解析。要旨によれば領域 I→II 転移 488 K、II→III 転移 468 K。**領域ごとの *K*<sub>g</sub> が本文にあるはず**（要旨には数値なし）。
+   https://www.sciencedirect.com/science/article/abs/pii/0032386185902708
+2. J. M. Kenny, A. Maffezzoli, "Crystallization kinetics of poly(phenylene sulfide) (PPS) and PPS/carbon fiber composites", *Polymer Engineering & Science* 31(8), 607–614, 1991（頁は未確認）。
+   **繊維入りの結晶化速度式**の可能性が高い。
+   https://4spepublications.onlinelibrary.wiley.com/doi/abs/10.1002/pen.760310812
+3. Mehl, Rebenfeld, *J. Appl. Polym. Sci.* 57(2), 1995。PPS 複合材の結晶化と繊維表面の核密度（未確認）。
+   https://onlinelibrary.wiley.com/doi/abs/10.1002/app.1995.070570207
+
 ## 3. 注意点
 
 - ガラス繊維は核剤として働き、結晶化を速めうる。樹脂単体の値をそのまま使うことはできない可能性がある。
