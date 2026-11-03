@@ -484,3 +484,52 @@ python3 -m pip install --user meshio        # VTU の読み込み
 **Claude Code に渡す指示文**：
 
 > `research/GUIDE_fifa_abaqus.md` §18 に従い、Zenodo 17831586 のデータ（2 GB）を落として、中身（ファイル構成、フィールド名と単位、要素の種類、反りの大きさの分布、板厚方向の要素数）を報告してください。計算はまだしないこと。
+
+## 19. 追加の計算（2026-11-04）：3 次元部品での RESCUE（簡単な物理モデル＋少数点の補正）
+
+**目的**：§18 で確認した Greif & Meyer のデータ（196 形状）で、平板と同じ RESCUE を 3 次元の部品で試す。
+データの繊維配向から本研究の簡単な物理モデルで反りを計算し（事前の予測）、データの Moldflow の反りの**数点だけ**を「計測」とみなして補正する。残りの全節点の反りがどこまで当たるかを調べる。計画は `research/PLAN_rescue_3d.md`。**GPU は使わない**（CalculiX、CPU）。
+
+**スクリプト**：`validation/greif3d_rescue.py`（docstring に式と正直な限界）。
+- 事前の予測：配向テンソル → k-means で 32 群 → 群ごとに Mori–Tanaka＋配向平均（混合近似）で剛性と熱膨張係数 → CalculiX の線形弾性 FE（データの四面体に中間節点を足した C3D10、3-2-1 で保持、一様な温度変化 −100 K）。熱膨張係数を等方部分と偏差部分に分けた 2 ケースを解く（重ね合わせ）。
+- 補正：等方・偏差の 2 倍率（または共通の 1 倍率）と剛体運動 6 自由度を、K 個の表面節点（5／10／20、無作為に 10 回）の 3 成分で当てはめる（L2-SP、事前値 1、*s*<sub>a</sub> = 0.5、計測の不確かさ 0.01 mm は例示）。
+- 評価：全節点で、予測とデータの差から最適な剛体運動を除いた rms を、データの反り（剛体運動を除く）の rms で割った値（相対誤差）。
+- 材料定数は **PP/GF30 の一般値**（PP 1.5 GPa・0.40・100 ppm/K、GF 72 GPa・0.22・5 ppm/K、*V*<sub>f</sub> 0.131、*s* 20 は仮定）。例示値であり、校正していない。
+
+**ここでの自己チェック（2026-11-04、合成の板、`results/greif3d_rescue/selftest.json`）**：
+- G1 パッチテスト（等方・一様な膨張）：6.8×10⁻¹²。
+- G2 合成データ（0.7 *U*<sub>iso</sub> + 1.3 *U*<sub>dev</sub> + 剛体運動 + 雑音）：10 節点の 2 倍率で 0.704／1.298 を回復、相対誤差 0.37 → 0.021。
+- G3 C3D4 は曲げで固くなる（反りが C3D10 の 0.42 倍）。**C3D10 を既定とする**。G3b：C3D10 は厚さ方向 4 → 8 要素で 1.7 % の変化。
+
+**準備**：
+```bash
+cd ~/wccm2026-cfrp-gnn && git pull
+which ccx || conda install -y -c conda-forge calculix     # CalculiX が無ければ（conda 環境に）
+python3 -m pip install --user meshio                      # §18 で入れた venv でもよい
+python3 validation/greif3d_rescue.py --selftest --out /tmp/g3d_selftest   # G1〜G3b がここと同じ値になること
+```
+
+**実行**（データは §18 の `~/data/greif2025_warp/`）：
+1. 小さい 20 形状（四面体の数で昇順）。うち最初の 3 形状で群の数の確認（G5、K = 64）も行う。
+   ```bash
+   python3 validation/greif3d_rescue.py --data ~/data/greif2025_warp --smallest 3 --k-check 64 --threads 4 --out ~/g3d_k
+   python3 validation/greif3d_rescue.py --data ~/data/greif2025_warp --smallest 20 --threads 4 --out ~/g3d_20
+   ```
+2. 1 形状あたりの時間が 10 分以下なら、全 196 形状（`--smallest 196`）。それより長ければ、60 形状で止めて報告する。
+   メモリが足りずに落ちる形状は飛ばしてよい（`--ids` で個別に指定できる）。落ちた形状の id と四面体の数を報告に書く。
+
+**報告すること**：
+- 自己チェック G1〜G3b の値（ここと一致するか）。
+- G5：K = 32 と 64 の差（3 形状）。G4：事前の予測の主方向の弾性率と、データの `Tensile_modulus_in_first_principal_direction` の比（中央値）。
+- `summary.json` の中央値と四分位：prior、cos_prior_data、field_1f／field_2f（場全体で当てはめたときの限界）、rescue_{5,10,20}_{1f,2f}。
+- 補正がよく効く形状と効かない形状の例を 2〜3 個ずつ（id、大きさ、反りの最大値、cos）。
+
+**判定の目安**（失敗したら、定数を合わせにいかずに失敗として報告する）：
+- G1 が 10⁻⁸ を超える、または G2 で倍率を回復できない → 実行環境の問題。そこで止めて報告する。
+- cos_prior_data が負や 0 付近の形状が多い → 事前の予測の形が合っていない（物理モデルの限界）。それ自体が結果なので、そのまま報告する。
+
+**守ること**：データを書き換えないこと。結果は `abaqus/denso_plate/abaqus_results/greif3d_rescue/` に `per_geometry.csv`、`per_geometry.json`、`summary.json` と報告（Markdown）だけを入れ、ブランチを切ってコミット・プッシュする。`work/` と VTU はリポジトリに入れない。
+
+**Claude Code に渡す指示文**：
+
+> `research/GUIDE_fifa_abaqus.md` §19 に従い、`validation/greif3d_rescue.py` で自己チェックをしてから、Greif & Meyer の形状（まず小さい 20 個、時間が許せば全部）で RESCUE の 3 次元版を計算し、結果を報告してください。GPU は使いません。定数は合わせにいかないこと。
