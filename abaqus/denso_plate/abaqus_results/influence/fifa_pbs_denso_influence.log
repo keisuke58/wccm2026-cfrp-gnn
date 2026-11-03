@@ -1,0 +1,930 @@
+host frontale01 start Tue Nov  3 10:01:07 PM JST 2026
+22:01:12 denso_hole_inf_xx_all: 864 quads x 154 layers = 133056 C3D8I, 142445 nodes; gauge elements Ch1 12, Ch2 24, Ch3 12; lamination surface stress sxx -24.4 / syy +18.6 MPa
+22:01:14 Analysis initiated from SIMULIA established products
+22:01:14 Abaqus JOB denso_hole_inf_xx_all
+22:01:14 Abaqus 2024
+22:01:14 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+22:01:14 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+22:01:14 Successfully checked out QPL for 8 cpu(s)
+22:01:14 Abaqus License Manager checked out the following licenses:
+22:01:14 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+22:01:14 <9 out of 120 licenses remain available>.
+22:01:14 Begin Analysis Input File Processor
+22:01:14 Tue 03 Nov 2026 10:01:14 PM JST
+22:01:14 Run pre
+22:01:29 Tue 03 Nov 2026 10:01:29 PM JST
+22:01:29 End Analysis Input File Processor
+22:01:29 Begin Abaqus/Standard Analysis
+22:01:29 Tue 03 Nov 2026 10:01:29 PM JST
+22:01:29 Run standard
+22:04:17 Tue 03 Nov 2026 10:04:17 PM JST
+22:04:17 End Abaqus/Standard Analysis
+22:04:17 Begin SIM Wrap-up
+22:04:17 Tue 03 Nov 2026 10:04:17 PM JST
+22:04:17 Run SMASimUtility
+22:04:17 Tue 03 Nov 2026 10:04:17 PM JST
+22:04:17 End SIM Wrap-up
+22:04:17 Abaqus JOB denso_hole_inf_xx_all COMPLETED
+22:04:18 wrote denso_hole_inf_xx_all_abaqus.json (11 steps)
+22:04:23 denso_hole_inf_xx_00: 864 quads x 154 layers = 133056 C3D8I, 142445 nodes; gauge elements Ch1 12, Ch2 24, Ch3 12; lamination surface stress sxx -24.4 / syy +18.6 MPa
+22:04:24 Analysis initiated from SIMULIA established products
+22:04:24 Abaqus JOB denso_hole_inf_xx_00
+22:04:24 Abaqus 2024
+22:04:24 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+22:04:24 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+22:04:24 Successfully checked out QPL for 8 cpu(s)
+22:04:24 Abaqus License Manager checked out the following licenses:
+22:04:24 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+22:04:24 <9 out of 120 licenses remain available>.
+22:04:24 Begin Analysis Input File Processor
+22:04:24 Tue 03 Nov 2026 10:04:24 PM JST
+22:04:24 Run pre
+22:04:37 Tue 03 Nov 2026 10:04:37 PM JST
+22:04:37 End Analysis Input File Processor
+22:04:37 Begin Abaqus/Standard Analysis
+22:04:37 Tue 03 Nov 2026 10:04:37 PM JST
+22:04:37 Run standard
+22:07:26 Tue 03 Nov 2026 10:07:26 PM JST
+22:07:26 End Abaqus/Standard Analysis
+22:07:26 Begin SIM Wrap-up
+22:07:26 Tue 03 Nov 2026 10:07:26 PM JST
+22:07:26 Run SMASimUtility
+22:07:26 Tue 03 Nov 2026 10:07:26 PM JST
+22:07:26 End SIM Wrap-up
+22:07:26 Abaqus JOB denso_hole_inf_xx_00 COMPLETED
+22:07:27 wrote denso_hole_inf_xx_00_abaqus.json (11 steps)
+22:07:33 denso_hole_inf_xx_01: 864 quads x 154 layers = 133056 C3D8I, 142445 nodes; gauge elements Ch1 12, Ch2 24, Ch3 12; lamination surface stress sxx -24.4 / syy +18.6 MPa
+22:07:33 Analysis initiated from SIMULIA established products
+22:07:33 Abaqus JOB denso_hole_inf_xx_01
+22:07:33 Abaqus 2024
+22:07:34 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+22:07:34 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+22:07:34 Successfully checked out QPL for 8 cpu(s)
+22:07:34 Abaqus License Manager checked out the following licenses:
+22:07:34 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+22:07:34 <9 out of 120 licenses remain available>.
+22:07:34 Begin Analysis Input File Processor
+22:07:34 Tue 03 Nov 2026 10:07:34 PM JST
+22:07:34 Run pre
+22:07:47 Tue 03 Nov 2026 10:07:47 PM JST
+22:07:47 End Analysis Input File Processor
+22:07:47 Begin Abaqus/Standard Analysis
+22:07:47 Tue 03 Nov 2026 10:07:47 PM JST
+22:07:47 Run standard
+22:12:01 Tue 03 Nov 2026 10:12:01 PM JST
+22:12:01 End Abaqus/Standard Analysis
+22:12:02 Begin SIM Wrap-up
+22:12:02 Tue 03 Nov 2026 10:12:02 PM JST
+22:12:02 Run SMASimUtility
+22:12:02 Tue 03 Nov 2026 10:12:02 PM JST
+22:12:02 End SIM Wrap-up
+22:12:02 Abaqus JOB denso_hole_inf_xx_01 COMPLETED
+22:12:03 wrote denso_hole_inf_xx_01_abaqus.json (11 steps)
+22:12:12 denso_hole_inf_xx_02: 864 quads x 154 layers = 133056 C3D8I, 142445 nodes; gauge elements Ch1 12, Ch2 24, Ch3 12; lamination surface stress sxx -24.4 / syy +18.6 MPa
+22:12:13 Analysis initiated from SIMULIA established products
+22:12:13 Abaqus JOB denso_hole_inf_xx_02
+22:12:13 Abaqus 2024
+22:12:13 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+22:12:13 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+22:12:13 Successfully checked out QPL for 8 cpu(s)
+22:12:13 Abaqus License Manager checked out the following licenses:
+22:12:13 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+22:12:13 <9 out of 120 licenses remain available>.
+22:12:13 Begin Analysis Input File Processor
+22:12:13 Tue 03 Nov 2026 10:12:13 PM JST
+22:12:13 Run pre
+22:12:32 Tue 03 Nov 2026 10:12:32 PM JST
+22:12:32 End Analysis Input File Processor
+22:12:32 Begin Abaqus/Standard Analysis
+22:12:32 Tue 03 Nov 2026 10:12:32 PM JST
+22:12:32 Run standard
+22:19:41 Tue 03 Nov 2026 10:19:41 PM JST
+22:19:41 End Abaqus/Standard Analysis
+22:19:41 Begin SIM Wrap-up
+22:19:41 Tue 03 Nov 2026 10:19:41 PM JST
+22:19:41 Run SMASimUtility
+22:19:41 Tue 03 Nov 2026 10:19:41 PM JST
+22:19:41 End SIM Wrap-up
+22:19:41 Abaqus JOB denso_hole_inf_xx_02 COMPLETED
+22:19:43 wrote denso_hole_inf_xx_02_abaqus.json (11 steps)
+22:19:50 denso_hole_inf_xx_03: 864 quads x 154 layers = 133056 C3D8I, 142445 nodes; gauge elements Ch1 12, Ch2 24, Ch3 12; lamination surface stress sxx -24.4 / syy +18.6 MPa
+22:19:52 Analysis initiated from SIMULIA established products
+22:19:52 Abaqus JOB denso_hole_inf_xx_03
+22:19:52 Abaqus 2024
+22:19:52 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+22:19:52 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+22:19:52 Successfully checked out QPL for 8 cpu(s)
+22:19:52 Abaqus License Manager checked out the following licenses:
+22:19:52 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+22:19:52 <9 out of 120 licenses remain available>.
+22:19:52 Begin Analysis Input File Processor
+22:19:52 Tue 03 Nov 2026 10:19:52 PM JST
+22:19:52 Run pre
+22:20:13 Tue 03 Nov 2026 10:20:13 PM JST
+22:20:13 End Analysis Input File Processor
+22:20:13 Begin Abaqus/Standard Analysis
+22:20:13 Tue 03 Nov 2026 10:20:13 PM JST
+22:20:13 Run standard
+22:27:29 Tue 03 Nov 2026 10:27:29 PM JST
+22:27:29 End Abaqus/Standard Analysis
+22:27:29 Begin SIM Wrap-up
+22:27:29 Tue 03 Nov 2026 10:27:29 PM JST
+22:27:29 Run SMASimUtility
+22:27:29 Tue 03 Nov 2026 10:27:29 PM JST
+22:27:29 End SIM Wrap-up
+22:27:30 Abaqus JOB denso_hole_inf_xx_03 COMPLETED
+22:27:31 wrote denso_hole_inf_xx_03_abaqus.json (11 steps)
+22:27:40 denso_hole_inf_xx_04: 864 quads x 154 layers = 133056 C3D8I, 142445 nodes; gauge elements Ch1 12, Ch2 24, Ch3 12; lamination surface stress sxx -24.4 / syy +18.6 MPa
+22:27:42 Analysis initiated from SIMULIA established products
+22:27:42 Abaqus JOB denso_hole_inf_xx_04
+22:27:42 Abaqus 2024
+22:27:42 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+22:27:42 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+22:27:42 Successfully checked out QPL for 8 cpu(s)
+22:27:42 Abaqus License Manager checked out the following licenses:
+22:27:42 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+22:27:42 <9 out of 120 licenses remain available>.
+22:27:42 Begin Analysis Input File Processor
+22:27:42 Tue 03 Nov 2026 10:27:42 PM JST
+22:27:42 Run pre
+22:27:59 Tue 03 Nov 2026 10:27:59 PM JST
+22:27:59 End Analysis Input File Processor
+22:27:59 Begin Abaqus/Standard Analysis
+22:27:59 Tue 03 Nov 2026 10:27:59 PM JST
+22:27:59 Run standard
+22:35:06 Tue 03 Nov 2026 10:35:06 PM JST
+22:35:06 End Abaqus/Standard Analysis
+22:35:06 Begin SIM Wrap-up
+22:35:06 Tue 03 Nov 2026 10:35:06 PM JST
+22:35:06 Run SMASimUtility
+22:35:06 Tue 03 Nov 2026 10:35:06 PM JST
+22:35:06 End SIM Wrap-up
+22:35:06 Abaqus JOB denso_hole_inf_xx_04 COMPLETED
+22:35:08 wrote denso_hole_inf_xx_04_abaqus.json (11 steps)
+22:35:15 denso_hole_inf_xx_05: 864 quads x 154 layers = 133056 C3D8I, 142445 nodes; gauge elements Ch1 12, Ch2 24, Ch3 12; lamination surface stress sxx -24.4 / syy +18.6 MPa
+22:35:17 Analysis initiated from SIMULIA established products
+22:35:17 Abaqus JOB denso_hole_inf_xx_05
+22:35:17 Abaqus 2024
+22:35:17 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+22:35:17 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+22:35:17 Successfully checked out QPL for 8 cpu(s)
+22:35:17 Abaqus License Manager checked out the following licenses:
+22:35:17 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+22:35:17 <9 out of 120 licenses remain available>.
+22:35:17 Begin Analysis Input File Processor
+22:35:17 Tue 03 Nov 2026 10:35:17 PM JST
+22:35:17 Run pre
+22:35:36 Tue 03 Nov 2026 10:35:36 PM JST
+22:35:36 End Analysis Input File Processor
+22:35:36 Begin Abaqus/Standard Analysis
+22:35:36 Tue 03 Nov 2026 10:35:36 PM JST
+22:35:36 Run standard
+22:42:42 Tue 03 Nov 2026 10:42:42 PM JST
+22:42:42 End Abaqus/Standard Analysis
+22:42:42 Begin SIM Wrap-up
+22:42:42 Tue 03 Nov 2026 10:42:42 PM JST
+22:42:42 Run SMASimUtility
+22:42:42 Tue 03 Nov 2026 10:42:42 PM JST
+22:42:42 End SIM Wrap-up
+22:42:42 Abaqus JOB denso_hole_inf_xx_05 COMPLETED
+22:42:45 wrote denso_hole_inf_xx_05_abaqus.json (11 steps)
+22:42:52 denso_hole_inf_xx_06: 864 quads x 154 layers = 133056 C3D8I, 142445 nodes; gauge elements Ch1 12, Ch2 24, Ch3 12; lamination surface stress sxx -24.4 / syy +18.6 MPa
+22:42:54 Analysis initiated from SIMULIA established products
+22:42:54 Abaqus JOB denso_hole_inf_xx_06
+22:42:54 Abaqus 2024
+22:42:54 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+22:42:54 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+22:42:54 Successfully checked out QPL for 8 cpu(s)
+22:42:54 Abaqus License Manager checked out the following licenses:
+22:42:54 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+22:42:54 <9 out of 120 licenses remain available>.
+22:42:54 Begin Analysis Input File Processor
+22:42:54 Tue 03 Nov 2026 10:42:54 PM JST
+22:42:54 Run pre
+22:43:14 Tue 03 Nov 2026 10:43:14 PM JST
+22:43:14 End Analysis Input File Processor
+22:43:14 Begin Abaqus/Standard Analysis
+22:43:14 Tue 03 Nov 2026 10:43:14 PM JST
+22:43:14 Run standard
+22:50:13 Tue 03 Nov 2026 10:50:13 PM JST
+22:50:13 End Abaqus/Standard Analysis
+22:50:14 Begin SIM Wrap-up
+22:50:14 Tue 03 Nov 2026 10:50:14 PM JST
+22:50:14 Run SMASimUtility
+22:50:14 Tue 03 Nov 2026 10:50:14 PM JST
+22:50:14 End SIM Wrap-up
+22:50:14 Abaqus JOB denso_hole_inf_xx_06 COMPLETED
+22:50:15 wrote denso_hole_inf_xx_06_abaqus.json (11 steps)
+22:50:26 denso_hole_inf_xx_07: 864 quads x 154 layers = 133056 C3D8I, 142445 nodes; gauge elements Ch1 12, Ch2 24, Ch3 12; lamination surface stress sxx -24.4 / syy +18.6 MPa
+22:50:28 Analysis initiated from SIMULIA established products
+22:50:28 Abaqus JOB denso_hole_inf_xx_07
+22:50:28 Abaqus 2024
+22:50:28 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+22:50:28 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+22:50:28 Successfully checked out QPL for 8 cpu(s)
+22:50:28 Abaqus License Manager checked out the following licenses:
+22:50:28 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+22:50:28 <9 out of 120 licenses remain available>.
+22:50:28 Begin Analysis Input File Processor
+22:50:28 Tue 03 Nov 2026 10:50:28 PM JST
+22:50:28 Run pre
+22:50:47 Tue 03 Nov 2026 10:50:47 PM JST
+22:50:47 End Analysis Input File Processor
+22:50:47 Begin Abaqus/Standard Analysis
+22:50:47 Tue 03 Nov 2026 10:50:47 PM JST
+22:50:47 Run standard
+22:57:46 Tue 03 Nov 2026 10:57:46 PM JST
+22:57:46 End Abaqus/Standard Analysis
+22:57:46 Begin SIM Wrap-up
+22:57:46 Tue 03 Nov 2026 10:57:46 PM JST
+22:57:46 Run SMASimUtility
+22:57:46 Tue 03 Nov 2026 10:57:46 PM JST
+22:57:46 End SIM Wrap-up
+22:57:46 Abaqus JOB denso_hole_inf_xx_07 COMPLETED
+22:57:48 wrote denso_hole_inf_xx_07_abaqus.json (11 steps)
+22:57:58 denso_hole_inf_xx_08: 864 quads x 154 layers = 133056 C3D8I, 142445 nodes; gauge elements Ch1 12, Ch2 24, Ch3 12; lamination surface stress sxx -24.4 / syy +18.6 MPa
+22:58:00 Analysis initiated from SIMULIA established products
+22:58:00 Abaqus JOB denso_hole_inf_xx_08
+22:58:00 Abaqus 2024
+22:58:00 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+22:58:00 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+22:58:00 Successfully checked out QPL for 8 cpu(s)
+22:58:00 Abaqus License Manager checked out the following licenses:
+22:58:00 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+22:58:00 <9 out of 120 licenses remain available>.
+22:58:00 Begin Analysis Input File Processor
+22:58:00 Tue 03 Nov 2026 10:58:00 PM JST
+22:58:00 Run pre
+22:58:19 Tue 03 Nov 2026 10:58:19 PM JST
+22:58:19 End Analysis Input File Processor
+22:58:19 Begin Abaqus/Standard Analysis
+22:58:19 Tue 03 Nov 2026 10:58:19 PM JST
+22:58:19 Run standard
+23:05:07 Tue 03 Nov 2026 11:05:07 PM JST
+23:05:07 End Abaqus/Standard Analysis
+23:05:08 Begin SIM Wrap-up
+23:05:08 Tue 03 Nov 2026 11:05:08 PM JST
+23:05:08 Run SMASimUtility
+23:05:08 Tue 03 Nov 2026 11:05:08 PM JST
+23:05:08 End SIM Wrap-up
+23:05:08 Abaqus JOB denso_hole_inf_xx_08 COMPLETED
+23:05:10 wrote denso_hole_inf_xx_08_abaqus.json (11 steps)
+23:05:20 denso_hole_inf_xx_09: 864 quads x 154 layers = 133056 C3D8I, 142445 nodes; gauge elements Ch1 12, Ch2 24, Ch3 12; lamination surface stress sxx -24.4 / syy +18.6 MPa
+23:05:21 Analysis initiated from SIMULIA established products
+23:05:21 Abaqus JOB denso_hole_inf_xx_09
+23:05:21 Abaqus 2024
+23:05:21 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+23:05:21 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+23:05:21 Successfully checked out QPL for 8 cpu(s)
+23:05:21 Abaqus License Manager checked out the following licenses:
+23:05:21 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+23:05:21 <9 out of 120 licenses remain available>.
+23:05:21 Begin Analysis Input File Processor
+23:05:21 Tue 03 Nov 2026 11:05:21 PM JST
+23:05:21 Run pre
+23:05:43 Tue 03 Nov 2026 11:05:43 PM JST
+23:05:43 End Analysis Input File Processor
+23:05:43 Begin Abaqus/Standard Analysis
+23:05:43 Tue 03 Nov 2026 11:05:43 PM JST
+23:05:43 Run standard
+23:12:26 Tue 03 Nov 2026 11:12:26 PM JST
+23:12:26 End Abaqus/Standard Analysis
+23:12:27 Begin SIM Wrap-up
+23:12:27 Tue 03 Nov 2026 11:12:27 PM JST
+23:12:27 Run SMASimUtility
+23:12:27 Tue 03 Nov 2026 11:12:27 PM JST
+23:12:27 End SIM Wrap-up
+23:12:27 Abaqus JOB denso_hole_inf_xx_09 COMPLETED
+23:12:28 wrote denso_hole_inf_xx_09_abaqus.json (11 steps)
+23:12:37 denso_hole_inf_xx_10: 864 quads x 154 layers = 133056 C3D8I, 142445 nodes; gauge elements Ch1 12, Ch2 24, Ch3 12; lamination surface stress sxx -24.4 / syy +18.6 MPa
+23:12:39 Analysis initiated from SIMULIA established products
+23:12:39 Abaqus JOB denso_hole_inf_xx_10
+23:12:39 Abaqus 2024
+23:12:39 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+23:12:39 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+23:12:39 Successfully checked out QPL for 8 cpu(s)
+23:12:39 Abaqus License Manager checked out the following licenses:
+23:12:39 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+23:12:39 <9 out of 120 licenses remain available>.
+23:12:39 Begin Analysis Input File Processor
+23:12:39 Tue 03 Nov 2026 11:12:39 PM JST
+23:12:39 Run pre
+23:12:59 Tue 03 Nov 2026 11:12:59 PM JST
+23:12:59 End Analysis Input File Processor
+23:12:59 Begin Abaqus/Standard Analysis
+23:12:59 Tue 03 Nov 2026 11:12:59 PM JST
+23:12:59 Run standard
+23:20:00 Tue 03 Nov 2026 11:20:00 PM JST
+23:20:00 End Abaqus/Standard Analysis
+23:20:00 Begin SIM Wrap-up
+23:20:00 Tue 03 Nov 2026 11:20:00 PM JST
+23:20:00 Run SMASimUtility
+23:20:00 Tue 03 Nov 2026 11:20:00 PM JST
+23:20:00 End SIM Wrap-up
+23:20:00 Abaqus JOB denso_hole_inf_xx_10 COMPLETED
+23:20:02 wrote denso_hole_inf_xx_10_abaqus.json (11 steps)
+23:20:09 denso_hole_inf_xx_11: 864 quads x 154 layers = 133056 C3D8I, 142445 nodes; gauge elements Ch1 12, Ch2 24, Ch3 12; lamination surface stress sxx -24.4 / syy +18.6 MPa
+23:20:10 Analysis initiated from SIMULIA established products
+23:20:10 Abaqus JOB denso_hole_inf_xx_11
+23:20:10 Abaqus 2024
+23:20:11 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+23:20:11 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+23:20:11 Successfully checked out QPL for 8 cpu(s)
+23:20:11 Abaqus License Manager checked out the following licenses:
+23:20:11 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+23:20:11 <9 out of 120 licenses remain available>.
+23:20:11 Begin Analysis Input File Processor
+23:20:11 Tue 03 Nov 2026 11:20:11 PM JST
+23:20:11 Run pre
+23:20:28 Tue 03 Nov 2026 11:20:28 PM JST
+23:20:28 End Analysis Input File Processor
+23:20:28 Begin Abaqus/Standard Analysis
+23:20:28 Tue 03 Nov 2026 11:20:28 PM JST
+23:20:28 Run standard
+23:27:31 Tue 03 Nov 2026 11:27:31 PM JST
+23:27:31 End Abaqus/Standard Analysis
+23:27:31 Begin SIM Wrap-up
+23:27:31 Tue 03 Nov 2026 11:27:31 PM JST
+23:27:31 Run SMASimUtility
+23:27:31 Tue 03 Nov 2026 11:27:31 PM JST
+23:27:31 End SIM Wrap-up
+23:27:31 Abaqus JOB denso_hole_inf_xx_11 COMPLETED
+23:27:33 wrote denso_hole_inf_xx_11_abaqus.json (11 steps)
+23:27:40 denso_hole_inf_xx_12: 864 quads x 154 layers = 133056 C3D8I, 142445 nodes; gauge elements Ch1 12, Ch2 24, Ch3 12; lamination surface stress sxx -24.4 / syy +18.6 MPa
+23:27:41 Analysis initiated from SIMULIA established products
+23:27:41 Abaqus JOB denso_hole_inf_xx_12
+23:27:41 Abaqus 2024
+23:27:41 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+23:27:41 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+23:27:41 Successfully checked out QPL for 8 cpu(s)
+23:27:41 Abaqus License Manager checked out the following licenses:
+23:27:41 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+23:27:41 <9 out of 120 licenses remain available>.
+23:27:41 Begin Analysis Input File Processor
+23:27:41 Tue 03 Nov 2026 11:27:41 PM JST
+23:27:41 Run pre
+23:28:02 Tue 03 Nov 2026 11:28:02 PM JST
+23:28:02 End Analysis Input File Processor
+23:28:02 Begin Abaqus/Standard Analysis
+23:28:02 Tue 03 Nov 2026 11:28:02 PM JST
+23:28:02 Run standard
+23:34:43 Tue 03 Nov 2026 11:34:43 PM JST
+23:34:43 End Abaqus/Standard Analysis
+23:34:43 Begin SIM Wrap-up
+23:34:43 Tue 03 Nov 2026 11:34:43 PM JST
+23:34:43 Run SMASimUtility
+23:34:43 Tue 03 Nov 2026 11:34:43 PM JST
+23:34:43 End SIM Wrap-up
+23:34:43 Abaqus JOB denso_hole_inf_xx_12 COMPLETED
+23:34:44 wrote denso_hole_inf_xx_12_abaqus.json (11 steps)
+23:34:53 denso_hole_inf_xx_13: 864 quads x 154 layers = 133056 C3D8I, 142445 nodes; gauge elements Ch1 12, Ch2 24, Ch3 12; lamination surface stress sxx -24.4 / syy +18.6 MPa
+23:34:54 Analysis initiated from SIMULIA established products
+23:34:54 Abaqus JOB denso_hole_inf_xx_13
+23:34:54 Abaqus 2024
+23:34:54 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+23:34:54 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+23:34:54 Successfully checked out QPL for 8 cpu(s)
+23:34:54 Abaqus License Manager checked out the following licenses:
+23:34:54 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+23:34:54 <9 out of 120 licenses remain available>.
+23:34:54 Begin Analysis Input File Processor
+23:34:54 Tue 03 Nov 2026 11:34:54 PM JST
+23:34:54 Run pre
+23:35:10 Tue 03 Nov 2026 11:35:10 PM JST
+23:35:10 End Analysis Input File Processor
+23:35:10 Begin Abaqus/Standard Analysis
+23:35:10 Tue 03 Nov 2026 11:35:10 PM JST
+23:35:10 Run standard
+23:42:17 Tue 03 Nov 2026 11:42:17 PM JST
+23:42:17 End Abaqus/Standard Analysis
+23:42:17 Begin SIM Wrap-up
+23:42:17 Tue 03 Nov 2026 11:42:17 PM JST
+23:42:17 Run SMASimUtility
+23:42:17 Tue 03 Nov 2026 11:42:17 PM JST
+23:42:17 End SIM Wrap-up
+23:42:17 Abaqus JOB denso_hole_inf_xx_13 COMPLETED
+23:42:20 wrote denso_hole_inf_xx_13_abaqus.json (11 steps)
+23:42:30 denso_hole_inf_xx_14: 864 quads x 154 layers = 133056 C3D8I, 142445 nodes; gauge elements Ch1 12, Ch2 24, Ch3 12; lamination surface stress sxx -24.4 / syy +18.6 MPa
+23:42:33 Analysis initiated from SIMULIA established products
+23:42:33 Abaqus JOB denso_hole_inf_xx_14
+23:42:33 Abaqus 2024
+23:42:33 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+23:42:33 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+23:42:33 Successfully checked out QPL for 8 cpu(s)
+23:42:33 Abaqus License Manager checked out the following licenses:
+23:42:33 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+23:42:33 <9 out of 120 licenses remain available>.
+23:42:33 Begin Analysis Input File Processor
+23:42:33 Tue 03 Nov 2026 11:42:33 PM JST
+23:42:33 Run pre
+23:42:57 Tue 03 Nov 2026 11:42:57 PM JST
+23:42:57 End Analysis Input File Processor
+23:42:57 Begin Abaqus/Standard Analysis
+23:42:57 Tue 03 Nov 2026 11:42:57 PM JST
+23:42:57 Run standard
+23:50:10 Tue 03 Nov 2026 11:50:10 PM JST
+23:50:10 End Abaqus/Standard Analysis
+23:50:10 Begin SIM Wrap-up
+23:50:10 Tue 03 Nov 2026 11:50:10 PM JST
+23:50:10 Run SMASimUtility
+23:50:10 Tue 03 Nov 2026 11:50:10 PM JST
+23:50:10 End SIM Wrap-up
+23:50:10 Abaqus JOB denso_hole_inf_xx_14 COMPLETED
+23:50:12 wrote denso_hole_inf_xx_14_abaqus.json (11 steps)
+23:50:19 denso_hole_inf_xx_15: 864 quads x 154 layers = 133056 C3D8I, 142445 nodes; gauge elements Ch1 12, Ch2 24, Ch3 12; lamination surface stress sxx -24.4 / syy +18.6 MPa
+23:50:22 Analysis initiated from SIMULIA established products
+23:50:22 Abaqus JOB denso_hole_inf_xx_15
+23:50:22 Abaqus 2024
+23:50:22 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+23:50:22 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+23:50:22 Successfully checked out QPL for 8 cpu(s)
+23:50:22 Abaqus License Manager checked out the following licenses:
+23:50:22 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+23:50:22 <9 out of 120 licenses remain available>.
+23:50:22 Begin Analysis Input File Processor
+23:50:22 Tue 03 Nov 2026 11:50:22 PM JST
+23:50:22 Run pre
+23:50:54 Tue 03 Nov 2026 11:50:54 PM JST
+23:50:54 End Analysis Input File Processor
+23:50:54 Begin Abaqus/Standard Analysis
+23:50:54 Tue 03 Nov 2026 11:50:54 PM JST
+23:50:54 Run standard
+23:57:35 Tue 03 Nov 2026 11:57:35 PM JST
+23:57:35 End Abaqus/Standard Analysis
+23:57:36 Begin SIM Wrap-up
+23:57:36 Tue 03 Nov 2026 11:57:36 PM JST
+23:57:36 Run SMASimUtility
+23:57:36 Tue 03 Nov 2026 11:57:36 PM JST
+23:57:36 End SIM Wrap-up
+23:57:36 Abaqus JOB denso_hole_inf_xx_15 COMPLETED
+23:57:37 wrote denso_hole_inf_xx_15_abaqus.json (11 steps)
+23:57:46 denso_hole_inf_yy_all: 864 quads x 154 layers = 133056 C3D8I, 142445 nodes; gauge elements Ch1 12, Ch2 24, Ch3 12; lamination surface stress sxx -24.4 / syy +18.6 MPa
+23:57:48 Analysis initiated from SIMULIA established products
+23:57:48 Abaqus JOB denso_hole_inf_yy_all
+23:57:48 Abaqus 2024
+23:57:48 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+23:57:48 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+23:57:48 Successfully checked out QPL for 8 cpu(s)
+23:57:48 Abaqus License Manager checked out the following licenses:
+23:57:48 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+23:57:48 <9 out of 120 licenses remain available>.
+23:57:48 Begin Analysis Input File Processor
+23:57:48 Tue 03 Nov 2026 11:57:48 PM JST
+23:57:48 Run pre
+23:58:05 Tue 03 Nov 2026 11:58:05 PM JST
+23:58:05 End Analysis Input File Processor
+23:58:05 Begin Abaqus/Standard Analysis
+23:58:05 Tue 03 Nov 2026 11:58:05 PM JST
+23:58:05 Run standard
+00:05:53 Wed 04 Nov 2026 12:05:53 AM JST
+00:05:53 End Abaqus/Standard Analysis
+00:05:53 Begin SIM Wrap-up
+00:05:53 Wed 04 Nov 2026 12:05:53 AM JST
+00:05:53 Run SMASimUtility
+00:05:53 Wed 04 Nov 2026 12:05:53 AM JST
+00:05:53 End SIM Wrap-up
+00:05:54 Abaqus JOB denso_hole_inf_yy_all COMPLETED
+00:05:55 wrote denso_hole_inf_yy_all_abaqus.json (11 steps)
+00:06:04 denso_hole_inf_yy_00: 864 quads x 154 layers = 133056 C3D8I, 142445 nodes; gauge elements Ch1 12, Ch2 24, Ch3 12; lamination surface stress sxx -24.4 / syy +18.6 MPa
+00:06:06 Analysis initiated from SIMULIA established products
+00:06:06 Abaqus JOB denso_hole_inf_yy_00
+00:06:06 Abaqus 2024
+00:06:06 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+00:06:06 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+00:06:06 Successfully checked out QPL for 8 cpu(s)
+00:06:06 Abaqus License Manager checked out the following licenses:
+00:06:06 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+00:06:06 <9 out of 120 licenses remain available>.
+00:06:06 Begin Analysis Input File Processor
+00:06:06 Wed 04 Nov 2026 12:06:06 AM JST
+00:06:06 Run pre
+00:06:24 Wed 04 Nov 2026 12:06:24 AM JST
+00:06:24 End Analysis Input File Processor
+00:06:24 Begin Abaqus/Standard Analysis
+00:06:24 Wed 04 Nov 2026 12:06:24 AM JST
+00:06:24 Run standard
+00:13:27 Wed 04 Nov 2026 12:13:27 AM JST
+00:13:27 End Abaqus/Standard Analysis
+00:13:28 Begin SIM Wrap-up
+00:13:28 Wed 04 Nov 2026 12:13:28 AM JST
+00:13:28 Run SMASimUtility
+00:13:28 Wed 04 Nov 2026 12:13:28 AM JST
+00:13:28 End SIM Wrap-up
+00:13:28 Abaqus JOB denso_hole_inf_yy_00 COMPLETED
+00:13:29 wrote denso_hole_inf_yy_00_abaqus.json (11 steps)
+00:13:42 denso_hole_inf_yy_01: 864 quads x 154 layers = 133056 C3D8I, 142445 nodes; gauge elements Ch1 12, Ch2 24, Ch3 12; lamination surface stress sxx -24.4 / syy +18.6 MPa
+00:13:43 Analysis initiated from SIMULIA established products
+00:13:43 Abaqus JOB denso_hole_inf_yy_01
+00:13:43 Abaqus 2024
+00:13:43 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+00:13:43 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+00:13:43 Successfully checked out QPL for 8 cpu(s)
+00:13:43 Abaqus License Manager checked out the following licenses:
+00:13:43 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+00:13:43 <9 out of 120 licenses remain available>.
+00:13:43 Begin Analysis Input File Processor
+00:13:43 Wed 04 Nov 2026 12:13:43 AM JST
+00:13:43 Run pre
+00:14:04 Wed 04 Nov 2026 12:14:04 AM JST
+00:14:04 End Analysis Input File Processor
+00:14:04 Begin Abaqus/Standard Analysis
+00:14:04 Wed 04 Nov 2026 12:14:04 AM JST
+00:14:04 Run standard
+00:21:28 Wed 04 Nov 2026 12:21:28 AM JST
+00:21:28 End Abaqus/Standard Analysis
+00:21:28 Begin SIM Wrap-up
+00:21:28 Wed 04 Nov 2026 12:21:28 AM JST
+00:21:28 Run SMASimUtility
+00:21:28 Wed 04 Nov 2026 12:21:28 AM JST
+00:21:28 End SIM Wrap-up
+00:21:28 Abaqus JOB denso_hole_inf_yy_01 COMPLETED
+00:21:31 wrote denso_hole_inf_yy_01_abaqus.json (11 steps)
+00:21:40 denso_hole_inf_yy_02: 864 quads x 154 layers = 133056 C3D8I, 142445 nodes; gauge elements Ch1 12, Ch2 24, Ch3 12; lamination surface stress sxx -24.4 / syy +18.6 MPa
+00:21:42 Analysis initiated from SIMULIA established products
+00:21:42 Abaqus JOB denso_hole_inf_yy_02
+00:21:42 Abaqus 2024
+00:21:42 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+00:21:42 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+00:21:42 Successfully checked out QPL for 8 cpu(s)
+00:21:42 Abaqus License Manager checked out the following licenses:
+00:21:42 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+00:21:42 <9 out of 120 licenses remain available>.
+00:21:42 Begin Analysis Input File Processor
+00:21:42 Wed 04 Nov 2026 12:21:42 AM JST
+00:21:42 Run pre
+00:21:59 Wed 04 Nov 2026 12:21:59 AM JST
+00:21:59 End Analysis Input File Processor
+00:21:59 Begin Abaqus/Standard Analysis
+00:21:59 Wed 04 Nov 2026 12:21:59 AM JST
+00:21:59 Run standard
+00:29:53 Wed 04 Nov 2026 12:29:53 AM JST
+00:29:53 End Abaqus/Standard Analysis
+00:29:53 Begin SIM Wrap-up
+00:29:53 Wed 04 Nov 2026 12:29:53 AM JST
+00:29:53 Run SMASimUtility
+00:29:54 Wed 04 Nov 2026 12:29:54 AM JST
+00:29:54 End SIM Wrap-up
+00:29:54 Abaqus JOB denso_hole_inf_yy_02 COMPLETED
+00:29:55 wrote denso_hole_inf_yy_02_abaqus.json (11 steps)
+00:30:03 denso_hole_inf_yy_03: 864 quads x 154 layers = 133056 C3D8I, 142445 nodes; gauge elements Ch1 12, Ch2 24, Ch3 12; lamination surface stress sxx -24.4 / syy +18.6 MPa
+00:30:05 Analysis initiated from SIMULIA established products
+00:30:05 Abaqus JOB denso_hole_inf_yy_03
+00:30:05 Abaqus 2024
+00:30:05 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+00:30:05 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+00:30:05 Successfully checked out QPL for 8 cpu(s)
+00:30:05 Abaqus License Manager checked out the following licenses:
+00:30:05 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+00:30:05 <9 out of 120 licenses remain available>.
+00:30:05 Begin Analysis Input File Processor
+00:30:05 Wed 04 Nov 2026 12:30:05 AM JST
+00:30:05 Run pre
+00:30:22 Wed 04 Nov 2026 12:30:22 AM JST
+00:30:22 End Analysis Input File Processor
+00:30:22 Begin Abaqus/Standard Analysis
+00:30:22 Wed 04 Nov 2026 12:30:22 AM JST
+00:30:22 Run standard
+00:37:48 Wed 04 Nov 2026 12:37:48 AM JST
+00:37:48 End Abaqus/Standard Analysis
+00:37:48 Begin SIM Wrap-up
+00:37:48 Wed 04 Nov 2026 12:37:48 AM JST
+00:37:48 Run SMASimUtility
+00:37:49 Wed 04 Nov 2026 12:37:49 AM JST
+00:37:49 End SIM Wrap-up
+00:37:49 Abaqus JOB denso_hole_inf_yy_03 COMPLETED
+00:37:50 wrote denso_hole_inf_yy_03_abaqus.json (11 steps)
+00:38:00 denso_hole_inf_yy_04: 864 quads x 154 layers = 133056 C3D8I, 142445 nodes; gauge elements Ch1 12, Ch2 24, Ch3 12; lamination surface stress sxx -24.4 / syy +18.6 MPa
+00:38:02 Analysis initiated from SIMULIA established products
+00:38:02 Abaqus JOB denso_hole_inf_yy_04
+00:38:02 Abaqus 2024
+00:38:02 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+00:38:02 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+00:38:02 Successfully checked out QPL for 8 cpu(s)
+00:38:02 Abaqus License Manager checked out the following licenses:
+00:38:02 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+00:38:02 <9 out of 120 licenses remain available>.
+00:38:02 Begin Analysis Input File Processor
+00:38:02 Wed 04 Nov 2026 12:38:02 AM JST
+00:38:02 Run pre
+00:38:20 Wed 04 Nov 2026 12:38:20 AM JST
+00:38:20 End Analysis Input File Processor
+00:38:20 Begin Abaqus/Standard Analysis
+00:38:20 Wed 04 Nov 2026 12:38:20 AM JST
+00:38:20 Run standard
+00:45:36 Wed 04 Nov 2026 12:45:36 AM JST
+00:45:36 End Abaqus/Standard Analysis
+00:45:36 Begin SIM Wrap-up
+00:45:36 Wed 04 Nov 2026 12:45:36 AM JST
+00:45:36 Run SMASimUtility
+00:45:36 Wed 04 Nov 2026 12:45:36 AM JST
+00:45:36 End SIM Wrap-up
+00:45:36 Abaqus JOB denso_hole_inf_yy_04 COMPLETED
+00:45:38 wrote denso_hole_inf_yy_04_abaqus.json (11 steps)
+00:45:49 denso_hole_inf_yy_05: 864 quads x 154 layers = 133056 C3D8I, 142445 nodes; gauge elements Ch1 12, Ch2 24, Ch3 12; lamination surface stress sxx -24.4 / syy +18.6 MPa
+00:45:51 Analysis initiated from SIMULIA established products
+00:45:51 Abaqus JOB denso_hole_inf_yy_05
+00:45:51 Abaqus 2024
+00:45:51 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+00:45:51 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+00:45:51 Successfully checked out QPL for 8 cpu(s)
+00:45:51 Abaqus License Manager checked out the following licenses:
+00:45:51 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+00:45:51 <9 out of 120 licenses remain available>.
+00:45:51 Begin Analysis Input File Processor
+00:45:51 Wed 04 Nov 2026 12:45:51 AM JST
+00:45:51 Run pre
+00:46:29 Wed 04 Nov 2026 12:46:29 AM JST
+00:46:29 End Analysis Input File Processor
+00:46:29 Begin Abaqus/Standard Analysis
+00:46:29 Wed 04 Nov 2026 12:46:29 AM JST
+00:46:29 Run standard
+00:53:26 Wed 04 Nov 2026 12:53:26 AM JST
+00:53:26 End Abaqus/Standard Analysis
+00:53:26 Begin SIM Wrap-up
+00:53:26 Wed 04 Nov 2026 12:53:26 AM JST
+00:53:26 Run SMASimUtility
+00:53:27 Wed 04 Nov 2026 12:53:27 AM JST
+00:53:27 End SIM Wrap-up
+00:53:27 Abaqus JOB denso_hole_inf_yy_05 COMPLETED
+00:53:29 wrote denso_hole_inf_yy_05_abaqus.json (11 steps)
+00:53:36 denso_hole_inf_yy_06: 864 quads x 154 layers = 133056 C3D8I, 142445 nodes; gauge elements Ch1 12, Ch2 24, Ch3 12; lamination surface stress sxx -24.4 / syy +18.6 MPa
+00:53:38 Analysis initiated from SIMULIA established products
+00:53:38 Abaqus JOB denso_hole_inf_yy_06
+00:53:38 Abaqus 2024
+00:53:38 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+00:53:38 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+00:53:38 Successfully checked out QPL for 8 cpu(s)
+00:53:38 Abaqus License Manager checked out the following licenses:
+00:53:38 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+00:53:38 <9 out of 120 licenses remain available>.
+00:53:38 Begin Analysis Input File Processor
+00:53:38 Wed 04 Nov 2026 12:53:38 AM JST
+00:53:38 Run pre
+00:53:57 Wed 04 Nov 2026 12:53:57 AM JST
+00:53:57 End Analysis Input File Processor
+00:53:57 Begin Abaqus/Standard Analysis
+00:53:57 Wed 04 Nov 2026 12:53:57 AM JST
+00:53:57 Run standard
+01:01:09 Wed 04 Nov 2026 01:01:09 AM JST
+01:01:09 End Abaqus/Standard Analysis
+01:01:10 Begin SIM Wrap-up
+01:01:10 Wed 04 Nov 2026 01:01:10 AM JST
+01:01:10 Run SMASimUtility
+01:01:10 Wed 04 Nov 2026 01:01:10 AM JST
+01:01:10 End SIM Wrap-up
+01:01:10 Abaqus JOB denso_hole_inf_yy_06 COMPLETED
+01:01:11 wrote denso_hole_inf_yy_06_abaqus.json (11 steps)
+01:01:20 denso_hole_inf_yy_07: 864 quads x 154 layers = 133056 C3D8I, 142445 nodes; gauge elements Ch1 12, Ch2 24, Ch3 12; lamination surface stress sxx -24.4 / syy +18.6 MPa
+01:01:22 Analysis initiated from SIMULIA established products
+01:01:22 Abaqus JOB denso_hole_inf_yy_07
+01:01:22 Abaqus 2024
+01:01:22 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+01:01:22 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+01:01:22 Successfully checked out QPL for 8 cpu(s)
+01:01:22 Abaqus License Manager checked out the following licenses:
+01:01:22 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+01:01:22 <9 out of 120 licenses remain available>.
+01:01:22 Begin Analysis Input File Processor
+01:01:22 Wed 04 Nov 2026 01:01:22 AM JST
+01:01:22 Run pre
+01:01:44 Wed 04 Nov 2026 01:01:44 AM JST
+01:01:44 End Analysis Input File Processor
+01:01:44 Begin Abaqus/Standard Analysis
+01:01:44 Wed 04 Nov 2026 01:01:44 AM JST
+01:01:44 Run standard
+01:09:15 Wed 04 Nov 2026 01:09:15 AM JST
+01:09:15 End Abaqus/Standard Analysis
+01:09:15 Begin SIM Wrap-up
+01:09:15 Wed 04 Nov 2026 01:09:15 AM JST
+01:09:15 Run SMASimUtility
+01:09:15 Wed 04 Nov 2026 01:09:15 AM JST
+01:09:15 End SIM Wrap-up
+01:09:15 Abaqus JOB denso_hole_inf_yy_07 COMPLETED
+01:09:17 wrote denso_hole_inf_yy_07_abaqus.json (11 steps)
+01:09:25 denso_hole_inf_yy_08: 864 quads x 154 layers = 133056 C3D8I, 142445 nodes; gauge elements Ch1 12, Ch2 24, Ch3 12; lamination surface stress sxx -24.4 / syy +18.6 MPa
+01:09:27 Analysis initiated from SIMULIA established products
+01:09:27 Abaqus JOB denso_hole_inf_yy_08
+01:09:27 Abaqus 2024
+01:09:27 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+01:09:27 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+01:09:27 Successfully checked out QPL for 8 cpu(s)
+01:09:27 Abaqus License Manager checked out the following licenses:
+01:09:27 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+01:09:27 <9 out of 120 licenses remain available>.
+01:09:27 Begin Analysis Input File Processor
+01:09:27 Wed 04 Nov 2026 01:09:27 AM JST
+01:09:27 Run pre
+01:09:58 Wed 04 Nov 2026 01:09:58 AM JST
+01:09:58 End Analysis Input File Processor
+01:09:58 Begin Abaqus/Standard Analysis
+01:09:58 Wed 04 Nov 2026 01:09:58 AM JST
+01:09:58 Run standard
+01:16:55 Wed 04 Nov 2026 01:16:55 AM JST
+01:16:55 End Abaqus/Standard Analysis
+01:16:55 Begin SIM Wrap-up
+01:16:55 Wed 04 Nov 2026 01:16:55 AM JST
+01:16:55 Run SMASimUtility
+01:16:55 Wed 04 Nov 2026 01:16:55 AM JST
+01:16:55 End SIM Wrap-up
+01:16:55 Abaqus JOB denso_hole_inf_yy_08 COMPLETED
+01:16:57 wrote denso_hole_inf_yy_08_abaqus.json (11 steps)
+01:17:04 denso_hole_inf_yy_09: 864 quads x 154 layers = 133056 C3D8I, 142445 nodes; gauge elements Ch1 12, Ch2 24, Ch3 12; lamination surface stress sxx -24.4 / syy +18.6 MPa
+01:17:05 Analysis initiated from SIMULIA established products
+01:17:05 Abaqus JOB denso_hole_inf_yy_09
+01:17:05 Abaqus 2024
+01:17:05 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+01:17:05 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+01:17:05 Successfully checked out QPL for 8 cpu(s)
+01:17:05 Abaqus License Manager checked out the following licenses:
+01:17:05 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+01:17:05 <9 out of 120 licenses remain available>.
+01:17:05 Begin Analysis Input File Processor
+01:17:05 Wed 04 Nov 2026 01:17:05 AM JST
+01:17:05 Run pre
+01:17:26 Wed 04 Nov 2026 01:17:26 AM JST
+01:17:26 End Analysis Input File Processor
+01:17:26 Begin Abaqus/Standard Analysis
+01:17:26 Wed 04 Nov 2026 01:17:26 AM JST
+01:17:26 Run standard
+01:24:35 Wed 04 Nov 2026 01:24:35 AM JST
+01:24:35 End Abaqus/Standard Analysis
+01:24:35 Begin SIM Wrap-up
+01:24:35 Wed 04 Nov 2026 01:24:35 AM JST
+01:24:35 Run SMASimUtility
+01:24:36 Wed 04 Nov 2026 01:24:36 AM JST
+01:24:36 End SIM Wrap-up
+01:24:36 Abaqus JOB denso_hole_inf_yy_09 COMPLETED
+01:24:37 wrote denso_hole_inf_yy_09_abaqus.json (11 steps)
+01:24:51 denso_hole_inf_yy_10: 864 quads x 154 layers = 133056 C3D8I, 142445 nodes; gauge elements Ch1 12, Ch2 24, Ch3 12; lamination surface stress sxx -24.4 / syy +18.6 MPa
+01:24:52 Analysis initiated from SIMULIA established products
+01:24:52 Abaqus JOB denso_hole_inf_yy_10
+01:24:52 Abaqus 2024
+01:24:53 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+01:24:53 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+01:24:53 Successfully checked out QPL for 8 cpu(s)
+01:24:53 Abaqus License Manager checked out the following licenses:
+01:24:53 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+01:24:53 <9 out of 120 licenses remain available>.
+01:24:53 Begin Analysis Input File Processor
+01:24:53 Wed 04 Nov 2026 01:24:53 AM JST
+01:24:53 Run pre
+01:25:09 Wed 04 Nov 2026 01:25:09 AM JST
+01:25:09 End Analysis Input File Processor
+01:25:09 Begin Abaqus/Standard Analysis
+01:25:09 Wed 04 Nov 2026 01:25:09 AM JST
+01:25:09 Run standard
+01:32:01 Wed 04 Nov 2026 01:32:01 AM JST
+01:32:01 End Abaqus/Standard Analysis
+01:32:01 Begin SIM Wrap-up
+01:32:01 Wed 04 Nov 2026 01:32:01 AM JST
+01:32:01 Run SMASimUtility
+01:32:01 Wed 04 Nov 2026 01:32:01 AM JST
+01:32:01 End SIM Wrap-up
+01:32:01 Abaqus JOB denso_hole_inf_yy_10 COMPLETED
+01:32:03 wrote denso_hole_inf_yy_10_abaqus.json (11 steps)
+01:32:26 denso_hole_inf_yy_11: 864 quads x 154 layers = 133056 C3D8I, 142445 nodes; gauge elements Ch1 12, Ch2 24, Ch3 12; lamination surface stress sxx -24.4 / syy +18.6 MPa
+01:32:28 Analysis initiated from SIMULIA established products
+01:32:28 Abaqus JOB denso_hole_inf_yy_11
+01:32:28 Abaqus 2024
+01:32:28 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+01:32:28 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+01:32:28 Successfully checked out QPL for 8 cpu(s)
+01:32:28 Abaqus License Manager checked out the following licenses:
+01:32:28 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+01:32:28 <9 out of 120 licenses remain available>.
+01:32:28 Begin Analysis Input File Processor
+01:32:28 Wed 04 Nov 2026 01:32:28 AM JST
+01:32:28 Run pre
+01:32:46 Wed 04 Nov 2026 01:32:46 AM JST
+01:32:46 End Analysis Input File Processor
+01:32:46 Begin Abaqus/Standard Analysis
+01:32:46 Wed 04 Nov 2026 01:32:46 AM JST
+01:32:46 Run standard
+01:40:30 Wed 04 Nov 2026 01:40:30 AM JST
+01:40:31 End Abaqus/Standard Analysis
+01:40:31 Begin SIM Wrap-up
+01:40:31 Wed 04 Nov 2026 01:40:31 AM JST
+01:40:31 Run SMASimUtility
+01:40:31 Wed 04 Nov 2026 01:40:31 AM JST
+01:40:31 End SIM Wrap-up
+01:40:31 Abaqus JOB denso_hole_inf_yy_11 COMPLETED
+01:40:32 wrote denso_hole_inf_yy_11_abaqus.json (11 steps)
+01:40:42 denso_hole_inf_yy_12: 864 quads x 154 layers = 133056 C3D8I, 142445 nodes; gauge elements Ch1 12, Ch2 24, Ch3 12; lamination surface stress sxx -24.4 / syy +18.6 MPa
+01:40:43 Analysis initiated from SIMULIA established products
+01:40:43 Abaqus JOB denso_hole_inf_yy_12
+01:40:43 Abaqus 2024
+01:40:43 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+01:40:43 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+01:40:43 Successfully checked out QPL for 8 cpu(s)
+01:40:43 Abaqus License Manager checked out the following licenses:
+01:40:43 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+01:40:43 <9 out of 120 licenses remain available>.
+01:40:43 Begin Analysis Input File Processor
+01:40:43 Wed 04 Nov 2026 01:40:43 AM JST
+01:40:43 Run pre
+01:41:00 Wed 04 Nov 2026 01:41:00 AM JST
+01:41:00 End Analysis Input File Processor
+01:41:00 Begin Abaqus/Standard Analysis
+01:41:00 Wed 04 Nov 2026 01:41:00 AM JST
+01:41:00 Run standard
+01:48:02 Wed 04 Nov 2026 01:48:02 AM JST
+01:48:02 End Abaqus/Standard Analysis
+01:48:02 Begin SIM Wrap-up
+01:48:02 Wed 04 Nov 2026 01:48:02 AM JST
+01:48:02 Run SMASimUtility
+01:48:02 Wed 04 Nov 2026 01:48:02 AM JST
+01:48:02 End SIM Wrap-up
+01:48:03 Abaqus JOB denso_hole_inf_yy_12 COMPLETED
+01:48:04 wrote denso_hole_inf_yy_12_abaqus.json (11 steps)
+01:48:14 denso_hole_inf_yy_13: 864 quads x 154 layers = 133056 C3D8I, 142445 nodes; gauge elements Ch1 12, Ch2 24, Ch3 12; lamination surface stress sxx -24.4 / syy +18.6 MPa
+01:48:16 Analysis initiated from SIMULIA established products
+01:48:16 Abaqus JOB denso_hole_inf_yy_13
+01:48:16 Abaqus 2024
+01:48:16 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+01:48:16 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+01:48:16 Successfully checked out QPL for 8 cpu(s)
+01:48:16 Abaqus License Manager checked out the following licenses:
+01:48:16 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+01:48:16 <9 out of 120 licenses remain available>.
+01:48:16 Begin Analysis Input File Processor
+01:48:16 Wed 04 Nov 2026 01:48:16 AM JST
+01:48:16 Run pre
+01:48:44 Wed 04 Nov 2026 01:48:44 AM JST
+01:48:44 End Analysis Input File Processor
+01:48:44 Begin Abaqus/Standard Analysis
+01:48:44 Wed 04 Nov 2026 01:48:44 AM JST
+01:48:44 Run standard
+01:56:03 Wed 04 Nov 2026 01:56:03 AM JST
+01:56:03 End Abaqus/Standard Analysis
+01:56:04 Begin SIM Wrap-up
+01:56:04 Wed 04 Nov 2026 01:56:04 AM JST
+01:56:04 Run SMASimUtility
+01:56:04 Wed 04 Nov 2026 01:56:04 AM JST
+01:56:04 End SIM Wrap-up
+01:56:04 Abaqus JOB denso_hole_inf_yy_13 COMPLETED
+01:56:05 wrote denso_hole_inf_yy_13_abaqus.json (11 steps)
+01:56:12 denso_hole_inf_yy_14: 864 quads x 154 layers = 133056 C3D8I, 142445 nodes; gauge elements Ch1 12, Ch2 24, Ch3 12; lamination surface stress sxx -24.4 / syy +18.6 MPa
+01:56:14 Analysis initiated from SIMULIA established products
+01:56:14 Abaqus JOB denso_hole_inf_yy_14
+01:56:14 Abaqus 2024
+01:56:14 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+01:56:14 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+01:56:14 Successfully checked out QPL for 8 cpu(s)
+01:56:14 Abaqus License Manager checked out the following licenses:
+01:56:14 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+01:56:14 <9 out of 120 licenses remain available>.
+01:56:14 Begin Analysis Input File Processor
+01:56:14 Wed 04 Nov 2026 01:56:14 AM JST
+01:56:14 Run pre
+01:56:38 Wed 04 Nov 2026 01:56:38 AM JST
+01:56:38 End Analysis Input File Processor
+01:56:38 Begin Abaqus/Standard Analysis
+01:56:38 Wed 04 Nov 2026 01:56:38 AM JST
+01:56:38 Run standard
+02:03:40 Wed 04 Nov 2026 02:03:40 AM JST
+02:03:40 End Abaqus/Standard Analysis
+02:03:40 Begin SIM Wrap-up
+02:03:40 Wed 04 Nov 2026 02:03:40 AM JST
+02:03:40 Run SMASimUtility
+02:03:40 Wed 04 Nov 2026 02:03:40 AM JST
+02:03:40 End SIM Wrap-up
+02:03:40 Abaqus JOB denso_hole_inf_yy_14 COMPLETED
+02:03:42 wrote denso_hole_inf_yy_14_abaqus.json (11 steps)
+02:03:50 denso_hole_inf_yy_15: 864 quads x 154 layers = 133056 C3D8I, 142445 nodes; gauge elements Ch1 12, Ch2 24, Ch3 12; lamination surface stress sxx -24.4 / syy +18.6 MPa
+02:03:52 Analysis initiated from SIMULIA established products
+02:03:52 Abaqus JOB denso_hole_inf_yy_15
+02:03:52 Abaqus 2024
+02:03:52 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+02:03:52 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+02:03:52 Successfully checked out QPL for 8 cpu(s)
+02:03:52 Abaqus License Manager checked out the following licenses:
+02:03:52 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+02:03:52 <9 out of 120 licenses remain available>.
+02:03:52 Begin Analysis Input File Processor
+02:03:52 Wed 04 Nov 2026 02:03:52 AM JST
+02:03:52 Run pre
+02:04:09 Wed 04 Nov 2026 02:04:09 AM JST
+02:04:09 End Analysis Input File Processor
+02:04:09 Begin Abaqus/Standard Analysis
+02:04:09 Wed 04 Nov 2026 02:04:09 AM JST
+02:04:09 Run standard
+02:11:30 Wed 04 Nov 2026 02:11:30 AM JST
+02:11:30 End Abaqus/Standard Analysis
+02:11:31 Begin SIM Wrap-up
+02:11:31 Wed 04 Nov 2026 02:11:31 AM JST
+02:11:31 Run SMASimUtility
+02:11:31 Wed 04 Nov 2026 02:11:31 AM JST
+02:11:31 End SIM Wrap-up
+02:11:31 Abaqus JOB denso_hole_inf_yy_15 COMPLETED
+02:11:33 wrote denso_hole_inf_yy_15_abaqus.json (11 steps)
+02:11:40 [I1] xx: sum of 16 bands vs all-depth run, max rel. difference 2.9e+04
+02:11:40 [I1] yy: sum of 16 bands vs all-depth run, max rel. difference 4.7e+04
+02:11:40 [I2] GCH1: operator [-46, -122, -206, -259, -259, -230, -194, -163, -139, -122]
+02:11:40       full run [-46, -121, -206, -260, -261, -231, -195, -164, -140, -123]
+02:11:40 [I2] GCH2: operator [-3, -8, -13, -19, -22, -21, -22, -23, -24, -25]
+02:11:40       full run [-3, -8, -14, -19, -22, -21, -22, -23, -24, -25]
+02:11:40 [I2] GCH3: operator [56, 148, 248, 298, 295, 268, 235, 205, 181, 163]
+02:11:40       full run [56, 147, 247, 299, 297, 270, 237, 207, 183, 165]
+02:11:40 [I2] max rel. difference, band-averaged paper eigenstrain vs full production run: 8.3e-03
+02:11:40 wrote /home/nishioka/git/wccm_hole/abaqus/denso_plate/jobs/influence_operator.json
+exit=0 end Wed Nov  4 02:11:40 AM JST 2026

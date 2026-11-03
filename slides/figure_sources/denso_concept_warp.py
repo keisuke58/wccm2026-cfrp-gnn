@@ -52,14 +52,14 @@ b.text(3.0, -3.35, "縮み方の違う層を貼った板 → 反る", ha="center
 b.text(3.0, -3.9, "（計算：100 mm あたり約 2.9 mm、バイメタルと同じ）", ha="center", fontsize=8, color="0.35")
 # (c) T0
 c = fig.add_axes([0.70, 0.22, 0.28, 0.62])
-T = np.linspace(320, 20, 300); T0 = 127.0
+T = np.linspace(320, 20, 300); T0 = 142.0
 sig = np.where(T > T0, 0.0, (T0 - T))
 c.plot(T, sig, color=ACC, lw=2.2)
 c.axvspan(T0, 320, color="0.93", zorder=0)
 c.axvline(T0, color="k", lw=0.8, ls="--")
 c.text(225, 70, "柔らかい：\n力が逃げる", ha="center", fontsize=8.5)
 c.text(100, 100, "固い：\n力が残る", ha="center", fontsize=8.5)
-c.text(T0 + 4, 112, r"$T_0$ ≈ 127 °C", fontsize=8.5)
+c.text(T0 + 4, 112, r"$T_0$ ≈ 142 °C", fontsize=8.5)
 c.set_xlim(320, 20); c.set_ylim(0, 125)
 c.set_xlabel("温度 [°C]（冷えていく →）", fontsize=9); c.set_ylabel("残る応力（模式）", fontsize=9)
 c.set_yticks([])
