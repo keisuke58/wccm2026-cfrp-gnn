@@ -87,7 +87,9 @@ const img = (s, p, x, y, w, aspect) => s.addImage({ path: p, x, y, w, h: w / asp
 
 let s = pres.addSlide({ masterName: "CONTENT" });
 s.addText("短繊維強化樹脂の射出成形品：残留ひずみ・反り予測の流れ", { placeholder: "title", fontSize: 24 });
-img(s, F("slides/figures_paper/overview_flow.png"), 0.3, 1.07, 12.73, 2.1667);
+img(s, F("slides/figures_paper/overview_flow.png"), 0.55, 1.05, 12.0, 2.1667);
+s.addText([tx("次：", { bold: true }), tx("デンソー様の実データ（流動解析・実部品の計測）で、入口の繊維の向きと補正を確かめる")],
+  { x: 0.7, y: 6.6, w: 11.9, h: 0.3, fontSize: 12.5, color: "1F3A5F", isTextBox: true, margin: 0 });
 
 // ----------------------------------------------- write, theme, Mincho patch ----
 function loadJSZip() {
