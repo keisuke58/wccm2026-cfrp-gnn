@@ -24,6 +24,12 @@ almost fully while the part is above Tg, so the mould history is forgotten and t
 in the (symmetric) air cooling below Tg; the sag then comes from the up/down asymmetry of the read
 orientation profile. Rough consistency (not a validation): surface sxx -9.1 MPa vs the elastic
 180 -> 20 C value -24.4 MPa scaled by (90 - 25)/(180 - 20) = 0.41, i.e. about -10 MPa.
+VE sweep (printed; relaxation times x 1e-3..1e3, WLF reference 70..110 C, GINF 1e-3..1e-1): surface sxx
+-6.7 .. -12.4 MPa, sag of the 150/150 mould -2.849 .. -2.860 mm, effect of the 140/160 mould asymmetry
+<= 0.001 mm. Both mould walls are above Tg, so within the WLF form the conclusion holds over these
+ranges; it would change for a mould wall below Tg or a non-WLF (e.g. crystalline-phase) relaxation.
+The sag comes from the up/down asymmetry of the orientation profile read from the paper's figure;
+whether that asymmetry is real or a reading artefact is not known.
 
 Run:  python3 abaqus/denso_plate/process_pps.py   (writes abaqus/denso_plate/process_results/pps_summary.json)
 """
@@ -127,8 +133,38 @@ def main():
               f"end {d['alpha_end'][0]:.3f}..{d['alpha_end'][1]:.3f}; [check] sag total - thermal - cryst = {sup:.1e} mm")
         d["superposition_sag_mm"] = sup
         res["cases"][case] = d
+    res["ve_sweep"] = ve_sweep(orient, CP, sag)
     json.dump(res, open(os.path.join(OUT, "pps_summary.json"), "w"), indent=1)
     print(f"wrote {OUT}/pps_summary.json")
+
+
+def ve_sweep(orient, CP, sag):
+    """Sensitivity to the ILLUSTRATIVE viscoelastic constants, over general ranges (not PPS data):
+    relaxation times x 1e-3 .. 1e3, WLF reference Tg +- 20 K (WLF_TREF 70..110 C), equilibrium fraction
+    GINF 1e-3 .. 1e-1. Read: surface stress and sag of the symmetric 150/150 mould, and how much of the
+    mould asymmetry (140/160 minus 150/150) survives in the sag."""
+    base = dict(pr.VE)
+    def run(ve, Tb, Tt):
+        pr.VE = ve
+        P, _ = pr.layer_props(orient, c=CP, part="total")
+        t, Tn = pr.heat_1d(Tb, Tt)
+        r = pr.plate_history(P, t, Tn)
+        return float(r["sig_layer"][-1, 0] / 1e6), sag(r["kappa"][1])
+    rows = []
+    variants = [("base", {})]
+    variants += [(f"tau x {k:g}", dict(TAU=tuple(t * k for t in base["TAU"]))) for k in (1e-3, 1e-1, 1e1, 1e3)]
+    variants += [(f"Tref {tr:.0f} C", dict(WLF_TREF=tr)) for tr in (70.0, 110.0)]
+    for gi in (1e-3, 1e-1):
+        g = tuple(x / sum(base["G"]) * (1 - gi) for x in base["G"])
+        variants.append((f"GINF {gi:g}", dict(GINF=gi, G=g)))
+    for name, ch in variants:
+        ve = dict(base, **ch)
+        s0, k0 = run(ve, 150.0, 150.0); s1, k1 = run(ve, 140.0, 160.0)
+        rows.append(dict(variant=name, sxx_surface_MPa=s0, sag_y_sym=k0, sag_y_asym=k1, asym_effect=k1 - k0))
+        print(f"[VE sweep] {name:12s}: surface sxx {s0:+6.1f} MPa | sag_y 150/150 {k0:+.3f} mm, "
+              f"140/160 {k1:+.3f} mm, mould-asymmetry effect {k1 - k0:+.3f} mm")
+    pr.VE = base
+    return rows
 
 
 if __name__ == "__main__":
