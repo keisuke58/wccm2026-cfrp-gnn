@@ -70,3 +70,18 @@
 - https://www.researchgate.net/publication/261567088_Residual_stresses_in_injection_molded_products
 - https://link.springer.com/article/10.1023/A:1009814126576
 - https://springerlink.bibliotecabuap.elogim.com/content/pdf/10.1007/s00289-022-04276-1.pdf
+
+## 公開の実測データの調査（2026-11-04）
+
+結論：**短繊維強化の射出成形品について、反り・残留ひずみの実測値を公開したデータセットは見つからなかった**（Zenodo・Mendeley Data・figshare を検索）。見つかったものは次のとおり。
+
+| データ | 中身 | 使い道 |
+|---|---|---|
+| Greif & Meyer, Zenodo 17831586 | 反り（Moldflow 解析、保圧なし）、196 形状 | 使用中（fifa §19）。実測ではない |
+| IVW, Zenodo 15852957／14945626（CC BY 4.0、論文 doi:10.1515/mim-2025-0004） | 射出成形の短ガラス繊維試料の X 線 CT 画像（30 GB）。配向テンソルは含まれない | 配向の実測の候補。画像から配向を求める処理が要る。形状・材料は未確認 |
+| Fraunhofer ITWM, Zenodo 10469922 | 穴あき平板 200 枚の配向（解析） | 実測ではない |
+| Zenodo 20309380 | 非強化 PP の成形条件と重量・消費電力（実測） | 繊維なし・反りなし |
+| Polymers 18(11), 1373（GF/PP ファンカバー） | 補足資料に 86 条件の反り（三次元測定機）と残留応力 | 本文・補足は未確認。点データの有無を確認すること |
+| Autodesk Moldflow Insight 2024 3D Warp 検証報告 | 成形収縮の実測（5000 材料以上）で材料定数を校正する STAMP 法。実測データは製品内で非公開 | **関連研究**：実測の収縮で熱膨張係数を校正する考え方は、本研究の共通の倍率に近い。緒言で触れる |
+
+注：Polymers の補足資料と IVW の CT の中身は、まだ一次資料で確認していない。
