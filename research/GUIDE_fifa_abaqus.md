@@ -456,3 +456,30 @@ OpenFOAM の一部ではない。**元の GitHub リポジトリ、ライセン�
 **Claude Code に渡す指示文**：
 
 > `research/GUIDE_fifa_abaqus.md` §17 に従い、openInjMoldSim の導入を試してください。段階 1 の結果（導入できるか、できないならその理由）をまず報告してください。定数を合わせにいかないこと。
+
+## 18. 追加の作業（2026-11-04）：3 次元部品の公開データの中身の確認（RESCUE の 3 次元版の準備）
+
+**目的**：本研究の補正（RESCUE）を 3 次元の部品で試すため、Greif & Meyer の公開データ（Moldflow の計算結果）の中身を確かめる。計画は `research/PLAN_rescue_3d.md`。**この段階では計算はしない。**
+
+**データ**：Greif & Meyer, "Injection Molding Simulations with Artificially Enhanced Warpage", Zenodo 17831586、CC BY 4.0、196 形状、`data.zip` 2.03 GB。
+PP/GF30（Celanese Factor PP GF 30）、Moldflow 2023、保圧なし。各節点に反りの変位と繊維配向テンソル、各要素に金型内の残留応力と弾性定数がある。
+
+```bash
+mkdir -p ~/data/greif2025_warp && cd ~/data/greif2025_warp
+curl -L -o data.zip "https://zenodo.org/api/records/17831586/files/data.zip/content"
+unzip -l data.zip | head -30; unzip -q data.zip
+python3 -m pip install --user meshio        # VTU の読み込み
+```
+
+**確かめて報告すること**（5 形状程度で十分）：
+1. ファイルの構成（VTU、LOG、YML の数と名前の付け方）。
+2. 1 つの VTU について：要素の種類（四面体など）と数、節点の数、座標の単位（mm か m か）、形状の大きさ。
+3. 節点と要素のフィールドの名前の一覧。特に、反り（`Deflection,_all_effects`）、繊維配向テンソル（`Fiber_orientation_tensor_on_nodes_(3D)`）、弾性定数（`Tensile_modulus_...`、`Poisson's_ratio_...`、`Shear_modulus_...`）、金型内の残留応力（`In-cavity_residual_stress_...`）の成分の並びと単位。
+4. 反りの大きさ（最大値）の分布を、196 形状について一覧にする（形状の大きさで割った値も）。
+5. 板厚方向の要素の数（薄い形状で 1〜2 要素しかないか）。
+
+**守ること**：データを書き換えないこと。結果は `abaqus/denso_plate/abaqus_results/greif3d/` に、報告（Markdown）と小さな一覧（CSV）だけを入れ、ブランチを切ってコミット・プッシュする。VTU や zip はリポジトリに入れない。
+
+**Claude Code に渡す指示文**：
+
+> `research/GUIDE_fifa_abaqus.md` §18 に従い、Zenodo 17831586 のデータ（2 GB）を落として、中身（ファイル構成、フィールド名と単位、要素の種類、反りの大きさの分布、板厚方向の要素数）を報告してください。計算はまだしないこと。
