@@ -23,7 +23,7 @@ const THEME = {
     accent6: "DDDDDD", hlink: "1F3A5F", folHlink: "555555" },
 };
 const INK = "111111", MUTED = "555555", RULE = "BFBFBF";
-const FOOT = "繊維強化樹脂の残留ひずみ予測（株式会社デンソー様との共同研究）／3 次元部品での検討・途中経過（46 形状）・データは公開の解析結果";
+const FOOT = "繊維強化樹脂の残留ひずみ予測（株式会社デンソー様との共同研究）／3 次元部品での検討・途中経過（142 形状）・データは公開の解析結果";
 
 const pres = new pptxgen();
 pres.layout = "LAYOUT_WIDE";

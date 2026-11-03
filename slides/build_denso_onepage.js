@@ -20,7 +20,7 @@ const THEME = {
     accent6: "DDDDDD", hlink: "1F3A5F", folHlink: "555555" },
 };
 const INK = "111111", MUTED = "555555", RULE = "BFBFBF";
-const FOOT = "平板は既報の実測（試験片 1 枚、図の読み取り値）。3 次元部品は公開の Moldflow 解析データ（46 形状、途中経過）で実測ではない。材料定数は一般値。";
+const FOOT = "平板は既報の実測（試験片 1 枚、図の読み取り値）。3 次元部品は公開の Moldflow 解析データ（142 形状、途中経過）で実測ではない。材料定数は一般値。";
 
 const pres = new pptxgen();
 pres.layout = "LAYOUT_WIDE";
