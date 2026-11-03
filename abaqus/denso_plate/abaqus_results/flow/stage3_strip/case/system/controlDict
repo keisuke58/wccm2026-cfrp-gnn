@@ -1,0 +1,107 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  7
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version         2;
+    format          ascii;
+    class           dictionary;
+    location        "system";
+    object          controlDict;
+}
+
+application     openInjMoldSimF;
+
+startFrom       latestTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         1.2;
+
+deltaT          1e-06;
+
+writeControl    adjustableRunTime;
+
+writeInterval   0.1;
+
+purgeWrite      0;
+
+writeFormat     ascii;
+
+writePrecision  8;
+
+writeCompression off;
+
+timeFormat      general;
+
+timePrecision   10;
+
+runTimeModifiable yes;
+
+adjustTimeStep  yes;
+
+maxCo           0.2;
+
+maxDeltaT       0.01;
+
+maxAlphaCo      0.05;
+
+maxSolidCo      1;
+
+pAuxRlx         0.1;
+
+functions
+{
+    injectionPressure
+    {
+        type            surfaceFieldValue;
+        functionObjectLibs ( "libfieldFunctionObjects.so" );
+        writeInterval   0.005;
+        writeFields     no;
+        log             true;
+        valueOutput     true;
+        regionType      patch;
+        surfaceFormat   off;
+        verbose         true;
+        name            inlet;
+        operation       areaAverage;
+        fields          ( p );
+    }
+    residuals
+    {
+        type            residuals;
+        functionObjectLibs ( "libutilityFunctionObjects.so" );
+        enabled         true;
+        writeControl    timeStep;
+        writeInterval   1;
+        fields          ( p_rgh T elSigDev );
+    }
+    minMaxp
+    {
+        type            fieldMinMax;
+        functionObjectLibs ( "libfieldFunctionObjects.so" );
+        fields          ( p p_rgh pAux T Tc shrRate visc U );
+        write           yes;
+        log             yes;
+        mode            magnitude;
+        location        yes;
+        writeControl    timeStep;
+        writeInterval   10;
+    }
+    Co1
+    {
+        type            CourantNo;
+        functionObjectLibs ( "libfieldFunctionObjects.so" );
+        executeControl  writeTime;
+        writeControl    writeTime;
+    }
+}
+
+
+// ************************************************************************* //
