@@ -20,6 +20,9 @@ Inputs and their status:
   Tg = 85 C (Nohara et al., Polimeros 16(2) 2006, PPS; NOT measured for 1130A6);
   C1 = 17.44, C2 = 51.6 K (the "universal" WLF constants, Williams-Landel-Ferry 1955; NOT PPS data);
   cooling rates 1, 5, 20 K/min (ASSUMED; the paper does not state the rate after the anneal).
+Partial relaxation (printed): with GENERAL values (Tg 85/90 C, tau_g 10..1000 s, WLF constants +-20 %,
+the three rates), the fraction phi of the stiffness that must relax for the calibrated factor,
+from f = (1 - phi) + phi f_M. phi is compared with nothing measured: PPS/GF data would be needed.
 Honest scope: no PPS relaxation data exist in the repository, so this does NOT predict the factor;
 it only says what relaxation time would be needed for relaxation alone to explain it. A single
 Maxwell element, constant E and alpha, crystallinity fixed (the anneal is assumed complete). The
@@ -46,17 +49,18 @@ RATES = (1.0, 5.0, 20.0)                     # K/min, assumed
 A_CAL = 0.67                                 # calibrated factor (Abaqus full mesh)
 
 
-def factor(tau_g, rate_K_min, n=4000):
+def factor(tau_g, rate_K_min, n=4000, tg=None, c1=None, c2=None):
     """f = sigma(20 C) / sigma_el for eq. (1); exact exponential update per temperature increment."""
+    tg = TG if tg is None else tg; c1 = C1 if c1 is None else c1; c2 = C2 if c2 is None else c2
     rate = rate_K_min / 60.0
     T = np.linspace(TA, TE, n + 1)
     s = 0.0                                  # sigma / (E alpha) in K
     for k in range(n):
         dT = T[k] - T[k + 1]; dt = dT / rate; Tm = 0.5 * (T[k] + T[k + 1])
-        if Tm < TG:
+        if Tm < tg:
             s += dT                          # glassy: elastic
             continue
-        tau = tau_g * 10 ** (-C1 * (Tm - TG) / (C2 + Tm - TG))
+        tau = tau_g * 10 ** (-c1 * (Tm - tg) / (c2 + Tm - tg))
         x = dt / tau
         s = s * np.exp(-x) + dT * (1 - np.exp(-x)) / x if x > 1e-12 else s + dT
     return s / (TA - TE)
@@ -77,6 +81,22 @@ def main():
         print(f"rate {r:4.0f} K/min: f = {A_CAL} at tau_g ~ {taus[i]:.1e} s "
               f"(T0_eff = {20 + f[i] * 160:.0f} C); f range {f.min():.3f} .. {f.max():.3f}")
         res.setdefault("tau_g_for_a_cal", {})[str(r)] = float(taus[i])
+    # partial relaxation: only a fraction phi of the stress-carrying stiffness relaxes (amorphous phase);
+    # crystals and fibres stay elastic. Parallel branches under the same strain: f = (1 - phi) + phi f_M,
+    # so the calibrated factor needs phi = (1 - a) / (1 - f_M). Swept over GENERAL (not PPS) values.
+    sweep = []
+    for tg in (85.0, 90.0):                          # Nohara et al. 2006 / Tsuda et al. 2026
+        for tau_g in (1e1, 1e2, 1e3):                # "tau ~ 100 s at Tg", one decade either side
+            for k1 in (0.8, 1.0, 1.2):               # +-20 % on the universal WLF constants
+                for r in RATES:
+                    fm = factor(tau_g, r, tg=tg, c1=C1 * k1, c2=C2 * k1)
+                    sweep.append(dict(Tg=tg, tau_g=tau_g, wlf_scale=k1, rate=r, f_M=fm, phi=(1 - A_CAL) / (1 - fm)))
+    ph = np.array([d["phi"] for d in sweep]); fm = np.array([d["f_M"] for d in sweep])
+    base = [d for d in sweep if d["Tg"] == 90.0 and d["tau_g"] == 1e2 and d["wlf_scale"] == 1.0 and d["rate"] == 5.0][0]
+    print(f"[partial relaxation] f_M over the general-value sweep ({len(sweep)} cases): {fm.min():.3f} .. {fm.max():.3f}")
+    print(f"     relaxing fraction needed for a = {A_CAL}: phi = {ph.min():.2f} .. {ph.max():.2f} "
+          f"(Tg 90 C, tau_g 100 s, universal WLF, 5 K/min: phi = {base['phi']:.2f})")
+    res["partial_relaxation"] = dict(sweep=sweep, phi_range=[float(ph.min()), float(ph.max())], base=base)
     json.dump(res, open(os.path.join(OUT, "anneal_relaxation.json"), "w"), indent=1)
     _plot(taus, res)
     print(f"wrote {OUT}/anneal_relaxation.json and .png")
