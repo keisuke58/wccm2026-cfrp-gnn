@@ -6,6 +6,7 @@
 #   CPUS=8 bash abaqus/denso_plate/run_hole_drilling.sh basis    # full deck, one run per eigenstrain component xx, yy, zz
 #   CPUS=8 bash abaqus/denso_plate/run_hole_drilling.sh gauge    # full deck, gauge grids moved -0.2 / +0.2 mm radially
 #   CPUS=8 bash abaqus/denso_plate/run_hole_drilling.sh overlap  # full deck with the ZONE set; grid shifts by overlap areas
+#   CPUS=8 bash abaqus/denso_plate/run_hole_drilling.sh influence  # unit eigenstrain per 0.2 mm depth band, xx and yy (34 jobs)
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 ABQ="${ABAQUS:-abaqus}"; CPUS="${CPUS:-4}"; PY="${PY:-python3}"
@@ -16,6 +17,20 @@ if [ "${1:-}" = "basis" ]; then
       && "$ABQ" python "$HERE/extract_hole_drilling.py" "denso_hole_$C" \
       && "$PY" "$HERE/compare_hole_drilling.py" "denso_hole_$C" --no-fig)
   done
+  exit 0
+elif [ "${1:-}" = "influence" ]; then
+  for C in xx yy; do
+    for B in -1 $(seq 0 15); do
+      T="inf_${C}_$( [ "$B" = "-1" ] && echo all || printf %02d "$B" )"
+      [ -f "$HERE/jobs/denso_hole_${T}_released.json" ] && { echo "skip $T (done)"; continue; }
+      "$PY" "$HERE/gen_hole_drilling.py" --eig "$C" --band "$B" --tag "$T"
+      (cd "$HERE/jobs" && "$ABQ" job="denso_hole_$T" cpus="$CPUS" interactive double ask_delete=OFF \
+        && "$ABQ" python "$HERE/extract_hole_drilling.py" "denso_hole_$T" \
+        && "$PY" "$HERE/compare_hole_drilling.py" "denso_hole_$T" --no-fig > /dev/null \
+        && rm -f "denso_hole_$T.odb")
+    done
+  done
+  "$PY" "$HERE/influence_check.py" "$HERE/jobs"
   exit 0
 elif [ "${1:-}" = "overlap" ]; then
   "$PY" "$HERE/gen_hole_drilling.py" --tag zone
