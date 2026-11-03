@@ -24,6 +24,11 @@
 | 6. 考察 | ゲージ位置の感度、冷却中の応力緩和、共通の倍率の仮定の妥当性 | ±0.4 mm で 1.1〜2.6 倍、τ_g ≈ 10⁹〜10¹⁰ s（全緩和）、緩和する割合 φ ≈ 0.56〜0.64（一般値で部分緩和） | `research/GUIDE_fifa_abaqus.md` 表8、`validation/denso_anneal_relaxation.py` |
 | 7. 結論 | 示せたことと限界 | — | — |
 
+## 本研究の範囲外として記す結果（段階②の準備、2026-11-03）
+
+- PPS の結晶化速度式（文献の定数、当てはめに使わないデータで確認）と、成形プロセス解析の PPS 版（`abaqus/denso_plate/process_pps.py`）。アニールなしの成形品の表面応力は −7〜−12 MPa（粘弾性定数を一般値の範囲で振った結果）、反りは配向分布の上下の非対称で決まる。
+- 本論文（段階①）の主張には含めない。粘弾性の実データを得た後の続報とする。
+
 ## 図表
 
 図は `python3 slides/figure_sources/denso_paper_fig1.py` と `python3 slides/figure_sources/denso_paper_figs.py` で作る（`slides/figures_paper/paper_fig*.png`、300 dpi）。
