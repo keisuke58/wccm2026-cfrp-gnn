@@ -32,6 +32,20 @@
 | Jansen（TU Delft） | エキシマレーザーによる層除去で残留応力分布を検証 |
 | Residual Stresses in Short-Fibre Reinforced Injection-Moulded Thermoplastic Parts（Springer, 10.1023/A:1009814126576） | 層ごとの直交異方性・粘弾性モデル、層除去法で検証 |
 
+## 3b. 少数の計測で残留応力の解析を補正する研究（2026-11-04 追加調査、本文未確認）
+
+| 文献 | 内容（抄録による） | 本研究との関係 |
+|---|---|---|
+| "Modeling, Calibration and Validation of Residual Stresses in Injection Molded Thermoplastics"（ResearchGate 333739856） | 射出成形品の残留応力モデルの校正と検証。材料データの不足とモデルの近似が精度を左右すると指摘 | 材料モデルの校正。点計測で予測を補正する枠組みではない（抄録の範囲）。**要本文確認** |
+| arXiv 2506.08205（摩擦攪拌加工） | 加工シミュレーションの情報を使い、少数の計測から残留応力分布を ML で推定 | 「物理の情報 ＋ 少数の計測」の考え方は近い。対象は金属の摩擦攪拌加工 |
+| 増分穿孔法の校正（PMC8618666） | 複合材料の内部の残留応力を穿孔法で推定する校正は、改善の努力が足りないと指摘 | 本研究の穿孔法の FE 再現の動機付け |
+| **空白**：射出成形品で、無応力温度などの物理量を、少数の点計測から逆に推定して予測を補正した研究は見つからなかった | | 本研究の位置 |
+
+## 3c. 3 次元部品の公開データ
+
+- Meyer & Greif, "Injection Molding Simulations", Zenodo（records/11370149、v5 は 18598121）、**CC BY 4.0**、約 33 GB。ABC データセットの形状 629 個の Moldflow 計算結果（VTU：反り、繊維配向テンソル、ログ）。Greif & Meyer (2026) の学習データ。
+- 本研究を 3 次元部品へ広げる検証に使える（`research/PLAN_rescue_3d.md`）。
+
 ## 4. 本研究の新しさ（案）
 
 1. **物理モデルの事前分布を、少数の点計測で補正した**。成形条件だけを入力とする先行の転移学習（Huang et al. 2021、Zhou et al. 2023、いずれも非強化樹脂）と違い、繊維配向・結晶化・固有ひずみの物理を持ち、補正量が物理量（実効無応力温度）として読める。補正の効果は当てはめに使わない点で評価した。
@@ -43,6 +57,9 @@
 ## 出典リンク
 
 - https://www.sciencedirect.com/science/article/pii/S1359835X26001004
+- https://www.researchgate.net/publication/333739856_Modeling_Calibration_and_Validation_of_Residual_Stresses_in_Injection_Molded_Thermoplastics
+- https://arxiv.org/pdf/2506.08205
+- https://zenodo.org/records/11370149
 - https://doi.org/10.3390/app132312868
 - https://link.springer.com/article/10.1007/s00170-026-18480-0
 - https://link.springer.com/chapter/10.1007/978-3-032-19524-1_42
