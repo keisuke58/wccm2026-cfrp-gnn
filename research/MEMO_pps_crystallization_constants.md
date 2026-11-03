@@ -64,20 +64,26 @@ A. J. Lovinger, D. D. Davis, F. J. Padden Jr., *Polymer* 26(11), 1595–1604, 19
 
 **表2（中分子量 PPS、*M*<sub>w</sub> ≈ 51 000、*T*<sub>m</sub><sup>0</sup> = 315 °C、*T*<sub>g</sub> = 92 °C）**
 
-| 輸送項の選び方 | *U*\* | 領域 | *K*<sub>g</sub> [10<sup>5</sup> K<sup>2</sup>] | *G*<sub>0</sub> [cm/s] | 相関係数 |
+| 輸送項の選び方 | *U*\* | 領域 | 表の「*K*<sub>g</sub>」[10<sup>5</sup> K<sup>2</sup>] | *G*<sub>0</sub> [cm/s] | 相関係数 |
 |---|---|---|---|---|---|
 | *T*<sub>∞</sub> = *T*<sub>g</sub> − 30 K（**著者の推奨**） | 1400 cal/mol（5.86 kJ/mol） | II | 8.84 | 5.43 | 0.9994 |
 | 同上 | 同上 | III | 18.35 | 3.86×10<sup>4</sup> | 0.9968 |
 | *T*<sub>∞</sub> = *T*<sub>g</sub> − 51.6 K（WLF 型） | 2650 cal/mol | II | 9.39 | 1.61×10<sup>2</sup> | 0.9996 |
 | 同上 | 同上 | III | 28.42 | 4.67×10<sup>9</sup> | 0.9976 |
 
+- **注意（2026-11-03 に確認）**：表の「*K*<sub>g</sub>」の行は「傾き」の行の 2.303 倍で、log<sub>10</sub> 形の式の値とみられる。上の自然指数の式に表の「*K*<sub>g</sub>」を入れると、領域 II と III の式が転移温度 208 °C で約 10<sup>5</sup> 倍食い違う。「傾き」の行（II 3.841×10<sup>5</sup>、III 7.970×10<sup>5</sup> K<sup>2</sup>）を入れると 4 % 以内で一致し、本文の *G*<sub>0</sub> の比 7.1×10<sup>3</sup> とも合う。**計算には「傾き」の行を使う**（`validation/pps_crystallization_kinetics.py`）。これは本研究の読み方で、論文に明記はない。
 - 領域 II → III の転移は 208 °C（推奨の組）。III/II の傾き比は 2.07（理論値 2）。
 - 著者は WLF の値（*U*\* = 4120 cal/mol、*T*<sub>∞</sub> = *T*<sub>g</sub> − 51.6 K）では解析が成り立たないとし、*U*\* = 1400 cal/mol、*T*<sub>∞</sub> = *T*<sub>g</sub> − 30 K を採用した。
 - 完全結晶の融解熱は約 80 J/g（19 cal/g、Brady の値からの外挿）。
 - 低分子量 PPS（*M*<sub>w</sub> ≈ 15 000）は、どの定数でも一つの式に乗らなかった。
 
+**検証（`validation/pps_crystallization_kinetics.py`）**：倍率 1 個を Nohara らの半結晶化時間 1 点（265 °C で 4.1 min）で合わせ、当てはめに使わないデータと比べた。
+- 領域 II と III の式の、208 °C での一致：比 0.96。
+- 速度が最大になる温度：176 °C（López et al. 1989 の約 180 °C）。
+- Nohara らの残り 2 点の半結晶化時間：268 °C で 8.8 min（実測 12.6 min）、270 °C で 15.7 min（実測 26.8 min）。融点近くでは銘柄の違い（*T*<sub>m</sub><sup>0</sup>）に敏感で、1.4〜1.7 倍のずれは想定の範囲。
+
 **本研究での使い方（案）**
-- Nakamura 式の *K*(*T*) の温度依存に、この *U*\*、*T*<sub>∞</sub>、*K*<sub>g</sub> を使う。成形の冷却では 208 °C より低温（領域 III）が主なので、*K*<sub>g</sub> = 1.835×10<sup>6</sup> K<sup>2</sup> を基準とする。
+- Nakamura 式の *K*(*T*) の温度依存に、この *U*\*、*T*<sub>∞</sub>、*K*<sub>g</sub> を使う。208 °C を境に領域 II（3.841×10<sup>5</sup> K<sup>2</sup>）と III（7.970×10<sup>5</sup> K<sup>2</sup>）を切り替える。
 - ただし、これは**球晶の成長速度**の定数であり、全体の結晶化速度（核形成を含む）の温度依存とは同じではない。また、純 PPS（Phillips の試料）の値で、1130A6（GF 30 %）の値ではない。前指数因子は DSC で合わせる必要がある。
 
 ## 2b. *K*<sub>g</sub> が載っている可能性の高い文献（2026-11-03 調査、本文未入手）

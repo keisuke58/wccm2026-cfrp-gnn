@@ -1,0 +1,60 @@
+{
+ "constants": {
+  "Ustar_cal_mol": 1400.0,
+  "Tg": 92.0,
+  "Tinf": 62.0,
+  "Tm0": 315.0,
+  "Kg": {
+   "II": 384100.0,
+   "III": 797000.0
+  },
+  "G0_cm_s": {
+   "II": 5.43,
+   "III": 38600.0
+  },
+  "T_transition": 208.0,
+  "n": 3.0,
+  "scale_c_per_cm": 65448.53800588547,
+  "fit": [
+   265.0,
+   4.1
+  ]
+ },
+ "C1_T_max": 175.82196439287856,
+ "C3_ratio": 0.9580847011280215,
+ "C2": [
+  {
+   "T": 268.0,
+   "t_half_measured_min": 12.6,
+   "t_half_model_min": 8.84706481274477
+  },
+  {
+   "T": 270.0,
+   "t_half_measured_min": 26.8,
+   "t_half_model_min": 15.728783491835186
+  }
+ ],
+ "cooling": [
+  {
+   "rate_K_min": 1.0,
+   "alpha_end": 0.999999999999,
+   "T_peak": 264.0000000000032
+  },
+  {
+   "rate_K_min": 10.0,
+   "alpha_end": 0.999999999999,
+   "T_peak": 253.60000000000377
+  },
+  {
+   "rate_K_min": 100.0,
+   "alpha_end": 0.999999999999,
+   "T_peak": 237.80000000000467
+  }
+ ],
+ "nakamura_K_for_umat": {
+  "note": "K_N(T) = K0 exp(-Ustar_R/(T-Tinf)) exp(-Kg/(T dT f)) per regime",
+  "Ustar_R_K": 704.5088566827696,
+  "K0_II": 355385.5613719581,
+  "K0_III": 2526313567.0271792
+ }
+}
