@@ -185,6 +185,17 @@ def write_deck(path, P, Q, hole, mat, nl, tag, eig="all"):
         xq, yq = P[Q[qs], 0], P[Q[qs], 1]
         areas = 0.5 * np.sum(xq * np.roll(yq, -1, axis=1) - np.roll(xq, -1, axis=1) * yq, axis=1)
         gauge_info[name] = dict(direction=lab, elements=labels, quad_areas=[float(v) for v in areas])
+    # zone: drilled-face elements near each grid (grid enlarged by ZONE_PAD), written out with the gauges so
+    # that gauge_overlap.py can average over ANY shifted grid by exact element/grid overlap areas
+    ZONE_PAD = 1.0e-3
+    def near(c, ang):
+        u = c[:, 0] * math.cos(ang) + c[:, 1] * math.sin(ang)
+        v = -c[:, 0] * math.sin(ang) + c[:, 1] * math.cos(ang)
+        return (u >= GAUGE_R[0] - ZONE_PAD) & (u <= GAUGE_R[1] + ZONE_PAD) & (np.abs(v) <= GAUGE_W / 2 + ZONE_PAD)
+    zq = np.where(near(cen, 0.0) | near(cen, math.pi / 2) | near(cen, math.pi / 4))[0]
+    gauge_info["ZONE"] = dict(direction="overlap zone", elements=[int(el(q, nl - 1)) for q in zq],
+                              polygons=[[[float(x), float(y)] for x, y in P[Q[q]]] for q in zq],
+                              pad_mm=ZONE_PAD * 1e3)
     nset("XSYM", [nd(p, k) for k in range(nl + 1) for p in np.where(P[:, 0] < 1e-12)[0]])
     nset("YSYM", [nd(p, k) for k in range(nl + 1) for p in np.where(P[:, 1] < 1e-12)[0]])
     nset("NFIX", [nd(int(np.argmin(np.hypot(P[:, 0], P[:, 1]))), 0)])

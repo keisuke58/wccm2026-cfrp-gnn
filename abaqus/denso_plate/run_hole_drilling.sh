@@ -5,6 +5,7 @@
 #   bash abaqus/denso_plate/run_hole_drilling.sh coarse          # 77-layer check deck (~34k C3D8I)
 #   CPUS=8 bash abaqus/denso_plate/run_hole_drilling.sh basis    # full deck, one run per eigenstrain component xx, yy, zz
 #   CPUS=8 bash abaqus/denso_plate/run_hole_drilling.sh gauge    # full deck, gauge grids moved -0.2 / +0.2 mm radially
+#   CPUS=8 bash abaqus/denso_plate/run_hole_drilling.sh overlap  # full deck with the ZONE set; grid shifts by overlap areas
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 ABQ="${ABAQUS:-abaqus}"; CPUS="${CPUS:-4}"; PY="${PY:-python3}"
@@ -15,6 +16,14 @@ if [ "${1:-}" = "basis" ]; then
       && "$ABQ" python "$HERE/extract_hole_drilling.py" "denso_hole_$C" \
       && "$PY" "$HERE/compare_hole_drilling.py" "denso_hole_$C" --no-fig)
   done
+  exit 0
+elif [ "${1:-}" = "overlap" ]; then
+  "$PY" "$HERE/gen_hole_drilling.py" --tag zone
+  cd "$HERE/jobs"
+  "$ABQ" job=denso_hole_zone cpus="$CPUS" interactive double ask_delete=OFF
+  "$ABQ" python "$HERE/extract_hole_drilling.py" denso_hole_zone
+  "$PY" "$HERE/compare_hole_drilling.py" denso_hole_zone --no-fig
+  "$PY" "$HERE/gauge_overlap.py" denso_hole_zone
   exit 0
 elif [ "${1:-}" = "gauge" ]; then
   for D in m02:-0.2 p02:0.2; do

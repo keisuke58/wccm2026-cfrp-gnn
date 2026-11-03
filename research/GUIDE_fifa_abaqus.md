@@ -359,3 +359,28 @@ CPUS=8 bash abaqus/denso_plate/run_hole_drilling.sh gauge     # denso_hole_gm02�
 
 > `research/GUIDE_fifa_abaqus.md` §14 に従い、`run_hole_drilling.sh gauge` を回してください。
 > 2 本のピークと実測比を表にして報告してください。定数・メッシュは変えないこと。
+
+## 15. 追加の計算（2026-11-03）：重なり面積によるゲージ位置の感度
+
+**目的**：§14 では、ゲージに含める要素を中心位置で選んだため、外側へのずれを解像できなかった（表7）。
+本節では、ゲージ付近の要素（ゲージを 1.0 mm 広げた範囲、本番メッシュで 258 要素）のひずみも出力し、
+要素とゲージの**重なり面積で重み付けして平均**する（`abaqus/denso_plate/gauge_overlap.py`）。
+1 本の計算で、−0.4〜+0.4 mm の任意のずれを評価できる。
+
+```bash
+git pull
+CPUS=8 bash abaqus/denso_plate/run_hole_drilling.sh overlap   # denso_hole_zone（本番メッシュ、1 ジョブ）
+```
+
+**判定**：
+- 11 ステップ終わること。
+- `compare_hole_drilling.py` の出力が表6（本番）と同じであること（メッシュと材料は同じで、出力する要素が増えただけ）。
+- `gauge_overlap.py` の面積の確認欄が、すべてのずれで 1.1, 1.1, 2.2 mm² であること（REJECTED が出ないこと）。
+
+**報告**：`gauge_overlap.py` の出力表、所要時間。`denso_hole_zone_{abaqus,released,overlap}.json` を
+`abaqus/denso_plate/abaqus_results/` に入れ、ブランチを切ってコミット・プッシュする（`.odb` と `.inp` は入れない）。
+
+**Claude Code に渡す指示文**：
+
+> `research/GUIDE_fifa_abaqus.md` §15 に従い、`run_hole_drilling.sh overlap` を回してください。
+> `gauge_overlap.py` の出力表をそのまま報告してください。定数・メッシュは変えないこと。
