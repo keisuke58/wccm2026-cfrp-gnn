@@ -4,6 +4,7 @@
 #   CPUS=8 bash abaqus/denso_plate/run_hole_drilling.sh          # full deck (154 layers, ~133k C3D8I)
 #   bash abaqus/denso_plate/run_hole_drilling.sh coarse          # 77-layer check deck (~34k C3D8I)
 #   CPUS=8 bash abaqus/denso_plate/run_hole_drilling.sh basis    # full deck, one run per eigenstrain component xx, yy, zz
+#   CPUS=8 bash abaqus/denso_plate/run_hole_drilling.sh gauge    # full deck, gauge grids moved -0.2 / +0.2 mm radially
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 ABQ="${ABAQUS:-abaqus}"; CPUS="${CPUS:-4}"; PY="${PY:-python3}"
@@ -13,6 +14,15 @@ if [ "${1:-}" = "basis" ]; then
     (cd "$HERE/jobs" && "$ABQ" job="denso_hole_$C" cpus="$CPUS" interactive double ask_delete=OFF \
       && "$ABQ" python "$HERE/extract_hole_drilling.py" "denso_hole_$C" \
       && "$PY" "$HERE/compare_hole_drilling.py" "denso_hole_$C" --no-fig)
+  done
+  exit 0
+elif [ "${1:-}" = "gauge" ]; then
+  for D in m02:-0.2 p02:0.2; do
+    T="${D%%:*}"; V="${D#*:}"
+    "$PY" "$HERE/gen_hole_drilling.py" --gauge-shift="$V" --tag "g$T"
+    (cd "$HERE/jobs" && "$ABQ" job="denso_hole_g$T" cpus="$CPUS" interactive double ask_delete=OFF \
+      && "$ABQ" python "$HERE/extract_hole_drilling.py" "denso_hole_g$T" \
+      && "$PY" "$HERE/compare_hole_drilling.py" "denso_hole_g$T")
   done
   exit 0
 elif [ "${1:-}" = "coarse" ]; then

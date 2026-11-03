@@ -17,7 +17,9 @@ the prior (Li et al., ICML 2018; here the closed-form Gaussian posterior):
 
 Held-out checks on the single plate (nothing used in a fit is used in its score):
   H1 fit on depths 0.2-1.0 mm (all gauges), predict 1.2-2.0 mm;
-  H2 fit on Ch.3 (MD) only, predict Ch.1 (TD) and Ch.2.
+  H2 fit on Ch.3 (MD) only, predict Ch.1 (TD) and Ch.2;
+  H3 as H2, but with ONE common factor a (a_xx = a_yy = a_zz = a), the assumption that the error
+     is a single shift of the stress-free temperature T0 (one parameter, least squares, no prior).
 Reported: RMSE of the physics as is vs after the correction, and the plain least-squares fit (no
 prior) for comparison. With a common factor a, the eigenstrain integral from T0 = 180 C scales as
 a; the equivalent stress-free temperature T0_eff = 20 + a (180 - 20) is given only as a reading of
@@ -105,6 +107,14 @@ def main():
         print(f"[{name}] a(L2-SP) = {np.round(a_p,3)} +- {np.round(sd,3)}; a(LSQ) = {np.round(a_l,3)}")
         print(f"     test RMSE [micro-strain]: physics as is {r['rmse_test_physics']:.1f} | L2-SP {r['rmse_test_l2sp']:.1f} | "
               f"LSQ {r['rmse_test_lsq']:.1f} | paper FE {r['rmse_test_paper_fe']:.1f}  ({r['n_fit']} fit / {r['n_test']} test points)")
+    tr = gauge == 2; te = ~tr
+    c3 = float(p0[tr] @ y[tr] / (p0[tr] @ p0[tr]))
+    res["checks"]["H3 common factor fit on Ch.3 (MD), predict Ch.1/Ch.2"] = dict(
+        common_factor=c3, T0_eff=20 + c3 * 160, rmse_test_physics=rmse(p0[te], y[te]),
+        rmse_test_common=rmse(c3 * p0[te], y[te]), rmse_test_paper_fe=rmse(yfe[te], y[te]))
+    print(f"[H3 common factor, fit Ch.3 (MD), predict Ch.1/Ch.2] a = {c3:.3f} (T0_eff {20 + c3*160:.0f} C)")
+    print(f"     test RMSE [micro-strain]: physics as is {rmse(p0[te], y[te]):.1f} | common factor {rmse(c3*p0[te], y[te]):.1f} | "
+          f"paper FE {rmse(yfe[te], y[te]):.1f}")
     a_all, sd_all = fit(H, y, True)
     common = float(np.linalg.lstsq(p0[:, None], y, rcond=None)[0][0])
     res.update(a_all=a_all.tolist(), a_all_sd=sd_all.tolist(), common_factor=common, T0_eff=20 + common * 160,
@@ -147,7 +157,7 @@ def _plot(H, y, yfe, p0, depth, dd, gauge, res):
     ax[1].set_xticks(range(4)); ax[1].set_xticklabels(names, fontsize=8)
     ax[1].set_ylabel(r"held-out RMSE [$\mu\varepsilon$]"); ax[1].legend(frameon=False, fontsize=7)
     ax[1].set_title("(b) error on measurements not used in the fit", fontsize=8)
-    fig.suptitle("Calibrating the physics prediction on Tsuda et al. (2026) Fig. 12 (read by eye); one plate, coarse mesh", fontsize=8)
+    fig.suptitle("Calibrating the physics prediction on Tsuda et al. (2026) Fig. 12 (read by eye); one plate", fontsize=8)
     fig.tight_layout(); fig.savefig(os.path.join(OUT, "transfer_hole_drilling.png"), dpi=200); plt.close(fig)
 
 

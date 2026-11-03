@@ -1,0 +1,146 @@
+host frontale01 start Tue Nov  3 06:54:35 AM JST 2026
+06:54:38 symmetric : wrote denso_heat_symmetric.inp, denso_proc_symmetric.inp | Python prediction: e_res,xx -1.047..+3.775 x1e-3, sag_y -0.000 mm (thermal -0.000, cryst -0.000), max |sigma_zz| 8.6e-10 Pa
+06:54:38 asymmetric: wrote denso_heat_asymmetric.inp, denso_proc_asymmetric.inp | Python prediction: e_res,xx -1.051..+3.777 x1e-3, sag_y -1.652 mm (thermal -0.193, cryst -1.459), max |sigma_zz| 8.6e-10 Pa
+06:54:38 === symmetric: heat transfer ===
+06:54:41 Analysis initiated from SIMULIA established products
+06:54:41 Abaqus JOB denso_heat_symmetric
+06:54:41 Abaqus 2024
+06:54:41 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+06:54:41 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+06:54:41 Successfully checked out QPL for 8 cpu(s)
+06:54:41 Abaqus License Manager checked out the following licenses:
+06:54:41 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+06:54:41 <9 out of 120 licenses remain available>.
+06:54:41 Begin Analysis Input File Processor
+06:54:41 Tue 03 Nov 2026 06:54:41 AM JST
+06:54:41 Run pre
+06:54:45 Tue 03 Nov 2026 06:54:45 AM JST
+06:54:45 End Analysis Input File Processor
+06:54:45 Begin Abaqus/Standard Analysis
+06:54:45 Tue 03 Nov 2026 06:54:45 AM JST
+06:54:45 Run standard
+06:59:57 Tue 03 Nov 2026 06:59:57 AM JST
+06:59:57 End Abaqus/Standard Analysis
+06:59:57 Begin SIM Wrap-up
+06:59:57 Tue 03 Nov 2026 06:59:57 AM JST
+06:59:57 Run SMASimUtility
+06:59:57 Tue 03 Nov 2026 06:59:57 AM JST
+06:59:57 End SIM Wrap-up
+06:59:57 Abaqus JOB denso_heat_symmetric COMPLETED
+06:59:57 === symmetric: stress (UMAT) ===
+06:59:58 Analysis initiated from SIMULIA established products
+06:59:58 Abaqus JOB denso_proc_symmetric
+06:59:58 Abaqus 2024
+06:59:58 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+06:59:58 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+06:59:58 Successfully checked out QPL for 8 cpu(s)
+06:59:58 Abaqus License Manager checked out the following licenses:
+06:59:58 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+06:59:58 <9 out of 120 licenses remain available>.
+06:59:58 Begin Compiling Abaqus/Standard User Subroutines
+06:59:58 Tue 03 Nov 2026 06:59:58 AM JST
+06:59:58 Intel(R) Fortran Intel(R) 64 Compiler Classic for applications running on Intel(R) 64, Version 2021.9.0 Build 20230302_000000
+06:59:58 Copyright (C) 1985-2023 Intel Corporation.  All rights reserved.
+06:59:58 
+06:59:59  Intel(R) Fortran 2021.9.0-1497
+06:59:59 denso_cryst_umat.f(37): remark #15009: umat_ has been targeted for automatic cpu dispatch
+06:59:59 denso_cryst_umat.f(213): remark #15009: kinv6_ has been targeted for automatic cpu dispatch
+06:59:59 End Compiling Abaqus/Standard User Subroutines
+06:59:59 Begin Linking Abaqus/Standard User Subroutines
+06:59:59 Intel(R) Fortran Intel(R) 64 Compiler Classic for applications running on Intel(R) 64, Version 2021.9.0 Build 20230302_000000
+06:59:59 Copyright (C) 1985-2023 Intel Corporation.  All rights reserved.
+06:59:59 
+07:00:08 GNU ld version 2.35.2-37.el9
+07:00:08 End Linking Abaqus/Standard User Subroutines
+07:00:08 Tue 03 Nov 2026 07:00:08 AM JST
+07:00:08 Begin Analysis Input File Processor
+07:00:08 Tue 03 Nov 2026 07:00:08 AM JST
+07:00:08 Run pre
+07:00:25 Tue 03 Nov 2026 07:00:25 AM JST
+07:00:25 End Analysis Input File Processor
+07:00:25 Begin Abaqus/Standard Analysis
+07:00:25 Tue 03 Nov 2026 07:00:25 AM JST
+07:00:25 Run standard
+07:57:34 Tue 03 Nov 2026 07:57:34 AM JST
+07:57:34 End Abaqus/Standard Analysis
+07:57:34 Begin SIM Wrap-up
+07:57:34 Tue 03 Nov 2026 07:57:34 AM JST
+07:57:34 Run SMASimUtility
+07:57:34 Tue 03 Nov 2026 07:57:34 AM JST
+07:57:34 End SIM Wrap-up
+07:57:34 Abaqus JOB denso_proc_symmetric COMPLETED
+07:58:04 wrote denso_proc_symmetric_abaqus.json (1162 heat frames)
+07:58:04 === asymmetric: heat transfer ===
+07:58:06 Analysis initiated from SIMULIA established products
+07:58:06 Abaqus JOB denso_heat_asymmetric
+07:58:06 Abaqus 2024
+07:58:06 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+07:58:06 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+07:58:06 Successfully checked out QPL for 8 cpu(s)
+07:58:06 Abaqus License Manager checked out the following licenses:
+07:58:06 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+07:58:06 <9 out of 120 licenses remain available>.
+07:58:06 Begin Analysis Input File Processor
+07:58:06 Tue 03 Nov 2026 07:58:06 AM JST
+07:58:06 Run pre
+07:58:09 Tue 03 Nov 2026 07:58:09 AM JST
+07:58:09 End Analysis Input File Processor
+07:58:09 Begin Abaqus/Standard Analysis
+07:58:09 Tue 03 Nov 2026 07:58:09 AM JST
+07:58:09 Run standard
+08:11:46 Tue 03 Nov 2026 08:11:46 AM JST
+08:11:46 End Abaqus/Standard Analysis
+08:11:46 Begin SIM Wrap-up
+08:11:46 Tue 03 Nov 2026 08:11:46 AM JST
+08:11:46 Run SMASimUtility
+08:11:47 Tue 03 Nov 2026 08:11:47 AM JST
+08:11:47 End SIM Wrap-up
+08:11:47 Abaqus JOB denso_heat_asymmetric COMPLETED
+08:11:47 === asymmetric: stress (UMAT) ===
+08:11:48 Analysis initiated from SIMULIA established products
+08:11:48 Abaqus JOB denso_proc_asymmetric
+08:11:48 Abaqus 2024
+08:11:48 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+08:11:48 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+08:11:48 Successfully checked out QPL for 8 cpu(s)
+08:11:48 Abaqus License Manager checked out the following licenses:
+08:11:48 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+08:11:48 <9 out of 120 licenses remain available>.
+08:11:48 Begin Compiling Abaqus/Standard User Subroutines
+08:11:48 Tue 03 Nov 2026 08:11:48 AM JST
+08:11:48 Intel(R) Fortran Intel(R) 64 Compiler Classic for applications running on Intel(R) 64, Version 2021.9.0 Build 20230302_000000
+08:11:48 Copyright (C) 1985-2023 Intel Corporation.  All rights reserved.
+08:11:48 
+08:11:49  Intel(R) Fortran 2021.9.0-1497
+08:11:49 denso_cryst_umat.f(37): remark #15009: umat_ has been targeted for automatic cpu dispatch
+08:11:49 denso_cryst_umat.f(213): remark #15009: kinv6_ has been targeted for automatic cpu dispatch
+08:11:50 End Compiling Abaqus/Standard User Subroutines
+08:11:50 Begin Linking Abaqus/Standard User Subroutines
+08:11:50 Intel(R) Fortran Intel(R) 64 Compiler Classic for applications running on Intel(R) 64, Version 2021.9.0 Build 20230302_000000
+08:11:50 Copyright (C) 1985-2023 Intel Corporation.  All rights reserved.
+08:11:50 
+08:11:59 GNU ld version 2.35.2-37.el9
+08:11:59 End Linking Abaqus/Standard User Subroutines
+08:11:59 Tue 03 Nov 2026 08:11:59 AM JST
+08:11:59 Begin Analysis Input File Processor
+08:11:59 Tue 03 Nov 2026 08:11:59 AM JST
+08:11:59 Run pre
+08:12:22 Tue 03 Nov 2026 08:12:22 AM JST
+08:12:22 End Analysis Input File Processor
+08:12:22 Begin Abaqus/Standard Analysis
+08:12:22 Tue 03 Nov 2026 08:12:22 AM JST
+08:12:22 Run standard
+09:14:26 Tue 03 Nov 2026 09:14:26 AM JST
+09:14:26 End Abaqus/Standard Analysis
+09:14:26 Begin SIM Wrap-up
+09:14:26 Tue 03 Nov 2026 09:14:26 AM JST
+09:14:26 Run SMASimUtility
+09:14:26 Tue 03 Nov 2026 09:14:26 AM JST
+09:14:26 End SIM Wrap-up
+09:14:27 Abaqus JOB denso_proc_asymmetric COMPLETED
+09:14:55 wrote denso_proc_asymmetric_abaqus.json (1162 heat frames)
+09:15:00 symmetric  (H) max |dT| (t >= 1 s) lumped 0.000 K, consistent 0.226 K; whole history 0.00 / 3.66 K | PASS
+09:15:00            (M) stress err 1.6e-03, alpha err 2.0e-08, sag x -0.000 (py +0.000) mm, y -0.000 (py -0.000) mm, max|S33| 0.00 MPa | PASS
+09:15:00 asymmetric (H) max |dT| (t >= 1 s) lumped 0.000 K, consistent 0.227 K; whole history 0.00 / 3.94 K | PASS
+09:15:00            (M) stress err 1.6e-03, alpha err 2.7e-08, sag x +0.015 (py +0.015) mm, y -1.653 (py -1.652) mm, max|S33| 0.00 MPa | PASS
+exit=0 end Tue Nov  3 09:15:00 AM JST 2026

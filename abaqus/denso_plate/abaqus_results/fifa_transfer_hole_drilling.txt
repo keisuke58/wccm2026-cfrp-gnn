@@ -1,0 +1,10 @@
+[check] superposition h_xx + h_yy + h_zz vs full run: 2.5e-07 (rel)
+        column norms [micro-strain]: xx 873, yy 863, zz 0
+physics as is: RMSE vs measured 57.9 micro-strain (paper FE 39.3)
+[H1 fit depth<=1.0, predict 1.2-2.0] a(L2-SP) = [0.61  0.609 1.   ] +- [0.018 0.018 0.5  ]; a(LSQ) = [6.04000000e-01 6.55000000e-01 2.12424554e+09]
+     test RMSE [micro-strain]: physics as is 43.5 | L2-SP 21.8 | LSQ 22.5 | paper FE 24.8  (15 fit / 15 test points)
+[H2 fit Ch.3 (MD), predict Ch.1/Ch.2] a(L2-SP) = [ 0.593 -0.259  1.   ] +- [0.028 0.283 0.5  ]; a(LSQ) = [ 6.62000000e-01 -1.47700000e+00 -6.48754204e+10]
+     test RMSE [micro-strain]: physics as is 46.2 | L2-SP 173.4 | LSQ 160.0 | paper FE 28.6  (10 fit / 20 test points)
+[all data] a(L2-SP) = [0.667 0.667 1.   ] +- [0.013 0.013 0.5  ]; RMSE 57.9 -> 14.7
+           single common factor 0.667 -> equivalent T0_eff = 127 C (paper's estimate ~120 C)
+wrote /home/nishioka/git/wccm_hole/results/denso_tsuda2026/transfer_hole_drilling.json and .png

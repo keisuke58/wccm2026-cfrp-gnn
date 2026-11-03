@@ -29,6 +29,7 @@ edge to the specimen edge; size set by --na/--nb/--nc/--layers (defaults match t
 Usage:
   python3 abaqus/denso_plate/gen_hole_drilling.py                 # full deck (154 layers)
   python3 abaqus/denso_plate/gen_hole_drilling.py --layers 77 --na 8 --nc 20 --tag coarse
+  python3 abaqus/denso_plate/gen_hole_drilling.py --gauge-shift 0.2 --tag gp02   # grids moved out by 0.2 mm
 Outputs in abaqus/denso_plate/jobs/: denso_hole<tag>.inp and denso_hole<tag>_meta.json.
 NOT run in Abaqus yet.
 """
@@ -229,8 +230,12 @@ def main():
     ap.add_argument("--tag", default="")
     ap.add_argument("--eig", default="all", choices=["all", "xx", "yy", "zz"],
                     help="keep only this eigenstrain component (linear superposition basis)")
+    ap.add_argument("--gauge-shift", type=float, default=0.0,
+                    help="move all gauge grids radially by this many mm (sensitivity to the gauge position)")
     ap.add_argument("--out", default=os.path.join(HERE, "jobs"))
     a = ap.parse_args()
+    global GAUGE_R
+    GAUGE_R = (GAUGE_R[0] + a.gauge_shift * 1e-3, GAUGE_R[1] + a.gauge_shift * 1e-3)
     assert abs(tc.H3 / a.layers * round(DRILL_STEP / (tc.H3 / a.layers)) - DRILL_STEP) < 1e-6 * DRILL_STEP or True
     os.makedirs(a.out, exist_ok=True)
     P, Q, hole, area = mesh2d(a.na, a.nb, a.nc, a.q)

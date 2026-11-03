@@ -9,7 +9,7 @@ flow (slides/build_denso_purpose_slide.js). Every curve comes from a file in the
       synthetic preliminary study (results/denso_ml_copaam_gpu/results.json);
   p4  released strain against drilling depth: measured and the paper's FE (Tsuda et al. (2026)
       Fig. 12, READ BY EYE) and this work with the paper's inputs
-      (results/denso_tsuda2026/hole_drilling_coarse_calculix.json, CalculiX, coarse mesh).
+      (abaqus/denso_plate/abaqus_results/denso_hole_released.json, Abaqus 2024, production mesh, fifa).
 Run:  python3 slides/figure_sources/denso_purpose_panels.py   (writes slides/figures_paper/purpose_p*.png)
 """
 import json
@@ -101,7 +101,7 @@ def main():
     save(fig, "purpose_p3_transfer.png")
     # p4 released strain: measured vs the paper's FE vs this work (same inputs)
     f12 = paper["fig12_released_strain"]; dd = f12["depth_mm"]
-    mine = json.load(open(os.path.join(ROOT, "results", "denso_tsuda2026", "hole_drilling_coarse_calculix.json")))
+    mine = json.load(open(os.path.join(ROOT, "abaqus", "denso_plate", "abaqus_results", "denso_hole_released.json")))
     fig, ax = plt.subplots(figsize=(W, H))
     ax.axhline(0, color="0.85", lw=0.6)
     for ch, g, c in (("3", "GCH3", "k"), ("1", "GCH1", GREY)):
