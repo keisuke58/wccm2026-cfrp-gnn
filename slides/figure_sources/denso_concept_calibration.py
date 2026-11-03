@@ -60,7 +60,7 @@ b.text(2.02, -215, "TD：使っていないのに合う", ha="right", fontsize=8
 b.set_xlabel("穴の深さ [mm]"); b.set_ylabel("解放ひずみ [µε]")
 b.set_xlim(0, 2.05); b.set_ylim(-330, 500); b.legend(frameon=False, fontsize=8, loc="upper left")
 b.set_title(f"(b) 倍率 1 つ（{c:.2f}）で直す：TD・45° の誤差 46 → 11 µε", fontsize=10.5, fontweight="bold")
-fig.text(0.5, 0.01, "計算は Abaqus（既報と同じ入力）。実測は既報 図12 の読み取り値、試験片 1 枚。倍率 0.67 は無応力温度 約 127 °C に相当。",
+fig.text(0.5, 0.01, "計算は Abaqus（既報と同じ入力）。実測は既報 図12 の読み取り値、試験片 1 枚。倍率 0.67 は無応力温度 約 142 °C に相当（温度依存の熱膨張係数で同定。一定とした換算では 127 °C）。",
          ha="center", fontsize=7.5, color="0.4")
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
 fig.savefig(OUT, dpi=250); print("wrote", OUT, "factor", round(c, 3))

@@ -7,7 +7,7 @@
 
 | 順 | 変数 | 根拠 | 出典 |
 |---|---|---|---|
-| 1 | 無応力温度 *T*<sub>0</sub>（冷却中の応力緩和を含む実効値） | 共通の倍率 1 個（0.67、*T*<sub>0,eff</sub> ≈ 127 °C）で、当てはめに使わない点の誤差が半分以下 | `validation/denso_tsuda2026_transfer.py` |
+| 1 | 無応力温度 *T*<sub>0</sub>（冷却中の応力緩和を含む実効値） | 共通の倍率 1 個（0.67。熱膨張係数一定の換算で *T*<sub>0,eff</sub> ≈ 127 °C）で、当てはめに使わない点の誤差が半分以下。温度依存の熱膨張係数で解放ひずみから同定すると *T*<sub>0,eff</sub> ≈ 142〜143 °C（`validation/denso_rescue_released.py`） | `validation/denso_tsuda2026_transfer.py` |
 | 2 | 繊維配向（MD／TD） | 熱膨張（20〜180 °C の割線値）が繊維方向 17、直角方向 74 ppm/°C と大きく異なり、応力分布の形を決める | `abaqus/denso_plate/process_pps.py` |
 | 3 | ゲージの位置（計測側） | 径方向 0.1 mm のずれで実測比が 0.11〜0.14 変わる | GUIDE_fifa_abaqus.md 表8 |
 | 4 | 繊維体積分率・アスペクト比 | 応力分布への効き方が *T*<sub>0</sub> と似ており、5 点の計測からは区別できない | `validation/denso_pretrain_surrogate.py` |

@@ -33,7 +33,7 @@
 | 2. 解析方法 | 2.1 配向平均（Mori–Tanaka、Levin）、2.2 積層理論、2.3 穿孔法の模擬（要素除去、成分別の重ね合わせ）、2.4 補正（L2-SP） | 式(1)〜(7) | `validation/denso_tsuda2026_compare.py`、`abaqus/denso_plate/gen_hole_drilling.py`、`validation/denso_tsuda2026_transfer.py` |
 | 3. 解析の検証 | 積層理論と固体要素の一致、重ね合わせの誤差、メッシュ依存性 | 10⁻³ 未満、2.5×10⁻⁷、約 3 % | `research/GUIDE_fifa_abaqus.md` 表2・6 |
 | 4. 既報の再現 | 4.1 表面の残留応力、4.2 穿孔法の解放ひずみ | σxx −24.4 対 −24.3 MPa、実測の 1.5〜1.7 倍 | `results/denso_tsuda2026/`、`abaqus/denso_plate/abaqus_results/` |
-| 5. 少数の実測点による補正 | 深さ方向・方向間の予測、共通の倍率と *T*₀ | 44 → 22 µε、46 → 11 µε、*T*₀,eff ≈ 127 °C | `results/denso_tsuda2026/transfer_hole_drilling.json` |
+| 5. 少数の実測点による補正 | 深さ方向・方向間の予測、共通の倍率と *T*₀ | 44 → 22 µε、46 → 11 µε、*T*₀,eff ≈ 127 °C（熱膨張係数一定の換算） | `results/denso_tsuda2026/transfer_hole_drilling.json` |
 | 5.x 解放ひずみからの条件同定（2026-11-04） | 影響関数（fifa §16）と 600 枚の代理モデルをつなぎ、実測の解放ひずみから成形条件を同定 | 代理モデル誤差 1.0 µε、合成データで *T*₀,eff 誤差 7.6 °C、既報の実測から *T*₀,eff ≈ 142〜143 °C（RMSE 58 → 14〜16 µε）。127 °C は熱膨張係数一定とした読み替え。*s* と配向の倍率 *m* は範囲の端に張り付き、決まらない | `validation/denso_rescue_released.py`、`results/denso_rescue/results.json` |
 | 6. 考察 | ゲージ位置の感度、冷却中の応力緩和、共通の倍率の仮定の妥当性 | ±0.4 mm で 1.1〜2.6 倍、τ_g ≈ 10⁹〜10¹⁰ s（全緩和）、緩和する割合 φ ≈ 0.56〜0.64（一般値で部分緩和） | `research/GUIDE_fifa_abaqus.md` 表8、`validation/denso_anneal_relaxation.py` |
 | 7. 結論 | 示せたことと限界 | — | — |
@@ -52,6 +52,7 @@
 - 図3（`paper_fig3_released.png`）：解放ひずみと穿孔深さ。実測（誤差棒は読み取りの不確かさ ±10 µε）、既報の解析、本計算（重なり面積で平均）。
 - 図4（`paper_fig4_calibration.png`）：(a) 浅い側で補正し深い側を予測、(b) 当てはめに使わない点の RMSE（H1〜H3）。
 - 図5（`paper_fig5_discrepancy.png`）：(a) ゲージ位置の感度、(b) 冷却中の応力緩和による応力の倍率（例示定数）。
+- 図6（`concept_rescue.png`）：(a) 解放ひずみの実測・既報の条件・同定した条件、(b) *T*<sub>0,eff</sub> の値の比較（`slides/figure_sources/denso_concept_rescue.py`）。
 - 表1〜3：下記
 
 ## 表（案）
@@ -92,7 +93,7 @@
 | H2：Ch.3（MD）で補正 → Ch.1（TD）・Ch.2 を予測 | 3 成分（L2-SP） | *a*<sub>xx</sub> = 0.59, *a*<sub>yy</sub> = −0.26 | 46.2 | 173.4 | 28.6 |
 | H3：Ch.3（MD）で補正 → Ch.1（TD）・Ch.2 を予測 | 共通の倍率 1 個 | *a* = 0.671（*T*<sub>0,eff</sub> = 127 °C） | 46.2 | 10.6 | 28.6 |
 
-注：全点で当てはめた共通の倍率は 0.667（*T*<sub>0,eff</sub> = 127 °C）。*s*<sub>y</sub> = 10 µε、*s*<sub>a</sub> = 0.5。*a*<sub>zz</sub> は板厚方向の成分で、解放ひずみへの感度がない（列ノルム 0）ため事前値 1 のまま。
+注：全点で当てはめた共通の倍率は 0.667（熱膨張係数一定の換算で *T*<sub>0,eff</sub> = 127 °C。温度依存の熱膨張係数を入れた同定では 142〜143 °C、5.x 節）。*s*<sub>y</sub> = 10 µε、*s*<sub>a</sub> = 0.5。*a*<sub>zz</sub> は板厚方向の成分で、解放ひずみへの感度がない（列ノルム 0）ため事前値 1 のまま。
 
 ## 論文にする前に足りないもの
 
