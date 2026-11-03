@@ -318,3 +318,27 @@ python3 validation/denso_tsuda2026_transfer.py --basis-dir abaqus/denso_plate/ab
 
 > `research/GUIDE_fifa_abaqus.md` §13 に従い、第 III 部の本番が終わった後に `run_hole_drilling.sh basis` を回してください。
 > 重ね合わせの誤差と、`denso_tsuda2026_transfer.py` の全出力を報告してください。定数・メッシュは変えないこと。
+
+## 14. 追加の計算（2026-11-03）：ゲージ位置の感度
+
+**目的**：本番の解放ひずみは実測の約 1.54 倍であった（表6）。解放ひずみは穴からの距離で急に小さくなるので、
+ゲージの位置のわずかな違いで値が変わる。ゲージ（FRAS-2）の位置はカタログの抜粋から読んだ値であり、
+貼付位置のばらつきもありうる。ゲージを径方向に ±0.2 mm ずらした計算で、1.54 倍のうち位置で説明できる量を見積もる。
+
+```bash
+git pull
+CPUS=8 bash abaqus/denso_plate/run_hole_drilling.sh gauge     # denso_hole_gm02（内側へ 0.2 mm）、denso_hole_gp02（外側へ 0.2 mm）
+```
+
+メッシュ・材料・配向は本番と同じで、ゲージに含める要素だけが変わる（本番メッシュでの要素数は Ch.1／Ch.3 で 13・12・12 個、−0.2・0・+0.2 mm）。
+
+**判定**：2 本とも 11 ステップ終わること。結果の数値に合格の基準はない（感度を見る計算である）。
+
+**報告**：2 本それぞれの `compare_hole_drilling.py` の出力（ピークと実測比）、所要時間。
+`denso_hole_g{m02,p02}_{abaqus,released}.json` と `_released.png` を `abaqus/denso_plate/abaqus_results/` に入れ、
+ブランチを切ってコミット・プッシュする（`.odb` と `.inp` は入れない）。
+
+**Claude Code に渡す指示文**：
+
+> `research/GUIDE_fifa_abaqus.md` §14 に従い、`run_hole_drilling.sh gauge` を回してください。
+> 2 本のピークと実測比を表にして報告してください。定数・メッシュは変えないこと。
