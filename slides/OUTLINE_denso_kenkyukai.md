@@ -4,7 +4,7 @@
 
 **スライド**：`slides/denso_kenkyukai.pptx`（`build_denso_kenkyukai_deck.js`、11 枚）。
 
-**題目（案）**：数値解析による事前学習と少数の実測点による転移学習を用いた、短繊維強化樹脂射出成形品の残留ひずみ予測
+**題目**：穿孔法の点計測による物理モデルの補正を用いた短繊維強化 PPS 射出成形品の残留ひずみ予測（手法の呼び名 RESCUE：REsidual Strain Calibration with Under-sampled Experiments）
 **発表者**：西岡 佳祐（慶應義塾大学 修士課程）
 
 | 節 | 枚 | 内容 | 根拠・素材 |
