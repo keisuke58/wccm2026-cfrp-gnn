@@ -29,9 +29,10 @@ ACC = "#1F3A5F"
 matplotlib.rcParams.update({"font.family": ["Times New Roman", "Liberation Serif", "IPAPMincho"], "font.size": 9,
                             "xtick.direction": "in", "ytick.direction": "in"})
 
-fig = plt.figure(figsize=(13.0, 4.6))
-bg = fig.add_axes([0, 0, 1, 1]); bg.set_xlim(0, 130); bg.set_ylim(0, 46); bg.axis("off")
-N = 6; W = 18.0; X0 = 2.0; GAP = (130 - 2 * X0 - N * W) / (N - 1); Y0, H = 24.0, 19.0
+YT = 60
+fig = plt.figure(figsize=(13.0, 6.0))
+bg = fig.add_axes([0, 0, 1, 1]); bg.set_xlim(0, 130); bg.set_ylim(0, YT); bg.axis("off")
+N = 6; W = 19.2; X0 = 0.6; GAP = (130 - 2 * X0 - N * W) / (N - 1); Y0, H = 39.3, 20.2
 xs = [X0 + i * (W + GAP) for i in range(N)]
 labels = ["繊維の向き", "縮み方（物理）", "部品の FE", "数点を測る", "補正して予測", "成形条件の設計"]
 
@@ -47,7 +48,7 @@ def frame(i, accent=False):
 
 
 def inset(i, pad=1.2):
-    return fig.add_axes([(xs[i] + pad) / 130, (Y0 + pad) / 46, (W - 2 * pad) / 130, (H - 2 * pad) / 46])
+    return fig.add_axes([(xs[i] + pad) / 130, (Y0 + pad) / YT, (W - 2 * pad) / 130, (H - 2 * pad) / YT])
 
 
 def picture(i, path, box=None):
@@ -87,17 +88,49 @@ a.plot([0, m], [0, m], "k:", lw=0.8); a.set_xscale("log"); a.set_yscale("log"); 
 a.minorticks_off()
 
 # stages
-sy, sh = 1.5, 14.0
+sy, sh = 0.3, 33.6
 stages = [(0, 3, "① 残留ひずみ", "平板・実測", "誤差 58 → 16 µε", "済み"),
           (2, 4, "② 反り", "3 次元部品・解析データ", "誤差 53 → 17 %（10 点）", "済み（途中経過）"),
           (5, 5, "③ 設計", "ゲート位置", f"最良のゲート {gr['best_agrees']}/{gr['n_parts']} 一致", "着手")]
-SW = (130 - 2 * X0 - 2 * 3.0) / 3
+SW = (130 - 2 * X0 - 2 * 1.4) / 3
+axes_res = []
 for k, (i0, i1, t, sub, num, st) in enumerate(stages):
-    x0 = X0 + k * (SW + 3.0); x1 = x0 + SW
+    x0 = X0 + k * (SW + 1.4); x1 = x0 + SW
     bg.add_patch(FancyBboxPatch((x0, sy), x1 - x0, sh, boxstyle="round,pad=0.2,rounding_size=1.0", ec="0.75", fc="#F5F6F8", lw=0.8))
-    bg.text(x0 + 1.5, sy + sh - 2.0, t, fontsize=12, fontweight="bold", va="top")
-    bg.text(x0 + 1.5, sy + sh - 6.3, sub, fontsize=9.5, va="top", color="0.35")
-    bg.text(x0 + 1.5, sy + 2.0, num, fontsize=12, fontweight="bold", color=ACC, va="bottom")
+    bg.text(x0 + 1.5, sy + sh - 2.0, f"{t}　{sub}", fontsize=12, fontweight="bold", va="top")
     bg.text(x1 - 1.5, sy + sh - 2.0, st, fontsize=9, va="top", ha="right", color="0.35")
+    bg.text(x0 + 1.5, sy + 1.5, num, fontsize=12.5, fontweight="bold", color=ACC, va="bottom")
+    axes_res.append(fig.add_axes([(x0 + 6.0) / 130, (sy + 7.6) / YT, (SW - 7.6) / 130, (sh - 12.8) / YT]))
+# results inside the stage boxes
+res = json.load(open(os.path.join(ROOT, "results", "denso_rescue", "results.json")))["R4"]["T0 only"]
+y0 = rr.released(rr.THETA_PAPER).reshape(3, 10); y1 = rr.released(tuple(res["theta"])).reshape(3, 10)
+ym = rr.Y_MEAS.reshape(3, 10); dd = np.concatenate([[0.0], rr.DEPTH]); zz = lambda v: np.concatenate([[0.0], v])
+a = axes_res[0]
+for k in (2, 0):
+    a.plot(rr.DEPTH, ym[k], "s", color="k", ms=3.5, mfc="white", label="実測" if k == 2 else None)
+    a.plot(dd, zz(y0[k]), "--", color="0.55", lw=1.2, label="補正前" if k == 2 else None)
+    a.plot(dd, zz(y1[k]), "-", color=ACC, lw=2.0, label="補正後" if k == 2 else None)
+a.axhline(0, color="0.85", lw=0.6); a.set_xlabel("穴の深さ [mm]", fontsize=8.5); a.set_ylabel("解放ひずみ [µε]", fontsize=8.5)
+a.tick_params(labelsize=7.5); a.legend(frameon=False, fontsize=7.5, loc="center right")
+tf = json.load(open(os.path.join(G3, "transfer_factor.json")))
+a = axes_res[1]
+vals = [tf["prior (a = 1)"]["median"], tf["LOO factor, no measurement"]["median"], tf["RESCUE 10 nodes, 2 factors"]["median"]]
+yy = np.arange(3)[::-1]
+a.barh(yy, np.array(vals) * 100, color=["0.75", ACC, ACC], height=0.55)
+for y_, v in zip(yy, vals):
+    a.text(v * 100 + 1.5, y_, f"{v * 100:.0f} %", va="center", fontsize=10, fontweight="bold")
+a.set_yticks(yy); a.set_yticklabels(["補正なし", "測定なし\n（他部品の倍率）", "10 点で補正"], fontsize=8)
+a.set_xlim(0, 68); a.set_xlabel(f"反りの誤差（中央値、{tf['n']} 形状）[%]", fontsize=8.5); a.tick_params(labelsize=7.5)
+for s_ in ("top", "right"):
+    a.spines[s_].set_visible(False)
+a = axes_res[2]
+for prt in gr["parts"]:
+    d_, p_ = np.array(prt["max_data_mm"]), np.array(prt["max_prior_mm"]) * tf["a_star_median"]
+    a.plot(d_, p_, "-", color="0.8", lw=0.8)
+    a.plot(d_[np.argmin(d_)], p_[np.argmin(d_)], "*", ms=9, color=ACC if prt["best_agrees"] else "0.5")
+    a.plot(d_, p_, "o", ms=3.5, color="0.35", mfc="white")
+a.plot([0.1, m * 1.2], [0.1, m * 1.2], "k:", lw=0.8); a.set_xscale("log"); a.set_yscale("log")
+a.set_xlabel("データの反り [mm]", fontsize=8.5); a.set_ylabel("予測の反り [mm]", fontsize=8.5); a.tick_params(labelsize=7.5)
+a.text(0.04, 0.95, "線：同じ部品のゲート違い\n★：反り最小のゲート", transform=a.transAxes, va="top", fontsize=7.5, color="0.3")
 fig.savefig(os.path.join(FIG, "overview_flow.png"), dpi=250); plt.close(fig)
 print("wrote overview_flow.png")
