@@ -24,14 +24,16 @@
 | 6. 考察 | ゲージ位置の感度、冷却中の応力緩和、共通の倍率の仮定の妥当性 | ±0.4 mm で 1.1〜2.6 倍、τ_g ≈ 10⁹〜10¹⁰ s | `research/GUIDE_fifa_abaqus.md` 表8、`validation/denso_anneal_relaxation.py` |
 | 7. 結論 | 示せたことと限界 | — | — |
 
-## 図表（案）
+## 図表
 
-- 図1：試験片・ゲージ配置・有限要素モデル（未作成）
-- 図2：配向の板厚方向分布と残留応力分布（`results/denso_tsuda2026/compare.png`）
-- 図3：解放ひずみと穿孔深さ（`abaqus/denso_plate/abaqus_results/denso_hole_released.png`）
-- 図4：補正前後の予測と誤差（`results/denso_tsuda2026/transfer_hole_drilling.png`）
-- 図5：ゲージ位置の感度（`slides/figures_paper/kk_gauge_shift.png`）
-- 表1：材料定数、表2：解放ひずみのピーク、表3：補正の検証
+図は `python3 slides/figure_sources/denso_paper_fig1.py` と `python3 slides/figure_sources/denso_paper_figs.py` で作る（`slides/figures_paper/paper_fig*.png`、300 dpi）。
+
+- 図1（`paper_fig1_model.png`）：(a) 試験片とゲージの配置、(b) 1/4 モデルの面内メッシュ（灰色は除去する要素）、(c) 断面の層分割と 10 段階の穿孔。
+- 図2（`paper_fig2_stress.png`）：(a) 配向テンソル成分の板厚方向分布（既報 図8a の読み取り値）、(b) 自由な板の残留応力分布（本計算）と既報の表面値。
+- 図3（`paper_fig3_released.png`）：解放ひずみと穿孔深さ。実測（誤差棒は読み取りの不確かさ ±10 µε）、既報の解析、本計算（重なり面積で平均）。
+- 図4（`paper_fig4_calibration.png`）：(a) 浅い側で補正し深い側を予測、(b) 当てはめに使わない点の RMSE（H1〜H3）。
+- 図5（`paper_fig5_discrepancy.png`）：(a) ゲージ位置の感度、(b) 冷却中の応力緩和による応力の倍率（例示定数）。
+- 表1：材料定数、表2：解放ひずみのピーク、表3：補正の検証（未作成）
 
 ## 論文にする前に足りないもの
 
