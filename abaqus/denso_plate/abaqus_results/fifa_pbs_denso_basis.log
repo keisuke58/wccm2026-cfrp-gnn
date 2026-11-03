@@ -1,0 +1,128 @@
+host frontale01 start Tue Nov  3 09:23:49 AM JST 2026
+09:23:55 denso_hole_xx: 864 quads x 154 layers = 133056 C3D8I, 142445 nodes; gauge elements Ch1 12, Ch2 24, Ch3 12; lamination surface stress sxx -24.4 / syy +18.6 MPa
+09:23:57 Analysis initiated from SIMULIA established products
+09:23:57 Abaqus JOB denso_hole_xx
+09:23:57 Abaqus 2024
+09:23:57 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+09:23:57 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+09:23:57 Successfully checked out QPL for 8 cpu(s)
+09:23:57 Abaqus License Manager checked out the following licenses:
+09:23:57 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+09:23:57 <9 out of 120 licenses remain available>.
+09:23:57 Begin Analysis Input File Processor
+09:23:57 Tue 03 Nov 2026 09:23:57 AM JST
+09:23:57 Run pre
+09:24:13 Tue 03 Nov 2026 09:24:13 AM JST
+09:24:13 End Analysis Input File Processor
+09:24:13 Begin Abaqus/Standard Analysis
+09:24:13 Tue 03 Nov 2026 09:24:13 AM JST
+09:24:13 Run standard
+09:29:05 Tue 03 Nov 2026 09:29:05 AM JST
+09:29:05 End Abaqus/Standard Analysis
+09:29:05 Begin SIM Wrap-up
+09:29:05 Tue 03 Nov 2026 09:29:05 AM JST
+09:29:05 Run SMASimUtility
+09:29:05 Tue 03 Nov 2026 09:29:05 AM JST
+09:29:05 End SIM Wrap-up
+09:29:05 Abaqus JOB denso_hole_xx COMPLETED
+09:29:07 wrote denso_hole_xx_abaqus.json (11 steps)
+09:29:07 denso_hole_xx [abaqus]: released strain [micro-strain] at depth [mm]; paper Fig. 12 read by eye
+09:29:07  depth   Ch1 this / exp / paper-FE     Ch2 this / exp / paper-FE     Ch3 this / exp / paper-FE
+09:29:07  0.00         0 /     0 /     0          0 /     0 /     0          0 /     0 /     0
+09:29:07  0.20        13 /   -10 /   -35         32 /    -5 /    -5         62 /    10 /    50
+09:29:07  0.40        26 /   -60 /  -100         76 /    -5 /   -10        160 /    70 /   135
+09:29:07  0.60        33 /  -120 /  -170        121 /    -8 /   -20        264 /   140 /   228
+09:29:07  0.80        41 /  -160 /  -220        149 /   -10 /   -30        319 /   192 /   272
+09:29:07  1.00        47 /  -170 /  -225        150 /   -15 /   -35        316 /   195 /   265
+09:29:07  1.20        51 /  -158 /  -200        138 /   -18 /   -35        289 /   185 /   240
+09:29:07  1.40        58 /  -140 /  -170        125 /   -18 /   -32        260 /   170 /   205
+09:29:07  1.60        67 /  -120 /  -140        115 /   -20 /   -30        234 /   155 /   180
+09:29:07  1.80        77 /  -108 /  -120        109 /   -20 /   -30        216 /   145 /   160
+09:29:07  2.00        86 /  -100 /  -108        105 /   -18 /   -28        203 /   142 /   150
+09:29:07 Ch1: peak |e| 86 (at 2.00 mm) vs measured 170 (x0.51) and paper FE 225 (x0.38); paper FE / measured = x1.32
+09:29:07 Ch3: peak |e| 319 (at 0.80 mm) vs measured 195 (x1.64) and paper FE 272 (x1.17); paper FE / measured = x1.39
+09:29:15 denso_hole_yy: 864 quads x 154 layers = 133056 C3D8I, 142445 nodes; gauge elements Ch1 12, Ch2 24, Ch3 12; lamination surface stress sxx -24.4 / syy +18.6 MPa
+09:29:17 Analysis initiated from SIMULIA established products
+09:29:17 Abaqus JOB denso_hole_yy
+09:29:17 Abaqus 2024
+09:29:17 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+09:29:17 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+09:29:17 Successfully checked out QPL for 8 cpu(s)
+09:29:17 Abaqus License Manager checked out the following licenses:
+09:29:17 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+09:29:17 <9 out of 120 licenses remain available>.
+09:29:17 Begin Analysis Input File Processor
+09:29:17 Tue 03 Nov 2026 09:29:17 AM JST
+09:29:17 Run pre
+09:29:35 Tue 03 Nov 2026 09:29:35 AM JST
+09:29:35 End Analysis Input File Processor
+09:29:35 Begin Abaqus/Standard Analysis
+09:29:35 Tue 03 Nov 2026 09:29:35 AM JST
+09:29:35 Run standard
+09:36:50 Tue 03 Nov 2026 09:36:50 AM JST
+09:36:50 End Abaqus/Standard Analysis
+09:36:50 Begin SIM Wrap-up
+09:36:50 Tue 03 Nov 2026 09:36:50 AM JST
+09:36:50 Run SMASimUtility
+09:36:50 Tue 03 Nov 2026 09:36:50 AM JST
+09:36:50 End SIM Wrap-up
+09:36:51 Abaqus JOB denso_hole_yy COMPLETED
+09:36:52 wrote denso_hole_yy_abaqus.json (11 steps)
+09:36:52 denso_hole_yy [abaqus]: released strain [micro-strain] at depth [mm]; paper Fig. 12 read by eye
+09:36:52  depth   Ch1 this / exp / paper-FE     Ch2 this / exp / paper-FE     Ch3 this / exp / paper-FE
+09:36:52  0.00         0 /     0 /     0          0 /     0 /     0          0 /     0 /     0
+09:36:52  0.20       -59 /   -10 /   -35        -34 /    -5 /    -5         -5 /    10 /    50
+09:36:52  0.40      -147 /   -60 /  -100        -84 /    -5 /   -10        -13 /    70 /   135
+09:36:52  0.60      -239 /  -120 /  -170       -135 /    -8 /   -20        -18 /   140 /   228
+09:36:52  0.80      -301 /  -160 /  -220       -169 /   -10 /   -30        -20 /   192 /   272
+09:36:52  1.00      -308 /  -170 /  -225       -172 /   -15 /   -35        -18 /   195 /   265
+09:36:52  1.20      -282 /  -158 /  -200       -159 /   -18 /   -35        -19 /   185 /   240
+09:36:52  1.40      -253 /  -140 /  -170       -147 /   -18 /   -32        -23 /   170 /   205
+09:36:52  1.60      -231 /  -120 /  -140       -138 /   -20 /   -30        -28 /   155 /   180
+09:36:52  1.80      -216 /  -108 /  -120       -133 /   -20 /   -30        -33 /   145 /   160
+09:36:52  2.00      -209 /  -100 /  -108       -131 /   -18 /   -28        -37 /   142 /   150
+09:36:52 Ch1: peak |e| 308 (at 1.00 mm) vs measured 170 (x1.81) and paper FE 225 (x1.37); paper FE / measured = x1.32
+09:36:52 Ch3: peak |e| 37 (at 2.00 mm) vs measured 195 (x0.19) and paper FE 272 (x0.14); paper FE / measured = x1.39
+09:36:59 denso_hole_zz: 864 quads x 154 layers = 133056 C3D8I, 142445 nodes; gauge elements Ch1 12, Ch2 24, Ch3 12; lamination surface stress sxx -24.4 / syy +18.6 MPa
+09:37:00 Analysis initiated from SIMULIA established products
+09:37:00 Abaqus JOB denso_hole_zz
+09:37:00 Abaqus 2024
+09:37:00 Successfully checked out QSD/111 from DSLS server 172.17.36.96
+09:37:01 Successfully checked out QXT/111 from DSLS server 172.17.36.96
+09:37:01 Successfully checked out QPL for 8 cpu(s)
+09:37:01 Abaqus License Manager checked out the following licenses:
+09:37:01 Abaqus/Standard checked out 111 tokens from DSLS server 172.17.36.96.
+09:37:01 <9 out of 120 licenses remain available>.
+09:37:01 Begin Analysis Input File Processor
+09:37:01 Tue 03 Nov 2026 09:37:01 AM JST
+09:37:01 Run pre
+09:37:32 Tue 03 Nov 2026 09:37:32 AM JST
+09:37:32 End Analysis Input File Processor
+09:37:32 Begin Abaqus/Standard Analysis
+09:37:32 Tue 03 Nov 2026 09:37:32 AM JST
+09:37:32 Run standard
+09:44:44 Tue 03 Nov 2026 09:44:44 AM JST
+09:44:44 End Abaqus/Standard Analysis
+09:44:44 Begin SIM Wrap-up
+09:44:44 Tue 03 Nov 2026 09:44:44 AM JST
+09:44:44 Run SMASimUtility
+09:44:44 Tue 03 Nov 2026 09:44:44 AM JST
+09:44:44 End SIM Wrap-up
+09:44:44 Abaqus JOB denso_hole_zz COMPLETED
+09:44:45 wrote denso_hole_zz_abaqus.json (11 steps)
+09:44:45 denso_hole_zz [abaqus]: released strain [micro-strain] at depth [mm]; paper Fig. 12 read by eye
+09:44:45  depth   Ch1 this / exp / paper-FE     Ch2 this / exp / paper-FE     Ch3 this / exp / paper-FE
+09:44:45  0.00         0 /     0 /     0          0 /     0 /     0          0 /     0 /     0
+09:44:45  0.20         0 /   -10 /   -35          0 /    -5 /    -5          0 /    10 /    50
+09:44:45  0.40         0 /   -60 /  -100          0 /    -5 /   -10          0 /    70 /   135
+09:44:45  0.60         0 /  -120 /  -170          0 /    -8 /   -20          0 /   140 /   228
+09:44:45  0.80         0 /  -160 /  -220          0 /   -10 /   -30          0 /   192 /   272
+09:44:45  1.00         0 /  -170 /  -225          0 /   -15 /   -35          0 /   195 /   265
+09:44:45  1.20         0 /  -158 /  -200          0 /   -18 /   -35          0 /   185 /   240
+09:44:45  1.40         0 /  -140 /  -170          0 /   -18 /   -32          0 /   170 /   205
+09:44:45  1.60         0 /  -120 /  -140          0 /   -20 /   -30          0 /   155 /   180
+09:44:45  1.80         0 /  -108 /  -120          0 /   -20 /   -30          0 /   145 /   160
+09:44:45  2.00         0 /  -100 /  -108          0 /   -18 /   -28          0 /   142 /   150
+09:44:45 Ch1: peak |e| 0 (at 0.20 mm) vs measured 170 (x0.00) and paper FE 225 (x0.00); paper FE / measured = x1.32
+09:44:45 Ch3: peak |e| 0 (at 0.20 mm) vs measured 195 (x0.00) and paper FE 272 (x0.00); paper FE / measured = x1.39
+exit=0 end Tue Nov  3 09:44:45 AM JST 2026
