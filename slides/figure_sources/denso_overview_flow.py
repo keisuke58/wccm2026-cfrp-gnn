@@ -90,7 +90,7 @@ picture(4, os.path.join(FIG, "onepage_part.png"), (0.68, 0.0, 1.0, 1.0))
 a = inset(5, 2.6)
 gr = json.load(open(os.path.join(G3, "gate_ranking.json")))
 for prt in gr["parts"]:
-    d_, p_ = np.array(prt["max_data_mm"]), np.array(prt["max_prior_mm"]) * 1.93
+    d_, p_ = np.array(prt["max_data_mm"]), np.array(prt["max_prior_mm"]) * json.load(open(os.path.join(G3, "transfer_factor.json")))["a_star_median"]
     a.plot(d_, p_, "-", color="0.8", lw=0.8)
     a.plot(d_, p_, "o", ms=3.5, color=ACC if prt["best_agrees"] else "0.5", mfc="white")
 m = max(max(x["max_data_mm"]) for x in gr["parts"])
@@ -98,9 +98,10 @@ a.plot([0, m], [0, m], "k:", lw=0.8); a.set_xscale("log"); a.set_yscale("log"); 
 a.minorticks_off()
 
 # stages
+TF0 = json.load(open(os.path.join(G3, "transfer_factor.json")))
 sy, sh = 0.3, 33.6
 stages = [(0, 3, "① 残留ひずみ", "平板・実測", "誤差 58 → 16 µε", "済み", ACC),
-          (2, 4, "② 反り", "3 次元部品・解析", "誤差 53 → 17 %（10 点）", "途中経過・強度は試算", PART),
+          (2, 4, "② 反り", "3 次元部品・解析", f"誤差 {round(TF0['prior (a = 1)']['median'] * 100)} → {round(TF0['RESCUE 10 nodes, 2 factors']['median'] * 100)} %（10 点）", "途中経過・強度は試算", PART),
           (5, 5, "③ 設計", "ゲート位置", f"最良のゲート {gr['best_agrees']}/{gr['n_parts']} 一致", "着手", TODO)]
 SW = (130 - 2 * X0 - 2 * 1.4) / 3
 axes_res = []
