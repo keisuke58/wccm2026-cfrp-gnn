@@ -23,13 +23,13 @@ const THEME = {
     accent6: "DDDDDD", hlink: "1F3A5F", folHlink: "555555" },
 };
 const INK = "111111", MUTED = "555555", RULE = "BFBFBF";
-const FOOT = "繊維強化樹脂の残留ひずみ予測（株式会社デンソー様との共同研究）／3 次元部品での検討・途中経過（46 形状）・データは公開の解析結果";
+const FOOT = "繊維強化樹脂の残留ひずみ予測（株式会社デンソー様との共同研究）／3 次元部品での検討・途中経過（142 形状）・データは公開の解析結果";
 
 const pres = new pptxgen();
 pres.layout = "LAYOUT_WIDE";
 pres.theme = { headFontFace: LATIN, bodyFontFace: LATIN };
 pres.author = "西岡 佳祐";
-pres.title = "3 次元部品における少数点計測による反り予測の補正（RESCUE）";
+pres.title = "3 次元部品における少数点計測による反り予測の補正";
 const C = pres.SchemeColor;
 
 pres.defineSlideMaster({
@@ -100,7 +100,7 @@ const iq = (k) => `${Math.round(RES.summary[k].q25 * 100)}〜${Math.round(RES.su
 // ===================================================== title ================
 let s = pres.addSlide({ masterName: "TITLE" });
 s.addText("3 次元部品における少数点の計測による反り予測の補正", { placeholder: "title", fontSize: 28 });
-s.addText("— RESCUE の 3 次元部品への適用（途中経過）—", { placeholder: "body" });
+s.addText("— 平板で示した補正法の 3 次元部品への適用（途中経過）—", { placeholder: "body" });
 rule(s, 4.4, 4.15, 5.0);
 s.addText([br("西岡 佳祐"), tx("2026年11月")],
   { x: 0.9, y: 4.6, w: 11.5, h: 0.9, fontSize: 15, color: INK, align: "center", isTextBox: true, margin: 0, lineSpacing: 24 });
@@ -111,7 +111,7 @@ s.addText(`注：反りの「データ」は公開の Moldflow 解析結果で�
 s = pres.addSlide({ masterName: "CONTENT" });
 s.addText("1. 背景と問い", { placeholder: "title" });
 para(s, 0.7, 1.25, 11.9, 1.5, [
-  br("これまでに、平板（既報[1]の試験片 1 枚）で、物理モデルの予測を穿孔法の少数の実測点で補正できることを示した（RESCUE）。"),
+  br("これまでに、平板（既報[1]の試験片 1 枚）で、物理モデルの予測を穿孔法の少数の実測点で補正できることを示した。"),
   tx("しかし、多数の 3 次元部品を扱う先行研究[2]と比べると、平板 1 枚では手法の一般性を示せない。そこで、公開されている 3 次元部品の解析データで、同じ手順を試した。"),
 ], 13.5);
 head(s, 0.7, 2.95, 11.9, "問い");
