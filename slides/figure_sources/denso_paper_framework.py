@@ -99,30 +99,34 @@ b.add_patch(FancyArrowPatch((3.8, 6.6), (4.8, 6.6), arrowstyle="-|>", mutation_s
 for k, (axx, ayy) in enumerate(((0.80, 0.15), (0.45, 0.45), (0.25, 0.70))):
     xc = 1.6 + k * 3.2
     b.add_patch(Ellipse((xc, 2.0), 2.4 * axx + 0.3, 2.4 * ayy + 0.3, fc="white", ec=NAVY if axx > ayy else AMBER, lw=1.0))
-    b.text(xc, 0.25, [r"$a_{xx}$ high", "planar random", r"$a_{yy}$ high"][k], ha="center", fontsize=6.8)
-b.text(5.0, 3.6, "orientation-tensor glyphs (per layer)", ha="center", fontsize=6.8, color="0.35")
+    b.text(xc, 0.25, [r"$a_{xx}$ high", "planar random", r"$a_{yy}$ high"][k], ha="center", fontsize=7)
+b.text(5.0, 3.6, "orientation-tensor glyphs (per layer)", ha="center", fontsize=7, color="0.35")
 
 # ---------------------------------------------------------- (c) eigenstrain profile (data)
 c = ax_at(40.4, TOP + 2.7, 11.4, 8.3)
-for T0, col, ls, lab in ((180.0, GREY, "--", r"$T_0=180\ ^\circ$C (paper)"), (T0ID, NAVY, "-", rf"$T_{{0,\mathrm{{eff}}}}={T0ID:.0f}\ ^\circ$C")):
+for T0, col, ls, lab in ((180.0, GREY, "--", r"$T_0$ = 180 °C (paper)"), (T0ID, NAVY, "-", rf"$T_{{0,\mathrm{{eff}}}}$ = {T0ID:.0f} °C")):
     zq, eth = rr.eigenstrain((T0, rr.THETA_PAPER[1], rr.THETA_PAPER[2], 1.0, 1.0))
     c.plot(eth[:, 0] * 1e3, zq, color=col, ls=ls, lw=1.4, label=lab)
-c.invert_yaxis(); c.set_ylabel(r"depth $z$ (mm)", fontsize=7.5); c.set_xlabel(r"$\varepsilon^{*}_{xx}$ (MD, $10^{-3}$)", fontsize=7.5); c.tick_params(labelsize=6.5)
-c.legend(frameon=False, fontsize=6.2, loc="lower left", bbox_to_anchor=(-0.04, 0.98), handlelength=1.6, ncol=1, labelspacing=0.2)
+c.invert_yaxis(); c.set_ylabel(r"depth $z$ (mm)", fontsize=7.5); c.set_xlabel(r"$\varepsilon^{*}_{xx}$ (MD, $10^{-3}$)", fontsize=7.5); c.tick_params(labelsize=7)
+c.legend(frameon=False, fontsize=7, loc="lower left", bbox_to_anchor=(-0.04, 0.98), handlelength=1.6, ncol=1, labelspacing=0.2)
 bg.text(44.6, TOP + 14.6, r"$\boldsymbol{\varepsilon}^{*}(z)=\int_{T_{0,\mathrm{eff}}}^{T_{\mathrm{RT}}}\langle\boldsymbol{\alpha}\rangle(\mathbf{a}(z),T)\,\mathrm{d}T$",
         ha="center", fontsize=8.5)
 
 # ---------------------------------------------------------- (d) FE: part image + plate
 im = Image.open(os.path.join(OUTD, "rescue3d_example.png")); W, Hh = im.size
 part = im.crop((int(0.43 * W), int(0.08 * Hh), int(0.70 * W), int(0.42 * Hh)))
-d = ax_at(54.6, TOP + 5.2, 16.0, 10.2); d.imshow(part); d.axis("off")
+d = ax_at(57.4, TOP + 6.2, 13.6, 9.4); d.imshow(part); d.axis("off")
+cb = ax_at(55.4, TOP + 8.0, 0.5, 5.6)
+cb.imshow(np.linspace(1, 0, 64)[:, None], aspect="auto", cmap="cividis"); cb.set_xticks([]); cb.set_yticks([])
+bg.text(55.65, TOP + 14.0, r"$|\mathbf{u}|$", fontsize=7.5, va="bottom", ha="center"); bg.text(55.65, TOP + 7.8, "0", fontsize=7, va="top", ha="center")
+bg.text(64.2, TOP + 5.9, "PP/GF30, Moldflow data [ref.]", ha="center", fontsize=7, color="0.35")
 bg.text(62.6, TOP + 4.3, "3-D part, C3D10 (CalculiX)", ha="center", fontsize=7.5)
 bg.text(62.6, TOP + 2.8, r"$\nabla\cdot\boldsymbol{\sigma}=\mathbf{0},\ \ \boldsymbol{\sigma}=\langle\mathbf{C}\rangle:(\boldsymbol{\varepsilon}-\boldsymbol{\varepsilon}^{*})$",
         ha="center", fontsize=8.0)
 bg.text(62.6, TOP + 1.3, "plate: laminate theory / Abaqus", ha="center", fontsize=7, color="0.35")
 
 # ---------------------------------------------------------- (e) measurement + calibration
-e1 = ax_at(1.2, BOT + 1.4, 10.2, 12.6); e1.set_xlim(0, 10); e1.set_ylim(0, 10); e1.axis("off")
+e1 = ax_at(1.2, BOT + 1.4, 9.4, 12.6); e1.set_xlim(0, 10); e1.set_ylim(0, 10); e1.axis("off")
 e1.add_patch(Rectangle((0.5, 2.0), 9.0, 5.0, fc="0.95", ec="0.3", lw=0.7))
 e1.add_patch(Rectangle((4.4, 4.4), 1.2, 2.6, fc="white", ec="0.3", lw=0.7))
 for yy in (4.9, 5.7, 6.5):
@@ -141,39 +145,44 @@ for k in (2, 0):
     e2.plot(rr.DEPTH, f12[k], "s", ms=2.6, mfc="white", color="k", mew=0.6)
     e2.plot(dd, zz(y0p[k]), "--", color=GREY, lw=0.9); e2.plot(dd, zz(y1p[k]), "-", color=NAVY, lw=1.3)
 e2.axhline(0, color="0.85", lw=0.5)
-e2.set_xlabel("depth (mm)", fontsize=7); e2.set_ylabel(r"released strain ($\mu\varepsilon$)", fontsize=7); e2.tick_params(labelsize=6)
-e2.text(0.97, 0.95, "MD", transform=e2.transAxes, ha="right", va="top", fontsize=6.5)
-e2.text(0.97, 0.05, "TD", transform=e2.transAxes, ha="right", fontsize=6.5)
+e2.set_xlabel("depth (mm)", fontsize=7); e2.set_ylabel(r"released strain ($\mu\varepsilon$)", fontsize=7); e2.tick_params(labelsize=7)
+e2.text(0.97, 0.95, "MD", transform=e2.transAxes, ha="right", va="top", fontsize=7)
+e2.text(0.97, 0.05, "TD", transform=e2.transAxes, ha="right", fontsize=7)
 bg.text(29.0, BOT + 13.6, "L2-SP calibration", ha="center", fontsize=8, fontweight="bold", color=NAVY)
-bg.text(29.0, BOT + 11.0, r"$\min_{\boldsymbol{\theta}}\ \frac{\|\mathbf{y}-\mathbf{G}\,\boldsymbol{\varepsilon}^{*}(\boldsymbol{\theta})\|^{2}}{s_y^{2}}"
+bg.text(29.0, BOT + 11.0, r"$\min_{\boldsymbol{\theta}}\ \frac{\|\mathbf{y}-\mathcal{H}(\boldsymbol{\theta})\|^{2}}{s_y^{2}}"
         r"+\frac{\|\boldsymbol{\theta}-\boldsymbol{\theta}_{0}\|^{2}}{s_\theta^{2}}$", ha="center", fontsize=8.0)
 bg.text(29.0, BOT + 8.3, r"$\boldsymbol{\theta}$: $T_{0,\mathrm{eff}}$ or factors $a$", ha="center", fontsize=7.2)
-bg.text(29.0, BOT + 6.6, r"$\mathbf{G}$: influence functions", ha="center", fontsize=7.2)
-bg.text(29.0, BOT + 3.4, "few data: hole drilling", ha="center", fontsize=6.9, color="0.35")
-bg.text(29.0, BOT + 2.1, "or 5–10 surface points", ha="center", fontsize=6.9, color="0.35")
+bg.text(29.0, BOT + 6.6, r"$\mathcal{H}$: forward model", ha="center", fontsize=7.2)
+bg.text(29.0, BOT + 5.2, "(influence fn. or FE)", ha="center", fontsize=7, color="0.35")
+bg.text(29.0, BOT + 2.9, "few data: hole drilling", ha="center", fontsize=7, color="0.35")
+bg.text(29.0, BOT + 1.6, "or 5–10 surface points", ha="center", fontsize=7, color="0.35")
 
 # ---------------------------------------------------------- (f) outputs
 tf = json.load(open(os.path.join(ROOT, "abaqus", "denso_plate", "abaqus_results", "greif3d_rescue", "transfer_factor.json")))
 st = json.load(open(os.path.join(ROOT, "results", "denso_strength", "strength.json")))
+R4T = json.load(open(os.path.join(ROOT, "results", "denso_rescue", "results.json")))["R4"]["T0 only"]
+chg = [abs(c[k]) * 100 for c in st["cases"].values() for k in ("change_MD", "change_TD") if k in c]
 gr = json.load(open(os.path.join(ROOT, "abaqus", "denso_plate", "abaqus_results", "greif3d_rescue", "gate_ranking.json")))
-items = [("Residual strain", f"flat plate, measured: RMSE {58} → {16} " + r"$\mu\varepsilon$", NAVY),
-         ("Warpage", f"{tf['n']} 3-D parts (Moldflow data): {round(tf['prior (a = 1)']['median'] * 100)} → "
-                     f"{round(tf['RESCUE 10 nodes, 2 factors']['median'] * 100)} % with 10 points", TEAL),
-         ("Transfer", f"no measurement on a new part: {round(tf['LOO factor, no measurement']['median'] * 100)} %", TEAL),
-         ("Strength margin", "residual stress takes 20–38 % (estimate)", AMBER),
-         ("Moulding design", f"best gate agrees in {gr['best_agrees']} of {gr['n_parts']} parts", AMBER)]
-for k, (t, sub, col) in enumerate(items):
+items = [("Residual strain", f"flat plate: RMSE {R4T['rmse_paper_conditions']:.0f} → {R4T['rmse_physics_at_theta']:.0f} " + r"$\mu\varepsilon$", NAVY, "measured"),
+         ("Warpage", f"{tf['n']} 3-D parts: {round(tf['prior (a = 1)']['median'] * 100)} → "
+                     f"{round(tf['RESCUE 10 nodes, 2 factors']['median'] * 100)} % with 10 points", TEAL, "simulation data"),
+         ("Transfer", f"no measurement on a new part: {round(tf['LOO factor, no measurement']['median'] * 100)} %", TEAL, "simulation data"),
+         ("Strength margin", f"residual stress takes {min(chg):.0f}–{max(chg):.0f} %", AMBER, "estimate"),
+         ("Moulding design", f"best gate agrees in {gr['best_agrees']} of {gr['n_parts']} parts", AMBER, "simulation data")]
+for k, (t, sub, col, kind) in enumerate(items):
     yy = BOT + 14.6 - k * 2.9
     bg.add_patch(FancyBboxPatch((38.0, yy - 1.0), 1.0, 2.0, boxstyle="round,pad=0.05,rounding_size=0.2", fc=col, ec="none"))
     bg.text(39.8, yy + 0.35, t, fontsize=8.2, fontweight="bold", va="center", color=col)
     bg.text(39.8, yy - 0.75, sub, fontsize=7.2, va="center", color="0.2")
-bg.text(70.6, BOT + 0.9, "values: examples / interim, see text", ha="right", fontsize=6.3, color="0.45")
+    bg.text(70.6, yy + 0.35, f"[{kind}]", fontsize=7, va="center", ha="right", color=NAVY if kind == "measured" else "0.45",
+            fontweight="bold" if kind == "measured" else "normal")
+bg.text(70.6, BOT + 0.9, "interim values; material constants are examples", ha="right", fontsize=7, color="0.45")
 
 # ---------------------------------------------------------- arrows between panels
 mid = TOP + 8.9
 arrow((17.3, mid), (18.1, mid)); arrow((35.5, mid), (36.3, mid)); arrow((52.9, mid), (53.7, mid))
 arrow((62.6, TOP - 0.1), (62.6, BOT + 18.3), c="0.25")                                       # FE -> outputs (prior)
-bg.text(63.2, TOP - 0.6, "prior prediction", fontsize=6.8, color="0.35", ha="left", va="center")
+bg.text(63.2, TOP - 0.6, "prior prediction", fontsize=7, color="0.35", ha="left", va="center")
 arrow((32.5, BOT + 18.3), (39.0, TOP + 0.1), c=NAVY, lw=1.3, rad=-0.3, ls="--")              # calibration feeds back
 bg.text(31.8, TOP - 0.6, r"update $T_{0,\mathrm{eff}}$ / $a$", fontsize=7.2, color=NAVY, ha="right", va="center")
 arrow((35.5, BOT + 9.0), (36.3, BOT + 9.0), c=NAVY, lw=1.3)
