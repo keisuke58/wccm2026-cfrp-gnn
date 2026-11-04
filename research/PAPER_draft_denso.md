@@ -8,6 +8,10 @@
 
 穿孔法の点計測による物理モデルの補正を用いた短繊維強化 PPS 射出成形品の残留ひずみ予測
 
+題目の別案（2026-11-04、3 次元部品の結果を含める場合）：**少数点の計測による物理モデルの補正を用いた短繊維強化樹脂射出成形品の残留ひずみ・反り予測**（英：Prediction of Residual Strain and Warpage in Short-Fibre-Reinforced Injection Mouldings by Correcting a Physics Model with Sparse Measurements）。平板と 3 次元を 2 本に分けるなら、1 本目は上の題目のまま。
+
+要約（一般向け、50 字程度）：樹脂部品の反りや中にたまった力を計算で予測し、数か所を測るだけで当たるように直す方法を作った。
+
 手法の呼び名：**RESCUE**（REsidual Strain Calibration with Under-sampled Experiments）。本文中で手法名として用いる（題目には入れない）。
 
 （旧案：数値解析による事前学習と少数の実測点による補正を用いた短繊維強化樹脂射出成形品の残留ひずみ予測）
