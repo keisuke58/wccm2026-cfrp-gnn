@@ -1,0 +1,5 @@
+# out-of-plane shape of a flat plate after moulding (CMM or 3-D scan), mm; x along MD, y along TD, w up
+# columns: specimen, x_mm, y_mm, w_mm
+specimen,x_mm,y_mm,w_mm
+EXAMPLE,0,0,0.00
+EXAMPLE,50,0,0.30

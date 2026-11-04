@@ -1,0 +1,4 @@
+# one row per specimen; thickness in mm, temperatures in deg C; annealed = 1/0; leave unknown values empty
+# columns: specimen, thickness_mm, mould_T_C, melt_T_C, annealed, anneal_T_C, note
+specimen,thickness_mm,mould_T_C,melt_T_C,annealed,anneal_T_C,note
+EXAMPLE,3.08,140,320,1,180,example row (paper conditions are not all known)

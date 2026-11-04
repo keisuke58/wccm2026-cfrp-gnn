@@ -1,0 +1,5 @@
+# hole-drilling released strain, one row per drilling step; micro-strain; depth from the drilled (top) face in mm
+# columns: specimen, depth_mm, ch1_td, ch2_45, ch3_md   (FRAS-2 type rosette: Ch.1 along TD, Ch.2 at 45 deg, Ch.3 along MD)
+specimen,depth_mm,ch1_td,ch2_45,ch3_md
+EXAMPLE,0.2,-10,-5,10
+EXAMPLE,0.4,-60,-5,70

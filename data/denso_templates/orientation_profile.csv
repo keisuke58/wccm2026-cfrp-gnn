@@ -1,0 +1,5 @@
+# fibre orientation through the thickness (flow analysis or micro-CT), depth from the drilled (top) face in mm
+# columns: specimen, depth_mm, a_xx (MD), a_yy (TD), a_zz (optional; 1 - a_xx - a_yy if empty)
+specimen,depth_mm,a_xx,a_yy,a_zz
+EXAMPLE,0.0,0.80,0.15,
+EXAMPLE,1.54,0.30,0.65,
