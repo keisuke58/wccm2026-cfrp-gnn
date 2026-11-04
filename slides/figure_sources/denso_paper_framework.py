@@ -176,7 +176,7 @@ for k, (t, sub, col, kind) in enumerate(items):
     bg.text(39.8, yy - 0.75, sub, fontsize=7.2, va="center", color="0.2")
     bg.text(70.6, yy + 0.35, f"[{kind}]", fontsize=7, va="center", ha="right", color=NAVY if kind == "measured" else "0.45",
             fontweight="bold" if kind == "measured" else "normal")
-bg.text(70.6, BOT + 0.9, "interim values; material constants are examples", ha="right", fontsize=7, color="0.45")
+bg.text(70.6, BOT + 0.9, "material constants are examples", ha="right", fontsize=7, color="0.45")
 
 # ---------------------------------------------------------- arrows between panels
 mid = TOP + 8.9

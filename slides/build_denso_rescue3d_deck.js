@@ -23,7 +23,7 @@ const THEME = {
     accent6: "DDDDDD", hlink: "1F3A5F", folHlink: "555555" },
 };
 const INK = "111111", MUTED = "555555", RULE = "BFBFBF";
-const FOOT = "繊維強化樹脂の残留ひずみ予測（株式会社デンソー様との共同研究）／3 次元部品での検討・途中経過（142 形状）・データは公開の解析結果";
+const FOOT = "繊維強化樹脂の残留ひずみ予測（株式会社デンソー様との共同研究）／3 次元部品での検討・最終結果（196 形状）・データは公開の解析結果";
 
 const pres = new pptxgen();
 pres.layout = "LAYOUT_WIDE";
@@ -100,11 +100,11 @@ const iq = (k) => `${Math.round(RES.summary[k].q25 * 100)}〜${Math.round(RES.su
 // ===================================================== title ================
 let s = pres.addSlide({ masterName: "TITLE" });
 s.addText("3 次元部品における少数点の計測による反り予測の補正", { placeholder: "title", fontSize: 28 });
-s.addText("— 平板で示した補正法の 3 次元部品への適用（途中経過）—", { placeholder: "body" });
+s.addText("— 平板で示した補正法の 3 次元部品への適用（最終）—", { placeholder: "body" });
 rule(s, 4.4, 4.15, 5.0);
 s.addText([br("西岡 佳祐"), tx("2026年11月")],
   { x: 0.9, y: 4.6, w: 11.5, h: 0.9, fontSize: 15, color: INK, align: "center", isTextBox: true, margin: 0, lineSpacing: 24 });
-s.addText(`注：反りの「データ」は公開の Moldflow 解析結果であり、実測ではない。${NG} 形状の途中経過である。`,
+s.addText(`注：反りの「データ」は公開の Moldflow 解析結果であり、実測ではない。${NG} 形状すべての結果である。`,
   { x: 0.9, y: 6.3, w: 11.5, h: 0.4, fontSize: 11, color: MUTED, align: "center", isTextBox: true, margin: 0 });
 
 // ===================================================== 1. 背景と問い =========
@@ -202,7 +202,7 @@ head(s, 0.7, 3.15, 11.9, "示せていないこと");
 s.addText([
   { text: "データは解析結果であり、実測ではない。材料は PP で、本研究の PPS ではない。", options: { bullet: true, breakLine: true } },
   { text: "全形状が同じ材料・同じ解析設定。材料・成形条件が変わったときに倍率を使い回せるかは未確認。", options: { bullet: true, breakLine: true } },
-  { text: `途中経過（${NG} 形状）。形の一致が低い部品（cos < 0.9）では補正後も誤差が 30〜60 % 残る。`, options: { bullet: true } },
+  { text: `${NG} 形状すべての結果。形の一致が低い部品（cos < 0.9）では補正後も誤差が 26〜61 % 残る。`, options: { bullet: true } },
 ], { x: 0.7, y: 3.5, w: 11.9, h: 1.5, fontSize: 13, color: INK, paraSpaceAfter: 4, valign: "top" });
 head(s, 0.7, 5.15, 11.9, "今後");
 s.addText([

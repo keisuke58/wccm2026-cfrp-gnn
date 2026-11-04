@@ -91,7 +91,7 @@ d.set_xlabel("補正前の予測とデータの形の一致 cos"); d.set_ylabel(
 d.set_xlim(min(0.8, c.min() - 0.01), 1.0); d.set_ylim(0, 70)
 d.set_title("(c) 形が合うほど直る", fontsize=10.5, fontweight="bold")
 fig.text(0.5, 0.005, "相対誤差：全節点で、予測とデータの差から剛体運動を除いた rms ÷ データの反りの rms。"
-         "データは Greif & Meyer（Zenodo 17831586）の Moldflow 計算、途中経過。補正前の予測の材料定数は一般値（例示）。",
+         "データは Greif & Meyer（Zenodo 17831586）の Moldflow 計算（196 形状すべて）。補正前の予測の材料定数は一般値（例示）。",
          ha="center", fontsize=7.5, color="0.4")
 fig.savefig(os.path.join(OUTD, "rescue3d_errors.png"), dpi=250); plt.close(fig)
 print("wrote rescue3d_flow.png, rescue3d_errors.png;", N, "geometries; medians",
