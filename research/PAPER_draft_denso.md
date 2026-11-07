@@ -8,6 +8,10 @@
 
 穿孔法の点計測による物理モデルの補正を用いた短繊維強化 PPS 射出成形品の残留ひずみ予測
 
+題目の別案（2026-11-04、3 次元部品の結果を含める場合）：**少数点の計測による物理モデルの補正を用いた短繊維強化樹脂射出成形品の残留ひずみ・反り予測**（英：Prediction of Residual Strain and Warpage in Short-Fibre-Reinforced Injection Mouldings by Correcting a Physics Model with Sparse Measurements）。平板と 3 次元を 2 本に分けるなら、1 本目は上の題目のまま。
+
+要約（一般向け、50 字程度）：樹脂部品の反りや中にたまった力を計算で予測し、数か所を測るだけで当たるように直す方法を作った。
+
 手法の呼び名：**RESCUE**（REsidual Strain Calibration with Under-sampled Experiments）。本文中で手法名として用いる（題目には入れない）。
 
 （旧案：数値解析による事前学習と少数の実測点による補正を用いた短繊維強化樹脂射出成形品の残留ひずみ予測）
@@ -37,7 +41,7 @@
 | 4. 既報の再現 | 4.1 表面の残留応力、4.2 穿孔法の解放ひずみ | σxx −24.4 対 −24.3 MPa、実測の 1.5〜1.7 倍 | `results/denso_tsuda2026/`、`abaqus/denso_plate/abaqus_results/` |
 | 5. 少数の実測点による補正 | 深さ方向・方向間の予測、共通の倍率と *T*₀ | 44 → 22 µε、46 → 11 µε、*T*₀,eff ≈ 127 °C（熱膨張係数一定の換算） | `results/denso_tsuda2026/transfer_hole_drilling.json` |
 | 5.x 解放ひずみからの条件同定（2026-11-04） | 影響関数（fifa §16）と 600 枚の代理モデルをつなぎ、実測の解放ひずみから成形条件を同定 | 代理モデル誤差 1.0 µε、合成データで *T*₀,eff 誤差 7.6 °C、既報の実測から *T*₀,eff ≈ 142〜143 °C（RMSE 58 → 14〜16 µε）。127 °C は熱膨張係数一定とした読み替え。*s* と配向の倍率 *m* は範囲の端に張り付き、決まらない | `validation/denso_rescue_released.py`、`results/denso_rescue/results.json` |
-| 5.y 3 次元部品での検証（解析データ、2026-11-04 途中経過、142 形状） | Greif & Meyer の公開データ（Moldflow、PP/GF30、保圧なし）の 3 次元部品で同じ手順。補正前の予測は配向平均＋CalculiX C3D10、補正は倍率 2 個＋剛体運動 | 142 形状の中央値：補正前 54 %、表面 10 点で補正 17 %（全点の限界 16 %）、倍率 2.01 は部品によらず、他の部品の倍率で測定なし 23 %。ゲートの良し悪しは 25 種中 21 種で一致。**データは解析であり実測ではない**、材料は PP | `research/MEMO_rescue_3d_status.md`、`validation/greif3d_*.py`、`abaqus/denso_plate/abaqus_results/greif3d_rescue/` |
+| 5.y 3 次元部品での検証（解析データ、2026-11-04、最終 196 形状） | Greif & Meyer の公開データ（Moldflow、PP/GF30、保圧なし）の 3 次元部品で同じ手順。補正前の予測は配向平均＋CalculiX C3D10、補正は倍率 2 個＋剛体運動 | 196 形状の中央値：補正前 54 %、表面 10 点で補正 17 %（全点の限界 16 %）、倍率 2.02 は部品によらず、他の部品の倍率で測定なし 22 %。ゲートの良し悪しは 33 種中 28 種で一致。**データは解析であり実測ではない**、材料は PP | `research/MEMO_rescue_3d_status.md`、`validation/greif3d_*.py`、`abaqus/denso_plate/abaqus_results/greif3d_rescue/` |
 | 6. 考察 | ゲージ位置の感度、冷却中の応力緩和、共通の倍率の仮定の妥当性 | ±0.4 mm で 1.1〜2.6 倍、τ_g ≈ 10⁹〜10¹⁰ s（全緩和）、緩和する割合 φ ≈ 0.56〜0.64（一般値で部分緩和） | `research/GUIDE_fifa_abaqus.md` 表8、`validation/denso_anneal_relaxation.py` |
 | 7. 結論 | 示せたことと限界 | — | — |
 
