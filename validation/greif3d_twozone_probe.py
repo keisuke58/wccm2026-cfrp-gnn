@@ -2,8 +2,8 @@
 Greif & Meyer's Moldflow parts (Zenodo 17831586; Moldflow results, not measurements). INCONCLUSIVE (2026-11-08).
 Per node: flow direction from the gradient of Fill_time (P1 gradient per tet, volume-averaged to nodes), flow component
 a_ff = n.A.n, distance to the surface h, skin indicator Freeze_time <= max(Fill_time). Prints, per part, the share of
-nodes frozen during filling and the rank correlations of a_ff with h and with Freeze_time; frame_check() compares the
-four plausible orders of the off-diagonal components by a_nn at the surface and a_ff.
+nodes frozen during filling and the rank correlations of a_ff with h and with Freeze_time. (The four plausible orders of
+the off-diagonal components were compared separately, by a_nn at the surface and a_ff: all give a_ff 0.19-0.36.)
 Result on 10 parts: frozen-during-fill share 0-17 % (fill 0.1-0.7 s); a_ff 0.19-0.36 for every component order, i.e. the
 fill-time gradient may not give the flow direction; few elements through the thickness. Neither confirms nor rejects.
 Run:  python3 validation/greif3d_twozone_probe.py DATA   (DATA: folders <id>/<...>_sim.vtu, not in the repository)
