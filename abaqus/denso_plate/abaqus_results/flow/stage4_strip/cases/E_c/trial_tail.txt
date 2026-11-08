@@ -1,0 +1,9 @@
+Time = 2.724849507e-06
+max(U) 1630.178
+max(U) 785.59166
+max(U) 6423.734
+max(U) 4925.3156
+max(U) 5575.7328
+#10  __libc_start_main in "/lib/x86_64-linux-gnu/libc.so.6"
+#11  ? in "/foamuser/bin/openInjMoldSimF"
+timeout: the monitored command dumped core
