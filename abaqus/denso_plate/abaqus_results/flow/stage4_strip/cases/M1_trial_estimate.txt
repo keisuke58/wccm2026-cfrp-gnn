@@ -1,0 +1,3 @@
+trial (M1, 8 ranks, 30 min): T = 1.922e-02 s at the end (203 steps), liquid fraction 0.0192; deltaT saturated at 1.23e-4 s (max Courant 0.200 = maxCo); rate 1.24e-5 s per wall s over the last 9 min (1.19e-5 over the whole trial)
+estimate for the filling run to T = 0.98 s: 21.5 h (22.4 h by the whole-trial rate) on 8 ranks
+over 12 h: the filling run is NOT started (section 20). The trial job did not exit after its 30 min timeout (log stopped at 30 min, job still R) and was deleted at 45 min.

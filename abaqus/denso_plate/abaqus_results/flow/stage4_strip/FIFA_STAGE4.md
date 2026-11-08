@@ -46,11 +46,18 @@ diverge both lower the cell ratio x:z (flow direction to thickness) from 2.6 to 
 x:z ratio that matters. M2 does not meet "30 or more elements through the thickness" of section 17; M1 does
 (32), so M1 is the mesh for step 3.
 
-## Step 3 (running)
+## Step 3: time estimate (filling run not started)
 
-M1 on 8 ranks for a fixed 30 min (`cases/strip_M1p.pbs`, `cases/Atrial`), for the time estimate of the full filling
-run. After 1 min: 10 steps, T = 3.9e-5 s, deltaT 7.4e-6 s and growing (max Courant 0.007 against maxCo 0.2), max(U)
-0.107 m/s. The estimate and then the filling run follow.
+M1 on 8 ranks for a fixed 30 min (`cases/strip_M1p.pbs`, `cases/Atrial`): 203 steps, no divergence, T = 1.92e-2 s at the
+end (liquid fraction 0.0192, consistent with the fill time 1 s), max(U) 0.14 m/s. The step grew to 1.23e-4 s and is held
+there by maxCo 0.2 (max Courant 0.200), so the rate is steady: 1.24e-5 s of filling per wall second over the last 9 min.
+**Estimate for the filling run to T = 0.98 s: about 21.5 h on 8 ranks**, above the 12 h of section 20, so it was not
+started (`cases/M1_trial_estimate.txt`). (The trial job did not exit after its 30 min `timeout`: the solver's log
+stopped at 30 min but the job stayed running and was deleted at 45 min.)
+
+Options, not done: (i) run it anyway (about 1 day, 8 cores of a compute node); (ii) more ranks (the strip has
+833 x 4 x 32 cells, so 16 ranks along x is still 52 cells per rank); (iii) a shorter strip or a coarser x (x:z between 1
+and 1.3 was stable, M2 used dx 0.25 with dz 0.19), which changes the mesh again.
 
 Files: `cases/<run>/blockMeshDict`, `trial_tail.txt` (last log lines), `checkMesh_summary.txt`;
 `cases/make_blockmesh.py` writes the variants. The OpenFOAM case directories are on fifa (`~/flow_sim/runs/strip_*`).
