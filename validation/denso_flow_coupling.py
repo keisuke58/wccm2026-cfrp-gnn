@@ -26,6 +26,8 @@ Result (2026-11-08):
   D2: the two-zone rule (skins aligned, channel at the gate state; no number fitted to orientation data) gives core
   1.64 mm, RMSE a_xx 0.21, a_yy 0.19 (best shear model 0.35, 0.29).
   D3: the 1 mm plate (Fig. 7a): core 0.24 mm (two-zone, fill time scaled with thickness, ASSUMED) vs 0.19 mm.
+  D4 (third plate, Ricotta et al. 2021, PPS/GF40 1.8 mm, mould 80 C, fill 1.8 s, core ~0.15 mm): the rule needs a
+  contact time of 0.83 s (46 % of the fill; a section at about 54 % of the flow path). Consistent, not a check.
   Not explained: WHY the channel keeps the gate orientation (candidates: flow-front / packing reorientation).
   The fill time (1 s at 3 mm), T_nf and D are assumed; the two plates test the RULE, not these values.
 Run:  python3 validation/denso_flow_coupling.py   (writes results/denso_flow/coupling.json)
@@ -151,6 +153,16 @@ def main():
     core7_m = max(H1 - 2 * d1, 0.0) * 1e3
     print(f"[D3] 1 mm plate: paper core (a_yy > a_xx) {core7_p:.2f} mm, shells {(1.08 - core7_p) / 2:.2f} mm; two-zone with fill time "
           f"x {H1 / fo.H:.2f} (same flow rate, ASSUMED): skins {d1 * 1e3:.2f} mm -> core {core7_m:.2f} mm")
+    # D4: a third plate, Ricotta, Sorgato, Zappalorto, Procedia Struct. Integr. 33 (2021) 695-703: PPS/GF40, 200 x 200 x
+    # 1.8 mm, mould 80 C, melt 310 C, flow rate 40 cm3/s -> fill time 1.8 s; SEM: core about 0.15 mm (8.3 %). The site
+    # of the section is not given, so the contact time is unknown: report the contact time the rule needs.
+    p4 = dict(base, T_melt=310.0); H4, tf4 = 1.8, 0.2 * 0.2 * 1.8e-3 * 1e6 / 40.0
+    lo, hi = 0.01, 3.0
+    for _ in range(60):
+        m = 0.5 * (lo + hi); lo, hi = (m, hi) if H4 - 2 * fo.frozen(80.0, dict(p4, t_fill=m)) * 1e3 > 0.15 else (lo, m)
+    print(f"[D4] Ricotta et al. 2021 plate (1.8 mm, mould 80 C, fill {tf4:.1f} s, core ~0.15 mm): the rule needs a contact time "
+          f"of {m:.2f} s ({m / tf4:.0%} of the fill, i.e. a section at about {1 - m / tf4:.0%} of the flow path at constant "
+          f"front speed); full-fill contact would freeze the whole thickness. Consistent, NOT a check (site unknown).")
     best = max(rows, key=lambda x: x["core_mm"])
     ok = best["core_mm"] >= 0.8 * cw_p
     print(f"widest core {best['core_mm']:.2f} mm at kappa {best['kappa']}, n {best['n']}, N_p {best['Np']} -> "
@@ -158,7 +170,8 @@ def main():
     json.dump(dict(paper_core_mm=cw_p, C0=d0, rows=rows, reached=ok, D1=dict(paper_shell_top=top, paper_shell_bottom=bot,
                                                                                 frozen_skin_mm=r0["d_t"] * 1e3),
                    D2=dict(core_mm=cw2, rmse_axx=rx2, rmse_ayy=ry2),
-                   D3=dict(core_1mm_paper=core7_p, core_1mm_model=core7_m, skin_1mm_model=d1 * 1e3)), open(os.path.join(OUT, "coupling.json"), "w"), indent=1)
+                   D3=dict(core_1mm_paper=core7_p, core_1mm_model=core7_m, skin_1mm_model=d1 * 1e3),
+                   D4=dict(fill_s=tf4, contact_s_needed=m)), open(os.path.join(OUT, "coupling.json"), "w"), indent=1)
     print("wrote", os.path.join(OUT, "coupling.json"))
 
 
