@@ -61,3 +61,22 @@ and 1.3 was stable, M2 used dx 0.25 with dz 0.19), which changes the mesh again.
 
 Files: `cases/<run>/blockMeshDict`, `trial_tail.txt` (last log lines), `checkMesh_summary.txt`;
 `cases/make_blockmesh.py` writes the variants. The OpenFOAM case directories are on fifa (`~/flow_sim/runs/strip_*`).
+
+## Step 3 again, in 2-D (the user's request, 9 Nov): M1 with one cell across (sides empty), 833 x 1 x 32
+
+Same x and z cells as M1 (0.096 mm, cubic in x-z), same material, constants and inlet flow rate (mean 0.08 m/s).
+30 min trial on 8 ranks: 676 steps, no divergence, max(U) 0.27 m/s (3.4 times the mean inlet velocity), T = 0.0765 s
+(liquid fraction 0.076), deltaT 1.20e-4 s held by maxCo 0.2; rate 4.19e-5 s per wall s over the last 10 min, so
+**about 6.0 h for the filling run** (12 h limit of section 20): started (`cases/2D/fill_2D.pbs`, with `-l mem=16gb` and
+a memory guard `cases/2D/memguard.sh`).
+
+Filling run: exit 136, 25160 s wall, 6603 steps, last T = 0.7677128885 s, liquid fraction -0.41180897, max(U) over the run
+8.65e+03 m/s. Last log lines: `cases/2D/fill_log_tail.txt`.
+
+## Step 4: probes 50 mm from the gate (2-D filling run)
+
+`orientation_50mm_2D.csv` (written by `step4_probes.py` from the probes of `cases/2D/controlDict0`): per depth from
+the top face (32 cell centres), a_xx, a_yy, a_zz at the end of filling (x flow, y width, z thickness), the time the
+melt front passed (first alpha.poly >= 0.5) and the time the layer froze (first T < TnoFlow = 543.15 K after the front
+passed; empty if it did not freeze before the end of filling). end of the probe record T = 0.76769 s; front passed at 32/32 probes; frozen at 2/32; TnoFlow 543.15 K
+No comparison or fitting done here; constants unchanged.

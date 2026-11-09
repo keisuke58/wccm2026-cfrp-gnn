@@ -1,0 +1,16 @@
+#!/bin/bash
+# GUIDE section 20 (fifa): mesh M1 in 2-D (833 x 1 x 32, sides empty), 8 ranks, the filling run (-fillEnd 0.98)
+cd ${0%/*} || exit 1
+. $WM_PROJECT_DIR/bin/tools/RunFunctions
+rm -rf 0 processor* && cp -r org0 0
+cp system/controlDict0 system/controlDict && cp system/fvSolution0 system/fvSolution
+foamDictionary system/controlDict -entry endTime -set 1.2
+foamDictionary system/controlDict -entry writeInterval -set 0.05
+foamDictionary system/controlDict -entry maxDeltaT -set 0.01
+foamDictionary 0/U -entry boundaryField.inlet.volumetricFlowRate -set 4.928e-07
+runApplication blockMesh || exit 1
+runApplication checkMesh || exit 1
+runApplication decomposePar || exit 1
+mpirun -np 8 openInjMoldSimF -parallel -fillEnd 0.98 > log.openInjMoldSimF_fill 2>&1
+echo "fill exit=$?"
+runApplication reconstructPar
