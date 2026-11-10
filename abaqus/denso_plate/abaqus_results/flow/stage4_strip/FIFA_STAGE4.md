@@ -126,3 +126,13 @@ the gate edge away from the walls delays it (74 -> 84 % filled) but does not rem
 changes the set-up: a lower etaMax (a material constant), a finer mesh next to the walls at the gate, or a material
 with a larger margin above the no-flow temperature (PPS data). The 50 mm section had filled at 0.62-0.73 s, before
 either divergence, so the CSV above (records up to 0.766 s) stands.
+
+Second test (the user's go-ahead, 10 Nov): the original 2-D set-up (whole x = 0 face as gate) with the mesh refined
+twice in x and z next to the gate (x < 2 mm, `topoSet` + `refineMesh`, cells 0.024 mm there, 36 736 cells,
+checkMesh OK), restarted at T = 0.70 s from `strip_2D_fill/0.7` by `mapFields` (`cases/2D_ref/`). It diverges after
+about 100 steps, at T = 0.7032 s (max(U) 0.147 -> 0.52 -> 36 m/s), with the pressure maximum (16 MPa) in the first
+fine cell column at the top corner of the gate (x = 0.012 mm, 0.04 mm from the wall). The finer cells resolve the
+corner between the uniform inlet and the frozen wall layer more sharply and fail sooner, so a finer mesh at the gate
+does not help; it confirms that the divergence sits in that corner. Left there; what remains changes the set-up or
+the material (a gate kept hot or insulated, a lower etaMax, or a material with a larger margin above its no-flow
+temperature), not tried.

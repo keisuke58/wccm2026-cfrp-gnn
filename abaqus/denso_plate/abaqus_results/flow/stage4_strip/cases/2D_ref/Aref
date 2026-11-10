@@ -1,0 +1,23 @@
+#!/bin/bash
+# GUIDE section 20 (fifa, 10 Nov): the 2-D filling run (whole x = 0 face as gate, as strip_2D_fill) restarted at
+# T = 0.70 s on a mesh refined twice in x and z next to the gate (x < 2 mm: cells 0.024 mm); fields mapped from
+# strip_2D_fill/0.7. One change: the mesh at the gate. Material and constants unchanged.
+cd ${0%/*} || exit 1
+. $WM_PROJECT_DIR/bin/tools/RunFunctions
+rm -rf processor*
+cp system/controlDict0 system/controlDict && cp system/fvSolution0 system/fvSolution
+foamDictionary system/controlDict -entry startFrom -set startTime
+foamDictionary system/controlDict -entry startTime -set 0.7
+foamDictionary system/controlDict -entry endTime -set 1.2
+foamDictionary system/controlDict -entry writeInterval -set 0.01
+foamDictionary system/controlDict -entry maxDeltaT -set 0.01
+for lev in 1 2; do
+  topoSet -constant > log.topoSet$lev 2>&1 || exit 1
+  refineMesh -dict system/refineMeshDict -overwrite > log.refineMesh$lev 2>&1 || exit 1
+done
+runApplication checkMesh || exit 1
+runApplication mapFields /runs/strip_2D_fill -sourceTime 0.7 -consistent || exit 1
+runApplication decomposePar || exit 1
+mpirun -np 8 openInjMoldSimF -parallel -fillEnd 0.98 > log.openInjMoldSimF_ref 2>&1
+echo "ref exit=$?"
+runApplication reconstructPar

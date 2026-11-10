@@ -1,0 +1,3 @@
+FoamFile { version 2.0; format ascii; class dictionary; object topoSetDict; }
+// GUIDE section 20 (fifa, 10 Nov): the cells next to the gate, x < 2 mm, all of the thickness
+actions ( { name gate; type cellSet; action new; source boxToCell; sourceInfo { box (-1 -1 -1) (0.002 1 1); } } );
