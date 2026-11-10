@@ -98,3 +98,31 @@ the front reached them); the time the inner layers freeze needs the packing/cool
 Read-out, without comparison: a_xx 0.96-0.97 from the faces to about 0.8 mm deep, falling to 0.47 at the mid-plane
 (a_yy 0.31, a_zz 0.22); a_yy > a_xx nowhere through the thickness, so no core layer in the sense of section 17 in
 this 2-D (one cell across) run.
+
+## Cause of the late divergence of the 2-D filling run (10 Nov, fifa, the user's request)
+
+Fields at T = 0.75 s and the minima/maxima just before the blow-up (`fieldMinMax`):
+- The blow-up starts at the gate: max(U) leaves its steady 0.16 m/s in the first cell column (x = 0.05 mm), 0.24-0.34 mm
+  from the bottom wall, and the pressure in the corner cell (x = 0.14 mm, first cell row) is 32 MPa against an inlet
+  average of 8 MPa (smooth, 7.3 -> 8.0 MPa over 0.71-0.767 s).
+- At the gate the melt has frozen against both walls: cells at the viscosity cap (etaMax 1e6 Pa s) in the first one
+  to two rows from 0.7 s on, already from the second cell column. The inlet (`flowRateInletVelocity`, uniform over the
+  whole x = 0 face) still drives 0.074 m/s into the row next to the wall, whose downstream neighbours are frozen
+  (Ux -0.011 m/s there, back-flow). The tutorial does not meet this because its melt is 110 K above the no-flow
+  temperature (220 against 110 C); the stage 3 material is only 50 K above (320 against 270 C), so the skin forms at
+  the gate itself.
+
+Test of candidate 2 of section 20 on this mesh (one change: the gate on the middle 22 of the 32 thickness cells, the
+outer 5 + 5 cells of the x = 0 face wall; same cells, material, constants and total flow rate, so the mean gate
+velocity rises to 0.116 m/s). Restarted at T = 0.70 s from `strip_2D_fill/0.7` by `mapFields -consistent`
+(`cases/2D_gate/`): it passes 0.767 s and runs stably (max(U) 0.16 m/s) to **T = 0.853 s (liquid fraction 0.84)**, then
+diverges in the same way (exit 136, 30 min). The blow-up is again next to the gate (x = 0.43 mm, 0.34 mm from the
+bottom wall), at the edge of the skin, which has grown to 2-3 cells below the gate edge (row 5) by then.
+
+Reading: the divergence is tied to the freezing front near the gate, where the viscosity jumps by about four
+orders of magnitude (from about 3e2 to the cap 1e6 Pa s) within a cell next to fast flow; the comment in the example's
+`thermophysicalProperties` says the same ("etaMax - High values cause instability during solidification"). Moving
+the gate edge away from the walls delays it (74 -> 84 % filled) but does not remove it. Not tried, because each
+changes the set-up: a lower etaMax (a material constant), a finer mesh next to the walls at the gate, or a material
+with a larger margin above the no-flow temperature (PPS data). The 50 mm section had filled at 0.62-0.73 s, before
+either divergence, so the CSV above (records up to 0.766 s) stands.

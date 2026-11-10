@@ -1,0 +1,30 @@
+
+Create databases as time
+
+Source time: 0.7
+Target time: 0.7
+Create meshes
+
+Source mesh size: 26656	Target mesh size: 26656
+
+
+Consistently creating and mapping fields for time 0.7
+
+    interpolating Co
+    interpolating pAux
+    interpolating shrRate
+    interpolating p_rgh
+    interpolating dgdt
+    interpolating rho
+    interpolating alpha.poly
+    interpolating visc
+    interpolating p
+    interpolating T
+    interpolating Tc
+    interpolating U
+    interpolating A2
+    interpolating elSigDev
+    interpolating StressFiber
+
+End
+

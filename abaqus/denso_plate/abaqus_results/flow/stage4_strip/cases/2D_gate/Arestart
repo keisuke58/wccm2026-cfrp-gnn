@@ -1,0 +1,20 @@
+#!/bin/bash
+# GUIDE section 20 (fifa, 10 Nov): the 2-D filling run restarted at T = 0.70 s on the mesh with the gate on the
+# middle 22 of 32 thickness cells; fields mapped from strip_2D_fill/0.7 (same cells, only the patches differ)
+cd ${0%/*} || exit 1
+. $WM_PROJECT_DIR/bin/tools/RunFunctions
+rm -rf processor*
+cp system/controlDict0 system/controlDict && cp system/fvSolution0 system/fvSolution
+foamDictionary system/controlDict -entry startFrom -set startTime
+foamDictionary system/controlDict -entry startTime -set 0.7
+foamDictionary system/controlDict -entry endTime -set 1.2
+foamDictionary system/controlDict -entry writeInterval -set 0.01
+foamDictionary system/controlDict -entry maxDeltaT -set 0.01
+runApplication blockMesh || exit 1
+runApplication checkMesh || exit 1
+runApplication mapFields /runs/strip_2D_fill -sourceTime 0.7 -consistent || exit 1
+foamDictionary 0.7/U -entry boundaryField.inlet.volumetricFlowRate -set 4.928e-07
+runApplication decomposePar || exit 1
+mpirun -np 8 openInjMoldSimF -parallel -fillEnd 0.98 > log.openInjMoldSimF_gate 2>&1
+echo "gate exit=$?"
+runApplication reconstructPar
