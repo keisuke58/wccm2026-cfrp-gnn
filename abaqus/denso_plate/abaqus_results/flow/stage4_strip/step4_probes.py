@@ -4,7 +4,8 @@ thickness), write per depth from the top face: a_xx, a_yy, a_zz at the end of fi
 
 Axes of the strip: x flow direction, y width (one empty cell in the 2-D case), z thickness.
 
-usage: python step4_probes.py <case dir> <out csv> [TnoFlow K]
+usage: python step4_probes.py <case dir> <out csv> [TnoFlow K] [t_max s]
+(t_max: ignore probe records after t_max, e.g. the steps of a divergence)
 """
 import csv
 import re
@@ -34,8 +35,9 @@ def read(path):
 def main():
     case, out = Path(sys.argv[1]), sys.argv[2]
     tnf = float(sys.argv[3]) if len(sys.argv) > 3 else 543.15
+    tmax = float(sys.argv[4]) if len(sys.argv) > 4 else float("inf")
     dirs = sorted((case / "postProcessing/probes50mm").iterdir(), key=lambda p: float(p.name))
-    get = lambda f: [r for d in dirs if (d / f).exists() for r in read(d / f)[1]]
+    get = lambda f: [r for d in dirs if (d / f).exists() for r in read(d / f)[1] if r[0] <= tmax]
     pos = read(dirs[0] / "alpha.poly")[0]
     al, T, A = get("alpha.poly"), get("T"), get("A2")
     n = len(pos)

@@ -80,3 +80,21 @@ the top face (32 cell centres), a_xx, a_yy, a_zz at the end of filling (x flow, 
 melt front passed (first alpha.poly >= 0.5) and the time the layer froze (first T < TnoFlow = 543.15 K after the front
 passed; empty if it did not freeze before the end of filling). end of the probe record T = 0.76769 s; front passed at 32/32 probes; frozen at 2/32; TnoFlow 543.15 K
 No comparison or fitting done here; constants unchanged.
+
+**Correction (10 Nov, fifa):** the filling run did **not** reach the end of filling. It ran stably to T = 0.766 s
+(liquid fraction 0.74; max(U) 0.15-0.18 m/s, i.e. about 2 times the mean inlet velocity, the whole time), then
+diverged within about 150 steps: max(U) 0.22 m/s at 0.7670 s, 1.05 at 0.76767, 8650 m/s at 0.76771 s, with
+alpha.poly far outside [0, 1] in the last two steps; the solver stopped with a floating-point exception (exit 136)
+after 7.0 h. `cases/2D/maxU_per_step.txt` has max(U) and min(alpha.poly) per step. The cause of this late divergence
+was not looked into (the front was then at about 59 mm of 80 mm, not at the vent).
+
+The CSV is therefore rewritten from the probe records up to T = 0.766 s (before the onset), not from the last
+record (`step4_probes.py ... 543.15 0.766`). The front passed the 50 mm position at 0.619-0.632 s in the inner layers
+and at 0.734 s in the two outermost cells, so the 50 mm section had filled 0.13 s earlier; the orientation there
+differs from the last record (0.7677 s) by less than 0.002 in every component. "At the end of filling" above reads
+"at T = 0.766 s, 74 % filled". Only the outermost cells (0.05 mm from each face) froze before then (at 0.734 s, when
+the front reached them); the time the inner layers freeze needs the packing/cooling stage, not run.
+
+Read-out, without comparison: a_xx 0.96-0.97 from the faces to about 0.8 mm deep, falling to 0.47 at the mid-plane
+(a_yy 0.31, a_zz 0.22); a_yy > a_xx nowhere through the thickness, so no core layer in the sense of section 17 in
+this 2-D (one cell across) run.
