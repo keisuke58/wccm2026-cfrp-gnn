@@ -1,0 +1,5 @@
+    walls_gate
+    {
+        type            wall;
+        inGroups        List<word> 1(wall);
+        nFaces          42;

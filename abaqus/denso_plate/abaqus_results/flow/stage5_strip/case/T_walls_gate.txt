@@ -1,0 +1,4 @@
+    walls_gate
+    {
+        type            zeroGradient;   // fifa, section 21: insulated, x < 2 mm from the gate (hot film-gate land)
+    }

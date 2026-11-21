@@ -1,0 +1,40 @@
+smoothSolver:  Solving for elSigDevyy, Initial residual = 0.13474223, Final residual = 4.5815656e-12, No Iterations 6
+smoothSolver:  Solving for elSigDevzz, Initial residual = 0.21407322, Final residual = 2.3170684e-13, No Iterations 7
+smoothSolver:  Solving for T, Initial residual = 0.00040658472, Final residual = 5.6223244e-07, No Iterations 3
+min(T) 420.19758
+GAMG:  Solving for p_rgh, Initial residual = 0.0028885041, Final residual = 6.6326837e-06, No Iterations 2
+GAMG:  Solving for p_rgh, Initial residual = 6.5951542e-06, Final residual = 1.8296573e-08, No Iterations 4
+GAMGPCG:  Solving for p_rgh, Initial residual = 1.8434517e-08, Final residual = 4.8236174e-13, No Iterations 5
+max(U) 131.44289
+min(p_rgh) 10000
+PIMPLE: Iteration 19
+MULES: Solving for alpha.poly
+Liquid phase volume fraction = 0.70190039  Min(alpha.poly) = -169.72806  Min(alpha.air) = -77.200479
+[0] #0  Foam::error::printStack(Foam::Ostream&) at ??:?
+[0] #1  Foam::sigFpe::sigHandler(int) at ??:?
+[0] #2  ? in "/lib/x86_64-linux-gnu/libc.so.6"
+[0] #3  double Foam::sumProd<double>(Foam::UList<double> const&, Foam::UList<double> const&) at ??:?
+[0] #4  Foam::PBiCG::solve(Foam::Field<double>&, Foam::Field<double> const&, unsigned char) const at ??:?
+[0] #5  Foam::fvMatrix<Foam::SymmTensor<double> >::solveSegregated(Foam::dictionary const&) in "/foamuser/bin/openInjMoldSimF"
+[0] #6  Foam::fvMatrix<Foam::SymmTensor<double> >::solve() in "/foamuser/bin/openInjMoldSimF"
+[0] #7  ? in "/foamuser/bin/openInjMoldSimF"
+[0] #8  __libc_start_main in "/lib/x86_64-linux-gnu/libc.so.6"
+[0] #9  ?[frontale01:00159] *** Process received signal ***
+[frontale01:00159] Signal: Floating point exception (8)
+[frontale01:00159] Signal code:  (-6)
+[frontale01:00159] Failing at address: 0x40c0000009f
+[frontale01:00159] [ 0] /lib/x86_64-linux-gnu/libc.so.6(+0x3ef20)[0x14b53492af20]
+[frontale01:00159] [ 1] /lib/x86_64-linux-gnu/libc.so.6(gsignal+0xc7)[0x14b53492ae97]
+[frontale01:00159] [ 2] /lib/x86_64-linux-gnu/libc.so.6(+0x3ef20)[0x14b53492af20]
+[frontale01:00159] [ 3] /opt/openfoam7/platforms/linux64GccDPInt32Opt/lib/libOpenFOAM.so(_ZN4Foam7sumProdIdEEdRKNS_5UListIT_EES5_+0x2d)[0x14b535f11c4d]
+[frontale01:00159] [ 4] /opt/openfoam7/platforms/linux64GccDPInt32Opt/lib/libOpenFOAM.so(_ZNK4Foam5PBiCG5solveERNS_5FieldIdEERKS2_h+0x8df)[0x14b535d1502f]
+[frontale01:00159] [ 5] openInjMoldSimF(_ZN4Foam8fvMatrixINS_10SymmTensorIdEEE15solveSegregatedERKNS_10dictionaryE+0x5cd)[0x559c55f4f17d]
+[frontale01:00159] [ 6] openInjMoldSimF(_ZN4Foam8fvMatrixINS_10SymmTensorIdEEE5solveEv+0x30e)[0x559c55f6a38e]
+[frontale01:00159] [ 7] openInjMoldSimF(+0x8ac74)[0x559c55e8ac74]
+[frontale01:00159] [ 8] /lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0xe7)[0x14b53490db97]
+[frontale01:00159] [ 9] openInjMoldSimF(+0x98d8a)[0x559c55e98d8a]
+[frontale01:00159] *** End of error message ***
+ in "/foamuser/bin/openInjMoldSimF"
+--------------------------------------------------------------------------
+mpirun noticed that process rank 0 with PID 0 on node frontale01 exited on signal 8 (Floating point exception).
+--------------------------------------------------------------------------

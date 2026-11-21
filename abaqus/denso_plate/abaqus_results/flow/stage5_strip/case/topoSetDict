@@ -1,0 +1,4 @@
+FoamFile { version 2.0; format ascii; class dictionary; object topoSetDict; }
+// GUIDE section 21 (fifa, 21 Nov): the wall faces within 2 mm of the gate (face centres x < 2 mm: 21 columns, 2.02 mm)
+actions ( { name gateWall; type faceSet; action new; source patchToFace; sourceInfo { name walls; } }
+          { name gateWall; type faceSet; action subset; source boxToFace; sourceInfo { box (-1 -1 -1) (0.002 1 1); } } );

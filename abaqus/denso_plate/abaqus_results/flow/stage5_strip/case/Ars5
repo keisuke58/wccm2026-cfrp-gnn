@@ -1,0 +1,20 @@
+#!/bin/bash
+# GUIDE section 21 (fifa, 21 Nov): the 2-D strip of section 20 (strip_2D_fill), one change: the top and bottom walls
+# within 2 mm of the gate insulated (patch walls_gate, T zeroGradient; decided before the run). Restart at T = 0.70 s
+# from strip_2D_fill/0.7 by mapFields (same cells). Material, Ci, flow rate and mesh as section 20.
+cd ${0%/*} || exit 1
+. $WM_PROJECT_DIR/bin/tools/RunFunctions
+rm -rf processor*
+cp system/controlDict0 system/controlDict && cp system/fvSolution0 system/fvSolution
+foamDictionary system/controlDict -entry startFrom -set startTime
+foamDictionary system/controlDict -entry startTime -set 0          # mesh changes without touching the 0.7 fields
+[ -n "$(grep -l walls_gate constant/polyMesh/boundary)" ] || { topoSet > log.topoSet 2>&1 && createPatch -overwrite > log.createPatch 2>&1; } || exit 1
+runApplication checkMesh || exit 1
+foamDictionary system/controlDict -entry startTime -set 0.7
+foamDictionary system/controlDict -entry endTime -set 1.2
+foamDictionary system/controlDict -entry writeInterval -set 0.01
+foamDictionary system/controlDict -entry maxDeltaT -set 0.01
+# internal fields copied from strip_2D_fill/0.7 beforehand (createPatch keeps the cells); mapFields -consistent rejects the extra patch
+runApplication decomposePar || exit 1
+timeout -k 60 ${TRIAL_SEC:-1800} mpirun -np 8 openInjMoldSimF -parallel -fillEnd 0.98 > log.openInjMoldSimF_s5trial 2>&1
+echo "s5 trial exit=$?"

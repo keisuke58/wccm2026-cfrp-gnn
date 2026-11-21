@@ -1,0 +1,3 @@
+FoamFile { version 2.0; format ascii; class dictionary; object createPatchDict; }
+pointSync false;
+patches ( { name walls_gate; patchInfo { type wall; } constructFrom set; set gateWall; } );
