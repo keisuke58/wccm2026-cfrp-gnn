@@ -1,0 +1,9 @@
+max(U) 225.01727
+max(U) 244.02502
+max(U) 265.47793
+max(U) 286.46061
+max(U) 312.79552
+max(U) 337.29918
+#10  __libc_start_main in "/lib/x86_64-linux-gnu/libc.so.6"
+#11  ? in "/foamuser/bin/openInjMoldSimF"
+timeout: the monitored command dumped core

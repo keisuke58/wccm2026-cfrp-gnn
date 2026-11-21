@@ -1,0 +1,50 @@
+smoothSolver:  Solving for elSigDevxx, Initial residual = 0.50348777, Final residual = 3.3024786e-12, No Iterations 13
+smoothSolver:  Solving for elSigDevxz, Initial residual = 0.44939869, Final residual = 4.0991588e-12, No Iterations 12
+smoothSolver:  Solving for elSigDevyy, Initial residual = 0.25564938, Final residual = 7.7834114e-12, No Iterations 11
+smoothSolver:  Solving for elSigDevzz, Initial residual = 0.67789751, Final residual = 1.984853e-12, No Iterations 13
+smoothSolver:  Solving for T, Initial residual = 0.99893585, Final residual = 0.0091298118, No Iterations 12
+min(T) -18662.517
+GAMG:  Solving for p_rgh, Initial residual = 0.97209098, Final residual = 2.9872837e-05, No Iterations 1
+GAMG:  Solving for p_rgh, Initial residual = 1.5290154e-05, Final residual = 9.6287851e-08, No Iterations 4
+GAMGPCG:  Solving for p_rgh, Initial residual = 9.4984488e-08, Final residual = 5.4046882e-12, No Iterations 4
+max(U) 8651.6454
+min(p_rgh) 10000
+PIMPLE: Iteration 22
+MULES: Solving for alpha.poly
+Liquid phase volume fraction = -0.41180897  Min(alpha.poly) = -553219.59  Min(alpha.air) = -433309.1
+[0] #0  Foam::error::printStack(Foam::Ostream&) at ??:?
+[0] #1  Foam::sigFpe::sigHandler(int) at ??:?
+[0] #2  ? in "/lib/x86_64-linux-gnu/libc.so.6"
+[0] #3  void Foam::multiply<Foam::SymmTensor<double> >(Foam::Field<Foam::SymmTensor<double> >&, Foam::UList<double> const&, Foam::UList<Foam::SymmTensor<double> > const&) in "/foamuser/bin/openInjMoldSimF"
+[0] #4  void Foam::multiply<Foam::SymmTensor<double>, Foam::fvPatchField, Foam::volMesh>(Foam::GeometricField<Foam::SymmTensor<double>, Foam::fvPatchField, Foam::volMesh>&, Foam::GeometricField<double, Foam::fvPatchField, Foam::volMesh> const&, Foam::GeometricField<Foam::SymmTensor<double>, Foam::fvPatchField, Foam::volMesh> const&) in "/foamuser/bin/openInjMoldSimF"
+[0] #5  Foam::tmp<Foam::GeometricField<Foam::SymmTensor<double>, Foam::fvPatchField, Foam::volMesh> > Foam::operator*<Foam::SymmTensor<double>, Foam::fvPatchField, Foam::volMesh>(Foam::GeometricField<double, Foam::fvPatchField, Foam::volMesh> const&, Foam::GeometricField<Foam::SymmTensor<double>, Foam::fvPatchField, Foam::volMesh> const&) in "/foamuser/bin/openInjMoldSimF"
+[0] #6  ? in "/foamuser/bin/openInjMoldSimF"
+[0] #7  __libc_start_main in "/lib/x86_64-linux-gnu/libc.so.6"
+[0] #8  ?[frontale01:00158] *** Process received signal ***
+[frontale01:00158] Signal: Floating point exception (8)
+[frontale01:00158] Signal code:  (-6)
+[frontale01:00158] Failing at address: 0x40c0000009e
+[frontale01:00158] [ 0] /lib/x86_64-linux-gnu/libc.so.6(+0x3ef20)[0x14562439ef20]
+[frontale01:00158] [ 1] /lib/x86_64-linux-gnu/libc.so.6(gsignal+0xc7)[0x14562439ee97]
+[frontale01:00158] [ 2] /lib/x86_64-linux-gnu/libc.so.6(+0x3ef20)[0x14562439ef20]
+[frontale01:00158] [ 3] openInjMoldSimF(_ZN4Foam8multiplyINS_10SymmTensorIdEEEEvRNS_5FieldIT_EERKNS_5UListIdEERKNS7_IS4_EE+0x4f)[0x556e757217af]
+[frontale01:00158] [ 4] openInjMoldSimF(_ZN4Foam8multiplyINS_10SymmTensorIdEENS_12fvPatchFieldENS_7volMeshEEEvRNS_14GeometricFieldIT_T0_T1_EERKNS5_IdS7_S8_EERKS9_+0x3f)[0x556e7572180f]
+[frontale01:00158] [ 5] openInjMoldSimF(_ZN4FoammlINS_10SymmTensorIdEENS_12fvPatchFieldENS_7volMeshEEENS_3tmpINS_14GeometricFieldIT_T0_T1_EEEERKNS6_IdS8_S9_EERKSA_+0x166)[0x556e75774506]
+[frontale01:00158] [ 6] openInjMoldSimF(+0x7ffdf)[0x556e7567ffdf]
+[frontale01:00158] [ 7] /lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0xe7)[0x145624381b97]
+[frontale01:00158] [ 8] openInjMoldSimF(+0x98d8a)[0x556e75698d8a]
+[frontale01:00158] *** End of error message ***
+ in "/foamuser/bin/openInjMoldSimF"
+--------------------------------------------------------------------------
+mpirun noticed that process rank 0 with PID 0 on node frontale01 exited on signal 8 (Floating point exception).
+--------------------------------------------------------------------------
+host frontale01 start Mon Nov  9 08:12:16 PM JST 2026
+time="2026-11-09T20:12:16+09:00" level=error msg="cannot find UID/GID for user nishioka: no subuid ranges found for user \"nishioka\" in /etc/subuid - check rootless mode in man pages."
+time="2026-11-09T20:12:16+09:00" level=warning msg="Using rootless single mapping into the namespace. This might break some images. Check /etc/subuid and /etc/subgid for adding sub*ids if not using a network user"
+time="2026-11-09T20:12:16+09:00" level=warning msg="Failed to add pause process to systemd sandbox cgroup: Process org.freedesktop.systemd1 exited with status 1"
+Running blockMesh on /case
+Running checkMesh on /case
+Running decomposePar on /case
+fill exit=136
+Running reconstructPar on /case
+elapsed 25160 s end Tue Nov 10 03:11:36 AM JST 2026
