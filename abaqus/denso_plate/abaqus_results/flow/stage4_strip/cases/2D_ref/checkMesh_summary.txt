@@ -1,0 +1,4 @@
+    cells:            36736
+    Max aspect ratio = 1.0022075 OK.
+    Mesh non-orthogonality Max: 31.019418 average: 0.97022359
+Mesh OK.

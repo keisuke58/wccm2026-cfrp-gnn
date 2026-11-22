@@ -1,0 +1,9 @@
+max(U) 0.089783491
+max(U) 0.089784439
+max(U) 0.089785381
+max(U) 0.089786237
+max(U) 0.089787074
+max(U) 0.089787852
+DILUPBiCG:  Solving for A2yz, Initial residual = 0, Final residual = 0, No Iterations 0
+DILUPBiCG:  Solving for A2zz, Initial residual = 4.015697e-09, Final residual = 1.7853475e-16, No Iterations 1
+diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0

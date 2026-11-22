@@ -1,0 +1,21 @@
+#!/bin/bash
+# GUIDE section 17 section 20: mesh M1 in 2-D, restart at 0.70 s with the gate on the middle 2/3
+#PBS -N oims_gate
+#PBS -l nodes=1:ppn=8
+#PBS -l walltime=08:00:00
+#PBS -l mem=16gb
+#PBS -j oe
+B=/tmp/pm$(id -u); mkdir -p $B; chmod 700 $B; export XDG_RUNTIME_DIR=$B
+P="podman --root $B/storage --runroot $B/run --events-backend=file --cgroup-manager=cgroupfs --storage-opt overlay.ignore_chown_errors=true"
+echo "host $(hostname) start $(date)"
+$P image exists localhost/of7-keepid || $P load -q -i $HOME/flow_sim/img/of7-keepid.tar
+$HOME/flow_sim/runs/stage4/memguard.sh & G=$!
+t0=$(date +%s)
+$P run --rm --network=host --userns=keep-id --user $(id -u):$(id -g) -e HOME=/tmp \
+  -v $HOME/flow_sim/runs:/runs -v $HOME/flow_sim/runs/strip_2D_gate:/case -v $HOME/flow_sim/user:/foamuser -w /case --entrypoint /bin/bash localhost/of7-keepid -c '
+  source /opt/openfoam7/etc/bashrc
+  export WM_PROJECT_USER_DIR=/foamuser FOAM_USER_APPBIN=/foamuser/bin FOAM_USER_LIBBIN=/foamuser/lib
+  export PATH=/foamuser/bin:$PATH LD_LIBRARY_PATH=/foamuser/lib:$LD_LIBRARY_PATH
+  ./Arestart'
+echo "elapsed $(( $(date +%s) - t0 )) s end $(date)"
+kill $G

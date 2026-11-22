@@ -1,0 +1,143 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  3.0.1                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     openInjMoldSimF;
+
+startFrom       latestTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         0.165;
+
+deltaT          1e-6;
+
+writeControl    adjustableRunTime;
+
+writeInterval   0.005;
+
+purgeWrite      0;
+
+writeFormat     ascii;
+
+writePrecision  8;
+
+writeCompression off;
+
+timeFormat      general;
+
+timePrecision   10;
+
+runTimeModifiable yes;
+
+adjustTimeStep  yes;
+
+maxCo           0.2;
+
+maxDeltaT       1e-3;
+
+maxAlphaCo      0.05;
+
+maxSolidCo      1;
+
+pAuxRlx         0.1;//active when p = pMin
+
+functions {
+    probes50mm      // fifa, section 20 step 4: 50 mm from the gate, through the thickness (32 cell centres), every step
+    {
+        type            probes;
+        functionObjectLibs ( "libsampling.so" );
+        writeControl    timeStep;
+        writeInterval   1;
+        fields          ( alpha.poly T A2 U );
+        probeLocations  ( (0.05 0.001 4.812500e-05) (0.05 0.001 1.443750e-04) (0.05 0.001 2.406250e-04) (0.05 0.001 3.368750e-04) (0.05 0.001 4.331250e-04) (0.05 0.001 5.293750e-04) (0.05 0.001 6.256250e-04) (0.05 0.001 7.218750e-04) (0.05 0.001 8.181250e-04) (0.05 0.001 9.143750e-04) (0.05 0.001 1.010625e-03) (0.05 0.001 1.106875e-03) (0.05 0.001 1.203125e-03) (0.05 0.001 1.299375e-03) (0.05 0.001 1.395625e-03) (0.05 0.001 1.491875e-03) (0.05 0.001 1.588125e-03) (0.05 0.001 1.684375e-03) (0.05 0.001 1.780625e-03) (0.05 0.001 1.876875e-03) (0.05 0.001 1.973125e-03) (0.05 0.001 2.069375e-03) (0.05 0.001 2.165625e-03) (0.05 0.001 2.261875e-03) (0.05 0.001 2.358125e-03) (0.05 0.001 2.454375e-03) (0.05 0.001 2.550625e-03) (0.05 0.001 2.646875e-03) (0.05 0.001 2.743125e-03) (0.05 0.001 2.839375e-03) (0.05 0.001 2.935625e-03) (0.05 0.001 3.031875e-03) );
+    }
+
+
+    injectionPressure   //Andrea : to monitor injection pressure
+    {
+        type surfaceFieldValue;
+        functionObjectLibs ("libfieldFunctionObjects.so");
+        //writeControl timeStep;
+        writeInterval  5e-3;
+        writeFields no;
+        log true;
+        valueOutput true;
+        regionType patch;
+        surfaceFormat off;
+        verbose true;
+        name inlet; // replace this with your boundary patch name
+        operation areaAverage;
+
+        fields
+            (
+            p
+            );
+    }
+
+        //Andrea - monitoring residuals
+	residuals
+	{
+		type   residuals;
+		functionObjectLibs   ("libutilityFunctionObjects.so");
+		enabled   true;
+		writeControl   timeStep;
+		writeInterval   1;
+		fields   (p_rgh T elSigDev );
+	}
+
+    minMaxp
+    {
+        type        fieldMinMax;
+        functionObjectLibs ("libfieldFunctionObjects.so");
+        fields
+        (
+             p p_rgh pAux T Tc shrRate visc U
+        );
+        write yes;
+        log yes;
+        mode magnitude;
+        location        yes;
+        writeControl    timeStep;
+        writeInterval   10;
+    }
+
+    Co1
+    {
+        // Mandatory entries (unmodifiable)
+        type            CourantNo;
+        functionObjectLibs ("libfieldFunctionObjects.so");
+
+        // Optional entries (runtime modifiable)
+        //rho             rho;
+
+        // Optional (inherited) entries
+        //field           <phi>;
+        //result          <fieldResult>;
+        //region          region0;
+        //enabled         true;
+        //log             true;
+        //timeStart       0;
+        //timeEnd         1000;
+          executeControl  writeTime;
+        //executeInterval 1;
+          writeControl    writeTime;
+    }
+}
+
+// ************************************************************************* //

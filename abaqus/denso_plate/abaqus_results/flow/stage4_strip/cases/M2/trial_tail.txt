@@ -1,0 +1,9 @@
+max(U) 0.12200826
+max(U) 0.12200983
+max(U) 0.12201137
+max(U) 0.12201288
+max(U) 0.12201437
+Time = 0.0001855980088
+min(T) 423.49803
+GAMG:  Solving for p_rgh, Initial residual = 0.11309489, Final residual = 0.0003974111, No Iterations 1
+GAMG:  Solving for p_rgh, Initial residual = 0.0003846063, Final residual = 1.2783129e-06, No Iterations 2
