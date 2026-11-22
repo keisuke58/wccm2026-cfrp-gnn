@@ -28,6 +28,8 @@ Result (2026-11-08):
   D3: the 1 mm plate (Fig. 7a): core 0.24 mm (two-zone, fill time scaled with thickness, ASSUMED) vs 0.19 mm.
   D4 (third plate, Ricotta et al. 2021, PPS/GF40 1.8 mm, mould 80 C, fill 1.8 s, core ~0.15 mm): the rule needs a
   contact time of 0.83 s (46 % of the fill; a section at about 54 % of the flow path). Consistent, not a check.
+  Revision (2026-11-22, validation/flow_freeze_thermal.py): D3 used the semi-infinite erf solution; with the finite
+  thickness the 1 mm plate is at the threshold of freezing through, so D3 is a trend, not a quantitative check.
   Not explained: WHY the channel keeps the gate orientation (candidates: flow-front / packing reorientation).
   The fill time (1 s at 3 mm), T_nf and D are assumed; the two plates test the RULE, not these values.
 Run:  python3 validation/denso_flow_coupling.py   (writes results/denso_flow/coupling.json)
