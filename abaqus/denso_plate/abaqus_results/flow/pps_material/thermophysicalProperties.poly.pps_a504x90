@@ -1,0 +1,93 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  3.0.1                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      thermophysicalProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// PPS + 40 wt% glass fibre, Toray TORELINA A504X90.  ILLUSTRATIVE, FROM PUBLIC CURVES, UNCALIBRATED.
+// Written by validation/pps_material_fit.py from data/literature/pps_gf40_toray_a504x90_curves.json
+// (points read from figure images; do not edit by hand, re-run the script).
+// Sources: viscosity  Fig. 6.13, https://www.plastics.toray/technical/torelina/tec_017.html
+//                     (APPARENT shear rate, L/D 40/1, no Bagley / Rabinowitsch correction; 310, 320, 330 C)
+//          PVT        Fig. 6.22, https://www.plastics.toray/technical/torelina/tec_018.html (20 .. 160 MPa)
+//          cp         Fig. 6.3,  https://www.plastics.toray/technical/torelina/tec_013.html (see cpTable CSV)
+// Fit errors: Cross-WLF RMS 2.3 % in eta (43 points);
+//             Tait RMS 1.20e-06 m3/kg away from the transition, 1.26e-06 m3/kg all points.
+// ASSUMED (not fitted): D2 = Tg = 90 C, A2 = 51.6 K (universal WLF), D3 = 0, TnoFlow (no public value).
+// Tau and D1 are NOT identified separately (no Newtonian plateau in the data); see the script docstring, F1.
+// Not the DENSO grade (DURAFIDE 1130A6, 30 % GF).
+
+thermoType
+{
+    type            mojHeRhoThermo;//leave alone
+    mixture         pureMixture;//leave alone
+    //transport     crossWLF;// specify thermal conductivity kappa with the crossWLF constants.
+    transport       crossWLFTTC;// TTC = T-abulated T-hermal C-onductivity // see file: kappaTable
+    //thermo        hPolynomial; // Use this also for constant Cp.
+    thermo          hTabular; //see file: constant/cpTable
+    equationOfState polymerPVT;//TaitEquation. Might be renamed in the future.
+    specie          specie;//leave alone
+    energy          sensibleInternalEnergy;//leave alone
+}
+
+mixture
+{
+    specie//leave alone
+    {
+        nMoles      1;
+        molWeight   18.0;
+    }
+    equationOfState // two-domain Tait fitted to Toray Fig. 6.22 (m3/kg, K, Pa)
+    {
+        b1m         6.815273e-04;// m3/kg
+        b2m         3.978826e-07;// m3/(kg K)
+        b3m         1.739944e+08;// Pa
+        b4m         3.146373e-03;// 1/K
+        b1s         6.532702e-04;// m3/kg
+        b2s         2.127870e-07;// m3/(kg K)
+        b3s         3.062622e+08;// Pa
+        b4s         1.938667e-03;// 1/K
+        b5          515.00;// K  (241.9 C) transition of the PVT test at p = 0, fitted
+        b6          5.2634e-07;// K/Pa
+        b7          1.452683e-05;// m3/kg
+        b8          1.272590e-01;// 1/K
+        b9          5.802335e-08;// 1/Pa
+    }
+    thermodynamics
+    {
+        Hf              0;//leave alone
+        Sf              0;//leave alone
+        //CpCoeffs<8>     (1000.0    0.0 0.0 0.0 0.0 0.0 0.0 0.0);//J/(kgK)
+    }
+    transport // PPS + GF40, Toray A504X90, Cross-WLF fitted to Fig. 6.13 (apparent shear rate)
+    {
+        n          0.49440;//1   fitted
+        Tau        1.77828e+04;//Pa  selection rule, upper bound only (plateau not visible)
+        D1         6.86061e+19;//Pa s  tied to Tau, not identified separately
+        D2         363.15;//K  ASSUMED = Tg 90 C
+        D3         0.0;//K/Pa  ASSUMED (no pressure data)
+        A1         46.0219;//1   fitted (310 .. 330 C only)
+        A2         51.6;//K  ASSUMED (universal WLF value)
+        //lambda     0.30;//W/(mK) see kappaTable (constant 0.30, public table value)
+        etaMin     5;//Pas  numerical limit of the example case, unchanged
+        etaMax     1e6;//Pas  numerical limit of the example case, unchanged
+        TnoFlow    508.65;//K  ASSUMED = 235.5 C (cp peak on cooling, same grade); no public value
+        deltaTempInterp 10.0;//K  unchanged
+    }
+}
+//etaMax - High values cause instability during solidification, packing. High viscosity must reduce the shear rate and
+//then elastic shear stress supports the material. See the constant/solidificationProperties file. If that file is not
+//present, no elastic shear stress will be calculated even though the solver reads the related fvSchemes.
+
+
+// ************************************************************************* //
