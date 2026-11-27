@@ -1,0 +1,7 @@
+# constant conductivity, public table value of A504X90 (through-thickness, 80 C); a choice, not a fit; public range of PPS + GF40 0.2 .. 0.4 W/(m K)
+T_K,kappa_W_per_mK
+273.15,0.30
+373.15,0.30
+473.15,0.30
+573.15,0.30
+673.15,0.30
